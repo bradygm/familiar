@@ -1,0 +1,266 @@
+# Public release plan
+
+How to turn Familiar from a personal Docker app into something other people can use,
+without ever holding anyone else's student data.
+
+## The short answer
+
+1. **Host it as a static, browser-only app on GitHub Pages.** No server, no accounts,
+   no database you operate. Every roster stays in the visitor's browser.
+2. **Keep SQLite on disk for your own instance.** The public build and your build share
+   one codebase and differ only in a storage adapter. You do not give up your database.
+3. **You do not need to finish the features first, and you should not.** Only a small
+   slice of the remaining work is at risk of being written twice, and it is identifiable.
+4. The architecture is *mostly* shareable already — much more than it looks.
+
+## Why the architecture is already close
+
+The frontend touches the backend in exactly two places:
+
+| Seam | Location | Becomes |
+| --- | --- | --- |
+| `api(path, options)` — the only `fetch` in the app | `frontend/app.js:7` | A local dispatcher mapping the same paths to in-browser functions |
+| `portraitUrl(card)` — builds `/assets/<path>` | `frontend/app.js:14` | `URL.createObjectURL(blob)` from local storage |
+
+Everything else in `app.js` — rendering, the expanding-recall state machine
+(`app.js:145-170`), keyboard handling, the session summary — is already client-side and
+knows nothing about SQLite or HTTP. Because `api()` keeps its signature, the same UI can
+run against either backend during the migration, behind a one-line switch.
+
+### Layer audit
+
+| Layer | Where it lives | Portable to a static app? |
+| --- | --- | --- |
+| Learning model & selection | `backend/app/study.py` (pure, no IO) | **Yes** — direct line-for-line port |
+| Expanding-recall scheduling | `frontend/app.js` | **Already there** — no port needed |
+| UI / rendering | `frontend/` | **Yes** — two functions change |
+| Persistence | `database.py` + SQL inside `main.py` | **No** — replaced by IndexedDB |
+| HTTP transport | `main.py` routes | **Deleted** — becomes direct calls |
+| PDF import / OCR | `importer.py` + poppler + tesseract | **Rewritten** for the browser |
+
+Two of six layers change. That is the real scope.
+
+One live symptom of the missing seam: `predicted_recall` is implemented **twice** today —
+Python at `study.py:16` and JavaScript at `app.js:19`. They currently agree. They will not
+agree forever. Extracting one shared core deletes that class of bug.
+
+## Storage durability, and why you keep SQLite
+
+### What actually clears IndexedDB
+
+| Action | IndexedDB cleared? |
+| --- | --- |
+| Chrome/Edge "Clear browsing data" → *Cached images and files* | No |
+| Chrome/Edge/Firefox → *Cookies and other site data* | **Yes** |
+| Safari → *Clear History and Website Data* | **Yes** |
+| Safari: 7 days with no visit, site not installed or persisted | **Yes** |
+| Disk-pressure eviction while storage is "best-effort" | **Yes** |
+| `navigator.storage.persist()` granted | Exempt from *automatic* eviction; an explicit clear still wipes it |
+| Private / incognito window | Gone when the window closes |
+
+So a routine cache clear does **not** touch it — that part of the worry is unfounded. But
+a site-data clear, a Safari history clear, or a quiet ITP eviction does. IndexedDB is a
+good cache of user-owned data and a bad system of record. That is an acceptable trade for
+a visitor who can re-import a PDF in two minutes. It is not an acceptable trade for
+several semesters of your own review history, which is unreproducible.
+
+### Two deployments, one codebase
+
+Do not pick one storage engine. Make storage the adapter behind the `api()` seam, and
+build two:
+
+| | Public build | Your build |
+| --- | --- | --- |
+| Hosting | GitHub Pages, static | `docker compose up`, as today |
+| Storage adapter | `IndexedDbStore` | `HttpStore` → FastAPI → SQLite |
+| System of record | Visitor's browser | `app-data/flashcards.sqlite3` on your disk |
+| Durability | Persist + PWA install + backup nagging | A real file: Time Machine, `sqlite3` CLI, `cp` |
+| Import | `pdf.js` + `tesseract.js` in a worker | Native poppler + tesseract, as today |
+| Learning model | Shared TypeScript core | Shared TypeScript core |
+
+The important part: **the HTTP adapter is code you already have.** `api()` at
+`frontend/app.js:7` *is* that adapter today, unchanged. Your instance is the one that
+moves the least in this whole plan.
+
+### What this does to the Python backend
+
+It shrinks, and that is the point. The learning model moves to the shared TypeScript core,
+so `backend/app/study.py` is not ported — it is **deleted**, and FastAPI stops computing
+mastery. What remains is CRUD over SQLite, the PDF importer, and static assets. The
+client computes, the server stores.
+
+This removes the duplication problem rather than managing it. There is one implementation
+of `predicted_recall` in the repository, both builds run it, and there is no parity suite
+to maintain because there is nothing to keep in parity.
+
+The one real change in character: the server trusts computed values from the client. For a
+single-user app bound to localhost, that is not a security property you had anyway.
+
+### A third option, if you ever want to drop the server
+
+The File System Access API lets a browser hold a persistent handle to a real directory
+(`~/Documents/Familiar/`) and write the database and portraits there. The handle lives in
+IndexedDB, but **the data does not** — so clearing site data costs you one folder re-pick,
+not your history. It is Chrome/Edge desktop only; Safari and Firefox do not support the
+directory picker with write access. Worth knowing about, not worth building now, and
+strictly worse than the SQLite file you already have.
+
+### Backups either way
+
+`app-data/` is gitignored, so Git is not protecting your database. Whichever path you take,
+the Phase 0 export format plus a periodic copy of the SQLite file is the actual safety net.
+Persistence settings reduce the odds of loss; they do not replace a backup.
+
+### One tradeoff to name
+
+The local-server build is desktop-only, because it is served from localhost. That is
+already true today, so it is not a regression — but it means phone study only exists on
+the static build. Treat the SQLite file as the single source of truth and the phone as a
+read-mostly copy you refresh by export; do not attempt two-way sync.
+
+## Hosting options considered
+
+| Option | Privacy | Setup friction for others | Verdict |
+| --- | --- | --- | --- |
+| **A. Static browser app on GitHub Pages** | Perfect — data never leaves the device, and you are not a data processor | Open a URL | **Recommended, for other people** |
+| **B. Keep Docker + SQLite** | Perfect | Install Docker, clone a repo, run a command | **Recommended, for you** — too much friction to ask of other instructors, exactly right for the one user who wants a durable file |
+| C. Hosted app with accounts and a server DB | **You would store other people's student photos** | Lowest | **Rejected** — unacceptable liability for a roster app |
+| D. Static study app + optional local Python importer producing a portable bundle | Perfect | Open a URL; power users install the CLI | **Keep as the documented fallback** if in-browser OCR underperforms |
+
+A and B are not competing answers. They are the same application with two storage
+adapters, per the section above. C is worth naming explicitly so it stays rejected.
+
+The moment you accept an upload of a roster PDF, you are holding identifiable student
+photos for institutions you have no relationship with. A static site sidesteps that entirely: there is no upload endpoint to
+subpoena, breach, or misconfigure.
+
+A desktop wrapper (Tauri/Electron) was considered and dropped — an installable PWA gives
+the same offline behaviour with none of the packaging and signing work.
+
+## What to build before the port, and what to hold
+
+### Do now — these carry over for free
+
+1. **Golden test vectors for the learning model.** Freeze a JSON fixture of
+   inputs to `predicted_recall`, `update_memory_state`, `adaptive_cards` and
+   `course_readiness`, plus their current outputs. This is the safety net that makes the
+   port provably behaviour-preserving rather than hopefully behaviour-preserving.
+   Highest value item on this list.
+2. **Portable export format (zip: `course.json` + `assets/*.jpg`).** This single piece of
+   work closes the outstanding "backup/export" item, becomes the migration path for your
+   own semester of real progress, and doubles as the roster-sharing format later.
+3. **Fix the expanding-recall miscount.** The summary reports attempts as people
+   (`PROJECT_PLAN.md` known bug). It lives in the shared client code, so fixing it now
+   means fixing it once.
+4. **Course reset and "remove a person who dropped."** Small, and the semantics you decide
+   now survive the storage swap even though the SQL does not.
+
+### Hold until the core is extracted — otherwise you write them twice
+
+- Continuous / never-ending adaptive mode
+- Sort by hardest-to-learn, easiest, and learning strength
+- Calibrating the memory-model coefficients from real review data
+- Re-import de-duplication and adding new students mid-semester
+- Accessibility and responsive QA, empty states, error handling
+- Your logo
+
+The deferred list is not "do it later." It is "do it once, in the shared core, where it is
+headlessly testable." Continuous mode in particular is pure scheduling logic — it can be
+written and tested with no UI at all.
+
+## Phases
+
+### Phase 0 — Freeze behaviour
+Golden vectors, portable export, the miscount fix, reset/remove. Ship on the current
+Docker app. Nothing architectural yet.
+
+### Phase 1 — Extract the core
+Restructure to `core/` (pure TypeScript: model, selection, scheduling — no DOM, no IO),
+`web/`, `backend/`. Port `study.py` and verify against the Phase 0 vectors with Vitest,
+then delete it and the duplicated JS `predicted_recall`. FastAPI stops computing mastery
+and starts accepting it; the app keeps running on SQLite throughout.
+
+### Phase 2 — Finish the learning features in the core
+Continuous mode, the new sorts, calibration groundwork. All headless, all test-driven,
+all written exactly once. This is where "the couple of last features" actually land.
+
+### Phase 3 — The storage adapter seam
+Formalise `api()` into a `Store` interface with two implementations: the existing
+`HttpStore` (extracted as-is, keeps your SQLite) and a new `IndexedDbStore`
+(`courses`, `cards`, `progress`, `sessions`, `reviews`, `assets` as Blobs). Do the same
+for `portraitUrl()` — a path under the server, a blob URL in the browser. Selected at
+build time, so the public bundle contains no HTTP client and your build contains no
+IndexedDB code. Validate the new adapter by loading your Phase 0 export into it; your
+own daily use never leaves SQLite.
+
+### Phase 4 — Import in the browser (public build only)
+`pdf.js` replaces `pdftoppm`; `tesseract.js` replaces `pytesseract` — same engine, so the
+crop fractions and `--psm` modes in `importer.py` port directly. Run it in a Web Worker
+with a progress bar. `importer.py` stays exactly where it is for your build, using the
+native binaries that are faster and already working. This is additive, not a migration.
+
+### Phase 5 — Ship the public build
+GitHub Pages via Actions, PWA + service worker, `navigator.storage.persist()`, backup
+prompting, a demo course with synthetic faces, and a privacy page. Custom domain if you
+want it on your own site — Pages supports one with HTTPS. Your Docker build is unaffected
+by this phase and keeps working the whole time.
+
+### Phase 6 — Make it usable beyond BYU
+Generic CSV + photos import, a stronger review/correct step, accessibility pass, logo,
+docs. See the generality note below.
+
+## Risks worth designing around now
+
+**Safari evicts IndexedDB after 7 days of no visits** (public build only — your SQLite
+file is unaffected). For a study app used weekly, that is real data loss. Mitigate with
+all three: call `navigator.storage.persist()`, prompt to install the PWA, and nag for a
+backup export. This is the single most likely way a *visitor* loses a semester of
+progress, and the reason the durability section above exists.
+
+**Your OCR is BYU-Flashcards-specific.** `importer.py` hardcodes three name cells per page
+at page-height fractions `0.216 / 0.435 / 0.655` and names in the right 55% of the page.
+Nobody else's roster looks like that. The fix is not a smarter parser — it is a good
+review-and-correct UI plus a generic CSV path, so imperfect extraction is recoverable for
+any layout. Treat the PDF importer as one adapter among several, and say plainly in the
+README which layout it supports.
+
+**Tesseract language data is ~10-15MB.** Self-host it rather than pulling from a CDN — a
+CDN request leaks that a visitor is importing something, which undercuts the privacy claim
+you are making. Same for fonts. Well within Pages' limits.
+
+**Pages cannot set HTTP headers,** so the Content-Security-Policy has to be a `<meta>` tag:
+`default-src 'self'`, `connect-src 'self'`, plus `wasm-unsafe-eval` for the OCR WASM.
+Worth doing — it makes "nothing leaves your device" enforced rather than promised, and a
+visitor can verify it in devtools.
+
+**Service worker staleness.** Version the assets and show a visible "update available"
+prompt, or returning users will sit on old builds.
+
+**In-browser OCR speed.** Two full OCR passes per page today; the whole-page `--psm 6` pass
+only feeds a diagnostic text blob. Drop it and OCR the right column alone to roughly halve
+the work. Expect a minute or two per course in WASM, which is acceptable for a once-per-
+semester operation with a progress bar. If it proves worse, Option D is the fallback.
+
+## Privacy posture to state publicly
+
+- Nothing is uploaded; the site has no backend and no analytics.
+- Storage is the visitor's browser; export is a manual file they control.
+- Sharing a roster between instructors is deliberately *not* a hosted feature — export a
+  bundle and send it however they already send sensitive files.
+- A short note that users remain responsible for their institution's student-data rules.
+- Add a line to the issue template telling people not to attach real roster PDFs.
+
+Your repo is currently clean — only the two anonymized screenshots are tracked, and
+`data/` and `app-data/` are ignored. Keep it that way.
+
+## Acceptance criteria for the public release
+
+- A visitor can open the URL, load the demo course, and study without importing anything.
+- A visitor can import a supported roster, correct mistakes, and study — with devtools
+  showing zero outbound requests carrying their data.
+- Closing the browser and returning a week later preserves progress, on a persisted or
+  installed instance.
+- Export produces a file that re-imports into a fresh browser profile with progress intact.
+- The learning model produces identical output to the Phase 0 golden vectors, in both builds.
+- Your own instance still stores everything in `app-data/flashcards.sqlite3`, readable with
+  the `sqlite3` CLI, with no review history lost at any point in the migration.

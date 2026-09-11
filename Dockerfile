@@ -11,6 +11,8 @@ COPY backend/requirements.txt /app/backend/requirements.txt
 RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 COPY backend /app/backend
 COPY frontend /app/frontend
+# Included so a Docker-only user can restore a backup without a host Python.
+COPY tools /app/tools
 
 RUN mkdir -p /app/app-data
 EXPOSE 8000

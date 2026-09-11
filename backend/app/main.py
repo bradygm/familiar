@@ -4,12 +4,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .database import app_data_dir, connection, initialize_database
 from .importer import available_pdfs, import_pdf
+from .portable import build_bundle
 from .study import adaptive_cards, course_readiness, days_since, predicted_recall, update_memory_state
 
 
@@ -386,7 +387,44 @@ def complete_session(session_id: str):
             (completed_at, readiness, session_id),
         )
         session = conn.execute("SELECT * FROM study_sessions WHERE id = ?", (session_id,)).fetchone()
-        return dict(session)
+        result = dict(session)
+        # `reviewed_count` counts attempts. Expanding recall shows a person more
+        # than once and interleaves other cards, so it is not a count of people.
+        result["people_count"] = conn.execute(
+            "SELECT COUNT(DISTINCT card_id) AS people FROM review_events WHERE session_id = ?",
+            (session_id,),
+        ).fetchone()["people"]
+        return result
+
+
+def _export_response(bundle: bytes, stem: str) -> Response:
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    filename = f"familiar-{stem}-{stamp}.zip"
+    return Response(
+        content=bundle,
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@app.get("/api/export")
+def export_everything(include_progress: bool = True):
+    """Download every course as one portable bundle. Read-only."""
+    with connection() as conn:
+        bundle = build_bundle(conn, ASSETS, None, include_progress)
+    return _export_response(bundle, "backup" if include_progress else "rosters")
+
+
+@app.get("/api/courses/{course_id}/export")
+def export_course(course_id: str, include_progress: bool = True):
+    """Download one course as a portable bundle. Read-only."""
+    with connection() as conn:
+        try:
+            bundle = build_bundle(conn, ASSETS, [course_id], include_progress)
+        except ValueError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+    stem = course_id if include_progress else f"{course_id}-roster"
+    return _export_response(bundle, stem)
 
 
 @app.get("/")

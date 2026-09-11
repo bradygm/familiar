@@ -27,6 +27,27 @@ Familiar was built to bring science-backed retrieval practice and expanding reca
 
 The only exposed port is local port 8000. Stop the app with `docker compose down`; this preserves `app-data/`. Removing `app-data/` removes imported courses and progress.
 
+## Backing up your data
+
+`app-data/` is ignored by Git, so nothing in your commit workflow protects your study
+history. Use **Local backup → Export everything** on the home page to download a portable
+zip of every course, portrait, and review event. See
+[docs/BACKUP_AND_RESTORE.md](docs/BACKUP_AND_RESTORE.md) for the restore procedure.
+
+## Running the tests
+
+The learning model has golden vectors pinning its exact behaviour, so a changed
+coefficient cannot slip through unnoticed:
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install -r backend/requirements-dev.txt
+.venv/bin/pytest
+```
+
+`tests/test_real_database_round_trip.py` additionally verifies that your own database
+survives an export and restore unchanged. It opens the live database read-only and skips
+when there is no local database.
+
 ## Exporting a BYU Flashcards roster
 
 Familiar expects the roster-style PDF exported by [BYU Flashcards](https://flashcards.byu.edu).
