@@ -132,12 +132,15 @@ Defer:
 - [x] Build the course picker and roster list with search and first/last-name sorting.
 - [x] Build the study setup and all-cards session flow.
 - [x] Add SQLite persistence, statistics, and session history.
-- [ ] Add course-progress reset and database backup/export.
+- [x] Add a portable backup/export bundle with a verified restore path.
+- [ ] Add course-progress reset.
 - [x] Implement the adaptive-session selector with module-level checks.
 - [x] Replace the fixed confidence score with a mastery/stability recall model and add a capped expanding-retrieval session mode.
 - [ ] Add responsive/accessibility QA, empty states, error handling, and sample-data safeguards.
 - [x] Write the local run and course-importing guide.
-- [ ] Write the local backup guide.
+- [x] Write the local backup guide.
+- [x] Pin the learning model with golden vectors before extracting a shared core.
+- [ ] Extract the learning model into a shared TypeScript core (see docs/PUBLIC_RELEASE_PLAN.md).
 
 ## Proposed project layout
 
@@ -191,6 +194,21 @@ Inspect both supplied PDFs, identify their extractable card fields and images, t
 ## Future features
 * Add my personal logo?
 * A way to remove people that drop the class later
-* make version that hosted on my website and usable by others? Upload only, etc? Not right now. 
+* make version that hosted on my website and usable by others? Upload only, etc? Planned in docs/PUBLIC_RELEASE_PLAN.md — static GitHub Pages build for others, SQLite kept for local use. 
 * Add ability to add new people, but it checks for duplicates. Like when a person adds the class, can I just upload a new pdf and it will just bring in the new people. 
 * Calibrate the memory-model coefficients from local timestamped review data after several courses provide enough responses; validate predictions before treating them as calibrated probabilities.
+* ~~Bug: in expanding recall mode, at the end it says "You reviewed 31 people" for example, but it actually was less people because some were shown multiple times.~~ Fixed: the summary now reports attempts and distinct people separately.
+* Continuous mode that just continues to adapt and sample. Sort of like the others but no end. If you miss one, it would trigger the learning cycle and spacing the practice. Continual ranking and ordering. Adaptive mode but no ending? Or better with specifically queing the ones you missed. 
+* Sort by those that were the hardest vs easiest to learn. 
+* Sort by familiar score (strength?)
+* repo name change if going to be hosting? Maybe just call repo familiar, but readme have the full name?
+* add google analytics 
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZKRH21WV3V"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-ZKRH21WV3V');
+</script>
