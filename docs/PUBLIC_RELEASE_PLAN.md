@@ -262,8 +262,17 @@ semester operation with a progress bar. If it proves worse, Option D is the fall
   Advertising signals are denied through Consent Mode. `page_location` is
   trimmed to origin plus pathname, because GA4 would otherwise send the hash
   route, which carries course ids. Analytics is skipped on `localhost`, so a
-  local install makes no third-party requests. **Constraint this creates: never
-  put a person's name, or anything else identifying, in a URL.**
+  local install makes no third-party requests.
+- Measured behaviour, not assumed: one `page_view` per page load and none on
+  hash navigation, and the reported location is the bare origin even when
+  landing directly on `?query#/course/<id>`. Enhanced Measurement's history
+  tracking does not fire for hash-only changes.
+- **What would break that**, in rough order of how easy it is to do by accident:
+  a dynamic `document.title` (GA sends it as `dt`, and "Jane Doe — Familiar"
+  would go straight to Google; it is static today), adding SPA route tracking
+  without re-applying the `page_location` trim, or custom events carrying names
+  in their parameters. Keeping names out of URLs *and* out of the title is the
+  cheap guardrail.
 - Setting an analytics cookie is the thing that would require a consent banner
   for EU visitors. Not a concern for a BYU-facing tool today, worth revisiting
   before promoting it more widely. A cookieless configuration exists
