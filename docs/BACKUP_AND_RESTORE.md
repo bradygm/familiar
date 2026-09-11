@@ -55,6 +55,14 @@ merge is how divergent histories quietly lose reviews.
 .venv/bin/python tools/restore_bundle.py backup.zip --into app-data/restored.sqlite3
 ```
 
+If you only ever run Familiar through Docker and have no host Python environment,
+run the same command in the container. `app-data/` is already mounted, so put the
+bundle there first:
+
+```bash
+docker compose run --rm flashcards python tools/restore_bundle.py app-data/backup.zip --into app-data/restored.sqlite3
+```
+
 Check the result before trusting it:
 
 ```bash
