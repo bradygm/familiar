@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "now": "2026-03-01T12:00:00+00:00",
-  "source_commit": "fda9652108665030293a6e6f76d02c7ab6b32bc4",
+  "source_commit": "6cccd1c0a3afe8bce2be488c1478857fb1e2a648",
   "days_since": [
     {
       "timestamp": null,
@@ -36,8 +36,32 @@
       "expected": 365.0
     },
     {
+      "timestamp": "2026-03-01T11:59:59.942011+00:00",
+      "expected": 6.711689814814814e-07
+    },
+    {
+      "timestamp": "2026-03-01T11:59:59.231916+00:00",
+      "expected": 8.889861111111112e-06
+    },
+    {
+      "timestamp": "2026-02-28T11:59:59.987553+00:00",
+      "expected": 1.0000001440625
+    },
+    {
+      "timestamp": "2026-02-28T23:59:59.999914+00:00",
+      "expected": 0.5000000009953703
+    },
+    {
       "timestamp": "2026-02-28T12:00:00Z",
       "expected": 1.0
+    },
+    {
+      "timestamp": "2026-02-28T05:00:00-07:00",
+      "expected": 1.0
+    },
+    {
+      "timestamp": "2026-03-06T12:00:00+00:00",
+      "expected": 0.0
     }
   ],
   "predicted_recall": [
@@ -2041,6 +2065,58 @@
     {
       "progress": {
         "mastery": 0.05,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.42145028691992525,
+        "stability_days": 0.0723000234905202
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.42828999999999995,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
         "stability_days": 0.25,
         "last_reviewed_at": null
       },
@@ -2134,6 +2210,58 @@
         "mastery": 0.05,
         "stability_days": 0.25,
         "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.4214500229539483,
+        "stability_days": 0.5587500234908829
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.4268546307817702,
+        "stability_days": 0.5642810548936246
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
       },
       "result": "wrong",
       "reviewed_at": "2026-03-01T12:00:00+00:00",
@@ -2249,6 +2377,58 @@
     {
       "progress": {
         "mastery": 0.05,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.4214500057384928,
+        "stability_days": 2.145000023490906
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.4233412533067432,
+        "stability_days": 2.1527419726007033
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
         "stability_days": 30.0,
         "last_reviewed_at": null
       },
@@ -2342,6 +2522,58 @@
         "mastery": 0.05,
         "stability_days": 30.0,
         "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.4214500001912831,
+        "stability_days": 63.48000002349091
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.42152095394802264,
+        "stability_days": 63.488713642739626
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
       },
       "result": "wrong",
       "reviewed_at": "2026-03-01T12:00:00+00:00",
@@ -2457,6 +2689,58 @@
     {
       "progress": {
         "mastery": 0.25,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.5162511325786523,
+        "stability_days": 0.06950011745260098
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.54865,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
         "stability_days": 0.25,
         "last_reviewed_at": null
       },
@@ -2550,6 +2834,58 @@
         "mastery": 0.25,
         "stability_days": 0.25,
         "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.5162500906076909,
+        "stability_days": 0.5237501174544141
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.537584068875409,
+        "stability_days": 0.5514052744681227
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
       },
       "result": "wrong",
       "reviewed_at": "2026-03-01T12:00:00+00:00",
@@ -2665,6 +3001,58 @@
     {
       "progress": {
         "mastery": 0.25,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.5162500226519455,
+        "stability_days": 2.005000117454532
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.5237154735792497,
+        "stability_days": 2.043709863003517
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
         "stability_days": 30.0,
         "last_reviewed_at": null
       },
@@ -2758,6 +3146,58 @@
         "mastery": 0.25,
         "stability_days": 30.0,
         "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.5162500007550651,
+        "stability_days": 59.28000011745457
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.5165300813737737,
+        "stability_days": 59.323568213698124
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
       },
       "result": "wrong",
       "reviewed_at": "2026-03-01T12:00:00+00:00",
@@ -2873,6 +3313,58 @@
     {
       "progress": {
         "mastery": 0.5,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.6550015101048698,
+        "stability_days": 0.06600023490520196
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.6991,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
         "stability_days": 0.25,
         "last_reviewed_at": null
       },
@@ -2966,6 +3458,58 @@
         "mastery": 0.5,
         "stability_days": 0.25,
         "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.6550001208102545,
+        "stability_days": 0.48000023490882815
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.683445425167212,
+        "stability_days": 0.5353105489362453
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
       },
       "result": "wrong",
       "reviewed_at": "2026-03-01T12:00:00+00:00",
@@ -3081,6 +3625,58 @@
     {
       "progress": {
         "mastery": 0.5,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.655000030202594,
+        "stability_days": 1.8300002349090645
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.664953964772333,
+        "stability_days": 1.9074197260070347
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
         "stability_days": 30.0,
         "last_reviewed_at": null
       },
@@ -3174,6 +3770,58 @@
         "mastery": 0.5,
         "stability_days": 30.0,
         "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.6550000010067535,
+        "stability_days": 54.03000023490914
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.6553734418316982,
+        "stability_days": 54.117136427396254
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
       },
       "result": "wrong",
       "reviewed_at": "2026-03-01T12:00:00+00:00",
@@ -3289,6 +3937,58 @@
     {
       "progress": {
         "mastery": 0.75,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.8162511325786523,
+        "stability_days": 0.06250035235780295
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.84955,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
         "stability_days": 0.25,
         "last_reviewed_at": null
       },
@@ -3382,6 +4082,58 @@
         "mastery": 0.75,
         "stability_days": 0.25,
         "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.8162500906076908,
+        "stability_days": 0.4362503523632423
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.8375840688754089,
+        "stability_days": 0.519215823404368
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
       },
       "result": "wrong",
       "reviewed_at": "2026-03-01T12:00:00+00:00",
@@ -3497,6 +4249,58 @@
     {
       "progress": {
         "mastery": 0.75,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.8162500226519456,
+        "stability_days": 1.655000352363597
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.8237154735792498,
+        "stability_days": 1.7711295890105523
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
         "stability_days": 30.0,
         "last_reviewed_at": null
       },
@@ -3590,6 +4394,58 @@
         "mastery": 0.75,
         "stability_days": 30.0,
         "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.816250000755065,
+        "stability_days": 48.780000352363714
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.8165300813737737,
+        "stability_days": 48.910704641094384
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
       },
       "result": "wrong",
       "reviewed_at": "2026-03-01T12:00:00+00:00",
@@ -3705,6 +4561,58 @@
     {
       "progress": {
         "mastery": 0.9,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.9238005436377531,
+        "stability_days": 0.060400422829363545
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.93982,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
         "stability_days": 0.25,
         "last_reviewed_at": null
       },
@@ -3798,6 +4706,58 @@
         "mastery": 0.9,
         "stability_days": 0.25,
         "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.9238000434916916,
+        "stability_days": 0.4100004228358908
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.9340403530601963,
+        "stability_days": 0.5095589880852417
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
       },
       "result": "wrong",
       "reviewed_at": "2026-03-01T12:00:00+00:00",
@@ -3913,6 +4873,58 @@
     {
       "progress": {
         "mastery": 0.9,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.9238000108729338,
+        "stability_days": 1.5500004228363164
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.9273834273180399,
+        "stability_days": 1.6893555068126627
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
         "stability_days": 30.0,
         "last_reviewed_at": null
       },
@@ -4006,6 +5018,58 @@
         "mastery": 0.9,
         "stability_days": 30.0,
         "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.9238000003624313,
+        "stability_days": 45.63000042283645
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.9239344390594114,
+        "stability_days": 45.78684556931325
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
       },
       "result": "wrong",
       "reviewed_at": "2026-03-01T12:00:00+00:00",
@@ -4121,6 +5185,58 @@
     {
       "progress": {
         "mastery": 0.98,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 0.05928046041419585
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
         "stability_days": 0.25,
         "last_reviewed_at": null
       },
@@ -4214,6 +5330,58 @@
         "mastery": 0.98,
         "stability_days": 0.25,
         "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 0.3960004604213032
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 0.5044086759150409
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
       },
       "result": "wrong",
       "reviewed_at": "2026-03-01T12:00:00+00:00",
@@ -4329,6 +5497,58 @@
     {
       "progress": {
         "mastery": 0.98,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 1.4940004604217667
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 1.6457426629737881
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
         "stability_days": 30.0,
         "last_reviewed_at": null
       },
@@ -4422,6 +5642,58 @@
         "mastery": 0.98,
         "stability_days": 30.0,
         "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 43.95000046042191
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T11:59:59.942011+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 44.12078739769665
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T05:59:59.999974+00:00"
       },
       "result": "wrong",
       "reviewed_at": "2026-03-01T12:00:00+00:00",

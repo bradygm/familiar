@@ -1,0 +1,17 @@
+{
+  "name": "@familiar/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The learning model, shared by every build of Familiar. No DOM, no IO.",
+  "scripts": {
+    "build": "tsc --build --force",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}
