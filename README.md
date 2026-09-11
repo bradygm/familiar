@@ -34,14 +34,36 @@ history. Use **Local backup → Export everything** on the home page to download
 zip of every course, portrait, and review event. See
 [docs/BACKUP_AND_RESTORE.md](docs/BACKUP_AND_RESTORE.md) for the restore procedure.
 
+## Project layout
+
+```text
+core/       the learning model in TypeScript: recall, mastery, selection. No DOM, no IO.
+backend/    FastAPI, SQLite, the PDF importer
+frontend/   the browser UI, which imports the compiled core
+tests/      Python tests, including the golden vectors both implementations share
+tools/      backup restore CLI
+```
+
+`core/` is shared by every build of Familiar. It is compiled to
+`frontend/vendor/core/`, which is generated rather than committed — `docker compose up
+--build` does it for you. To run natively you need to build it once yourself:
+
+```bash
+cd core && npm install && npm run build
+```
+
 ## Running the tests
 
 The learning model has golden vectors pinning its exact behaviour, so a changed
-coefficient cannot slip through unnoticed:
+coefficient cannot slip through unnoticed. The same fixture is asserted from both
+languages, which is what keeps the TypeScript core and the Python backend
+interchangeable:
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r backend/requirements-dev.txt
 .venv/bin/pytest
+
+cd core && npm test
 ```
 
 `tests/test_real_database_round_trip.py` additionally verifies that your own database
