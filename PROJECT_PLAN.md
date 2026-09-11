@@ -212,3 +212,4 @@ Inspect both supplied PDFs, identify their extractable card fields and images, t
 
   gtag('config', 'G-ZKRH21WV3V');
 </script>
+* for web version, it needs to be self explanitory or instructions online. They won't have the readme. 
