@@ -213,3 +213,4 @@ Inspect both supplied PDFs, identify their extractable card fields and images, t
   gtag('config', 'G-ZKRH21WV3V');
 </script>
 * for web version, it needs to be self explanitory or instructions online. They won't have the readme. 
+* Awaiting review: this detail shouldn't be on the header of the line next to total. And the review names button should only show up when there are names to review, and it could have the number in the button name itself. Otherwise, it should be gone to simplify the view. 

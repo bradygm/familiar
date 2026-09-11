@@ -5,6 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Familiar</title>
     <link rel="stylesheet" href="/static/styles.css" />
+    <script>
+      // Anonymous visit counts, hosted site only.
+      //
+      // Three deliberate constraints, so this stays a visit count and nothing more:
+      //
+      //   - Skipped on localhost and *.localhost, so a local install makes no
+      //     third-party request at all, and my own study sessions are not most of
+      //     the traffic.
+      //
+      //   - Consent Mode with analytics_storage denied, which makes GA4 send
+      //     cookieless pings: no cookie, so no persistent or cross-site
+      //     identifier. Verified — `client_storage: 'none'` does NOT achieve this
+      //     in GA4; it still writes _ga. The cost is that returning visitors are
+      //     indistinguishable from new ones and low-traffic sites may see little
+      //     in the standard reports. Granting analytics_storage restores reliable
+      //     counts, but then the privacy note must stop saying "no cookie".
+      //
+      //   - page_location trimmed to origin + pathname. GA4 otherwise sends
+      //     document.location.href, and the hash routes carry course ids. Never
+      //     put a person's name, or anything else identifying, in a URL.
+      (function () {
+        var host = location.hostname;
+        var local = ['localhost', '127.0.0.1', '[::1]', ''];
+        var isLocal = local.indexOf(host) !== -1 || /\.localhost$/.test(host);
+        if (isLocal || location.protocol === 'file:') return;
+        var id = 'G-ZKRH21WV3V';
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { dataLayer.push(arguments); };
+        gtag('consent', 'default', {
+          ad_storage: 'denied',
+          ad_user_data: 'denied',
+          ad_personalization: 'denied',
+          analytics_storage: 'denied',
+        });
+        gtag('js', new Date());
+        gtag('config', id, { page_location: location.origin + location.pathname });
+        var tag = document.createElement('script');
+        tag.async = true;
+        tag.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+        document.head.appendChild(tag);
+      })();
+    </script>
   </head>
   <body>
     <header class="topbar"><a class="brand" href="#/">familiar<span>.</span></a><p>Science-backed practice for learning every name.</p></header>

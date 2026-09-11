@@ -209,6 +209,10 @@ by this phase and keeps working the whole time.
 Generic CSV + photos import, a stronger review/correct step, accessibility pass, logo,
 docs. See the generality note below.
 
+Web visitors have no README, so the page has to explain itself: what it does, which roster
+layout it supports, and where the data lives. The privacy statement in particular has to
+be in the page, not only in the repository.
+
 ## Risks worth designing around now
 
 **Safari evicts IndexedDB after 7 days of no visits** (public build only — your SQLite
@@ -229,9 +233,17 @@ CDN request leaks that a visitor is importing something, which undercuts the pri
 you are making. Same for fonts. Well within Pages' limits.
 
 **Pages cannot set HTTP headers,** so the Content-Security-Policy has to be a `<meta>` tag:
-`default-src 'self'`, `connect-src 'self'`, plus `wasm-unsafe-eval` for the OCR WASM.
-Worth doing — it makes "nothing leaves your device" enforced rather than promised, and a
-visitor can verify it in devtools.
+`default-src 'self'`, `connect-src 'self' https://*.google-analytics.com`,
+`script-src 'self' https://www.googletagmanager.com`, plus `wasm-unsafe-eval` for the OCR
+WASM. Worth doing — it still enforces that roster data has nowhere to go, since the only
+permitted destinations are the origin itself and the analytics endpoint, and it keeps a
+future dependency from quietly adding a third one.
+
+Note what analytics costs here: a visitor can no longer confirm the privacy claim by
+observing zero outbound requests. They will see requests to Google and have to trust that
+those carry only a page view. That is a loss of *verifiability*, not of privacy, and it is
+the reason the analytics is cookieless and the URL is trimmed — so the claim stays small
+enough to be credible without proof.
 
 **Service worker staleness.** Version the assets and show a visible "update available"
 prompt, or returning users will sit on old builds.
@@ -243,7 +255,15 @@ semester operation with a progress bar. If it proves worse, Option D is the fall
 
 ## Privacy posture to state publicly
 
-- Nothing is uploaded; the site has no backend and no analytics.
+- Nothing is uploaded; the site has no backend, and no roster, portrait, name, or
+  study result leaves the browser.
+- The page records anonymous visit counts for internal use, via Google Analytics.
+  It sets no cookie (`client_storage: 'none'`), so there is no persistent or
+  cross-site identifier, and `page_location` is trimmed to origin plus pathname
+  because GA4 would otherwise send the hash route, which carries course ids.
+  Analytics is skipped on `localhost`, so a local install makes no third-party
+  requests. **Constraint this creates: never put a person's name, or anything
+  else identifying, in a URL.**
 - Storage is the visitor's browser; export is a manual file they control.
 - Sharing a roster between instructors is deliberately *not* a hosted feature — export a
   bundle and send it however they already send sensitive files.
@@ -257,7 +277,8 @@ Your repo is currently clean — only the two anonymized screenshots are tracked
 
 - A visitor can open the URL, load the demo course, and study without importing anything.
 - A visitor can import a supported roster, correct mistakes, and study — with devtools
-  showing zero outbound requests carrying their data.
+  showing no outbound request carrying roster data, and no request at all beyond the
+  single analytics page view.
 - Closing the browser and returning a week later preserves progress, on a persisted or
   installed instance.
 - Export produces a file that re-imports into a fresh browser profile with progress intact.
