@@ -5,3 +5,4 @@ __pycache__/
 app-data/
 data/*.pdf
 .pytest_cache/
+app-data/backups/
