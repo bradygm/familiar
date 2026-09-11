@@ -28,6 +28,16 @@ def course_readiness(cards: List[dict], at: datetime) -> float:
     return sum(recalls) / len(recalls)
 
 
+def selection_score(seen_count: int, recall: float, jitter: float = 0.0) -> float:
+    """Rank a card for adaptive selection. Higher means more worth showing.
+
+    Kept pure and jitter-injected so the ranking can be verified exactly; the
+    caller supplies the randomness that breaks ties between similar cards.
+    """
+    uncertainty = 1 / math.sqrt(seen_count + 1)
+    return (2.2 if seen_count == 0 else 0) + 3.0 * (1 - recall) + 0.55 * uncertainty + jitter
+
+
 def adaptive_cards(cards: List[dict], limit: int, now: Optional[datetime] = None) -> List[dict]:
     """Select a useful mix; cards are never excluded for being not due."""
     now = now or datetime.now(timezone.utc)
@@ -40,8 +50,7 @@ def adaptive_cards(cards: List[dict], limit: int, now: Optional[datetime] = None
     for card in cards:
         seen = card["seen_count"]
         recall = predicted_recall(card["mastery"], card["stability_days"], days_since(card["last_reviewed_at"], now))
-        uncertainty = 1 / math.sqrt(seen + 1)
-        score = (2.2 if seen == 0 else 0) + 3.0 * (1 - recall) + 0.55 * uncertainty + random.random() * 0.25
+        score = selection_score(seen, recall, random.random() * 0.25)
         scored.append((score, card))
 
     scored.sort(key=lambda item: item[0], reverse=True)

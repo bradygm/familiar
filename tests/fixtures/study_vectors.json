@@ -1,0 +1,4503 @@
+{
+  "schema": 1,
+  "now": "2026-03-01T12:00:00+00:00",
+  "source_commit": "fda9652108665030293a6e6f76d02c7ab6b32bc4",
+  "days_since": [
+    {
+      "timestamp": null,
+      "expected": 365.0
+    },
+    {
+      "timestamp": "2026-03-01T12:00:00+00:00",
+      "expected": 0.0
+    },
+    {
+      "timestamp": "2026-03-01T11:45:36+00:00",
+      "expected": 0.01
+    },
+    {
+      "timestamp": "2026-03-01T00:00:00+00:00",
+      "expected": 0.5
+    },
+    {
+      "timestamp": "2026-02-28T12:00:00+00:00",
+      "expected": 1.0
+    },
+    {
+      "timestamp": "2026-02-26T12:00:00+00:00",
+      "expected": 3.0
+    },
+    {
+      "timestamp": "2026-02-15T12:00:00+00:00",
+      "expected": 14.0
+    },
+    {
+      "timestamp": "2025-03-01T12:00:00+00:00",
+      "expected": 365.0
+    },
+    {
+      "timestamp": "2026-02-28T12:00:00Z",
+      "expected": 1.0
+    }
+  ],
+  "predicted_recall": [
+    {
+      "mastery": 0.05,
+      "stability_days": 0.02,
+      "days_since_review": 0.0,
+      "expected": 0.05
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.02,
+      "days_since_review": 0.01,
+      "expected": 0.030326532985631673
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.02,
+      "days_since_review": 0.5,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.02,
+      "days_since_review": 1.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.02,
+      "days_since_review": 3.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.02,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.02,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.04,
+      "days_since_review": 0.0,
+      "expected": 0.05
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.04,
+      "days_since_review": 0.01,
+      "expected": 0.03894003915357025
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.04,
+      "days_since_review": 0.5,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.04,
+      "days_since_review": 1.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.04,
+      "days_since_review": 3.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.04,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.04,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.25,
+      "days_since_review": 0.0,
+      "expected": 0.05
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.25,
+      "days_since_review": 0.01,
+      "expected": 0.04803947195761616
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.25,
+      "days_since_review": 0.5,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.25,
+      "days_since_review": 1.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.25,
+      "days_since_review": 3.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.25,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 0.25,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 1.0,
+      "days_since_review": 0.0,
+      "expected": 0.05
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 1.0,
+      "days_since_review": 0.01,
+      "expected": 0.049502491687458405
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 1.0,
+      "days_since_review": 0.5,
+      "expected": 0.030326532985631673
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 1.0,
+      "days_since_review": 1.0,
+      "expected": 0.018393972058572117
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 1.0,
+      "days_since_review": 3.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 1.0,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 1.0,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 7.0,
+      "days_since_review": 0.0,
+      "expected": 0.05
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 7.0,
+      "days_since_review": 0.01,
+      "expected": 0.049928622424692835
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 7.0,
+      "days_since_review": 0.5,
+      "expected": 0.04655313898520114
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 7.0,
+      "days_since_review": 1.0,
+      "expected": 0.04334389498750908
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 7.0,
+      "days_since_review": 3.0,
+      "expected": 0.03257195287655278
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 7.0,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 7.0,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 30.0,
+      "days_since_review": 0.0,
+      "expected": 0.05
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 30.0,
+      "days_since_review": 0.01,
+      "expected": 0.049983336110802495
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 30.0,
+      "days_since_review": 0.5,
+      "expected": 0.04917357269108088
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 30.0,
+      "days_since_review": 1.0,
+      "expected": 0.0483608050241003
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 30.0,
+      "days_since_review": 3.0,
+      "expected": 0.04524187090179798
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 30.0,
+      "days_since_review": 14.0,
+      "expected": 0.031354454263652805
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 30.0,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 120.0,
+      "days_since_review": 0.0,
+      "expected": 0.05
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 120.0,
+      "days_since_review": 0.01,
+      "expected": 0.049995833506939626
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 120.0,
+      "days_since_review": 0.5,
+      "expected": 0.0497921000922555
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 120.0,
+      "days_since_review": 1.0,
+      "expected": 0.0495850646319438
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 120.0,
+      "days_since_review": 3.0,
+      "expected": 0.04876549560141663
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 120.0,
+      "days_since_review": 14.0,
+      "expected": 0.04449408854940119
+    },
+    {
+      "mastery": 0.05,
+      "stability_days": 120.0,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.02,
+      "days_since_review": 0.0,
+      "expected": 0.25
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.02,
+      "days_since_review": 0.01,
+      "expected": 0.15163266492815836
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.02,
+      "days_since_review": 0.5,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.02,
+      "days_since_review": 1.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.02,
+      "days_since_review": 3.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.02,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.02,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.04,
+      "days_since_review": 0.0,
+      "expected": 0.25
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.04,
+      "days_since_review": 0.01,
+      "expected": 0.19470019576785122
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.04,
+      "days_since_review": 0.5,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.04,
+      "days_since_review": 1.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.04,
+      "days_since_review": 3.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.04,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.04,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.25,
+      "days_since_review": 0.0,
+      "expected": 0.25
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.25,
+      "days_since_review": 0.01,
+      "expected": 0.2401973597880808
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.25,
+      "days_since_review": 0.5,
+      "expected": 0.033833820809153176
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.25,
+      "days_since_review": 1.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.25,
+      "days_since_review": 3.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.25,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 0.25,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 1.0,
+      "days_since_review": 0.0,
+      "expected": 0.25
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 1.0,
+      "days_since_review": 0.01,
+      "expected": 0.24751245843729203
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 1.0,
+      "days_since_review": 0.5,
+      "expected": 0.15163266492815836
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 1.0,
+      "days_since_review": 1.0,
+      "expected": 0.09196986029286058
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 1.0,
+      "days_since_review": 3.0,
+      "expected": 0.012446767091965986
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 1.0,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 1.0,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 7.0,
+      "days_since_review": 0.0,
+      "expected": 0.25
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 7.0,
+      "days_since_review": 0.01,
+      "expected": 0.24964311212346416
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 7.0,
+      "days_since_review": 0.5,
+      "expected": 0.23276569492600568
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 7.0,
+      "days_since_review": 1.0,
+      "expected": 0.2167194749375454
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 7.0,
+      "days_since_review": 3.0,
+      "expected": 0.1628597643827639
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 7.0,
+      "days_since_review": 14.0,
+      "expected": 0.033833820809153176
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 7.0,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 30.0,
+      "days_since_review": 0.0,
+      "expected": 0.25
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 30.0,
+      "days_since_review": 0.01,
+      "expected": 0.24991668055401248
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 30.0,
+      "days_since_review": 0.5,
+      "expected": 0.24586786345540437
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 30.0,
+      "days_since_review": 1.0,
+      "expected": 0.24180402512050148
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 30.0,
+      "days_since_review": 3.0,
+      "expected": 0.22620935450898988
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 30.0,
+      "days_since_review": 14.0,
+      "expected": 0.15677227131826402
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 30.0,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 120.0,
+      "days_since_review": 0.0,
+      "expected": 0.25
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 120.0,
+      "days_since_review": 0.01,
+      "expected": 0.24997916753469812
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 120.0,
+      "days_since_review": 0.5,
+      "expected": 0.2489605004612775
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 120.0,
+      "days_since_review": 1.0,
+      "expected": 0.247925323159719
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 120.0,
+      "days_since_review": 3.0,
+      "expected": 0.24382747800708315
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 120.0,
+      "days_since_review": 14.0,
+      "expected": 0.22247044274700595
+    },
+    {
+      "mastery": 0.25,
+      "stability_days": 120.0,
+      "days_since_review": 365.0,
+      "expected": 0.011938807769706742
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.02,
+      "days_since_review": 0.0,
+      "expected": 0.5
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.02,
+      "days_since_review": 0.01,
+      "expected": 0.3032653298563167
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.02,
+      "days_since_review": 0.5,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.02,
+      "days_since_review": 1.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.02,
+      "days_since_review": 3.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.02,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.02,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.04,
+      "days_since_review": 0.0,
+      "expected": 0.5
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.04,
+      "days_since_review": 0.01,
+      "expected": 0.38940039153570244
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.04,
+      "days_since_review": 0.5,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.04,
+      "days_since_review": 1.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.04,
+      "days_since_review": 3.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.04,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.04,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.25,
+      "days_since_review": 0.0,
+      "expected": 0.5
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.25,
+      "days_since_review": 0.01,
+      "expected": 0.4803947195761616
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.25,
+      "days_since_review": 0.5,
+      "expected": 0.06766764161830635
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.25,
+      "days_since_review": 1.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.25,
+      "days_since_review": 3.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.25,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 0.25,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 1.0,
+      "days_since_review": 0.0,
+      "expected": 0.5
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 1.0,
+      "days_since_review": 0.01,
+      "expected": 0.49502491687458405
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 1.0,
+      "days_since_review": 0.5,
+      "expected": 0.3032653298563167
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 1.0,
+      "days_since_review": 1.0,
+      "expected": 0.18393972058572117
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 1.0,
+      "days_since_review": 3.0,
+      "expected": 0.024893534183931972
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 1.0,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 1.0,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 7.0,
+      "days_since_review": 0.0,
+      "expected": 0.5
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 7.0,
+      "days_since_review": 0.01,
+      "expected": 0.4992862242469283
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 7.0,
+      "days_since_review": 0.5,
+      "expected": 0.46553138985201137
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 7.0,
+      "days_since_review": 1.0,
+      "expected": 0.4334389498750908
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 7.0,
+      "days_since_review": 3.0,
+      "expected": 0.3257195287655278
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 7.0,
+      "days_since_review": 14.0,
+      "expected": 0.06766764161830635
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 7.0,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 30.0,
+      "days_since_review": 0.0,
+      "expected": 0.5
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 30.0,
+      "days_since_review": 0.01,
+      "expected": 0.49983336110802495
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 30.0,
+      "days_since_review": 0.5,
+      "expected": 0.49173572691080875
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 30.0,
+      "days_since_review": 1.0,
+      "expected": 0.48360805024100295
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 30.0,
+      "days_since_review": 3.0,
+      "expected": 0.45241870901797976
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 30.0,
+      "days_since_review": 14.0,
+      "expected": 0.31354454263652803
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 30.0,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 120.0,
+      "days_since_review": 0.0,
+      "expected": 0.5
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 120.0,
+      "days_since_review": 0.01,
+      "expected": 0.49995833506939624
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 120.0,
+      "days_since_review": 0.5,
+      "expected": 0.497921000922555
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 120.0,
+      "days_since_review": 1.0,
+      "expected": 0.495850646319438
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 120.0,
+      "days_since_review": 3.0,
+      "expected": 0.4876549560141663
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 120.0,
+      "days_since_review": 14.0,
+      "expected": 0.4449408854940119
+    },
+    {
+      "mastery": 0.5,
+      "stability_days": 120.0,
+      "days_since_review": 365.0,
+      "expected": 0.023877615539413484
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.02,
+      "days_since_review": 0.0,
+      "expected": 0.75
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.02,
+      "days_since_review": 0.01,
+      "expected": 0.45489799478447507
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.02,
+      "days_since_review": 0.5,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.02,
+      "days_since_review": 1.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.02,
+      "days_since_review": 3.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.02,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.02,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.04,
+      "days_since_review": 0.0,
+      "expected": 0.75
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.04,
+      "days_since_review": 0.01,
+      "expected": 0.5841005873035536
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.04,
+      "days_since_review": 0.5,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.04,
+      "days_since_review": 1.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.04,
+      "days_since_review": 3.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.04,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.04,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.25,
+      "days_since_review": 0.0,
+      "expected": 0.75
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.25,
+      "days_since_review": 0.01,
+      "expected": 0.7205920793642424
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.25,
+      "days_since_review": 0.5,
+      "expected": 0.10150146242745953
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.25,
+      "days_since_review": 1.0,
+      "expected": 0.013736729166550634
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.25,
+      "days_since_review": 3.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.25,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 0.25,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 1.0,
+      "days_since_review": 0.0,
+      "expected": 0.75
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 1.0,
+      "days_since_review": 0.01,
+      "expected": 0.742537375311876
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 1.0,
+      "days_since_review": 0.5,
+      "expected": 0.45489799478447507
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 1.0,
+      "days_since_review": 1.0,
+      "expected": 0.27590958087858175
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 1.0,
+      "days_since_review": 3.0,
+      "expected": 0.03734030127589796
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 1.0,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 1.0,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 7.0,
+      "days_since_review": 0.0,
+      "expected": 0.75
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 7.0,
+      "days_since_review": 0.01,
+      "expected": 0.7489293363703925
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 7.0,
+      "days_since_review": 0.5,
+      "expected": 0.698297084778017
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 7.0,
+      "days_since_review": 1.0,
+      "expected": 0.6501584248126362
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 7.0,
+      "days_since_review": 3.0,
+      "expected": 0.4885792931482917
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 7.0,
+      "days_since_review": 14.0,
+      "expected": 0.10150146242745953
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 7.0,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 30.0,
+      "days_since_review": 0.0,
+      "expected": 0.75
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 30.0,
+      "days_since_review": 0.01,
+      "expected": 0.7497500416620374
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 30.0,
+      "days_since_review": 0.5,
+      "expected": 0.7376035903662131
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 30.0,
+      "days_since_review": 1.0,
+      "expected": 0.7254120753615044
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 30.0,
+      "days_since_review": 3.0,
+      "expected": 0.6786280635269697
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 30.0,
+      "days_since_review": 14.0,
+      "expected": 0.4703168139547921
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 30.0,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 120.0,
+      "days_since_review": 0.0,
+      "expected": 0.75
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 120.0,
+      "days_since_review": 0.01,
+      "expected": 0.7499375026040944
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 120.0,
+      "days_since_review": 0.5,
+      "expected": 0.7468815013838325
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 120.0,
+      "days_since_review": 1.0,
+      "expected": 0.743775969479157
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 120.0,
+      "days_since_review": 3.0,
+      "expected": 0.7314824340212495
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 120.0,
+      "days_since_review": 14.0,
+      "expected": 0.6674113282410179
+    },
+    {
+      "mastery": 0.75,
+      "stability_days": 120.0,
+      "days_since_review": 365.0,
+      "expected": 0.03581642330912023
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.02,
+      "days_since_review": 0.0,
+      "expected": 0.9
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.02,
+      "days_since_review": 0.01,
+      "expected": 0.5458775937413701
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.02,
+      "days_since_review": 0.5,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.02,
+      "days_since_review": 1.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.02,
+      "days_since_review": 3.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.02,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.02,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.04,
+      "days_since_review": 0.0,
+      "expected": 0.9
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.04,
+      "days_since_review": 0.01,
+      "expected": 0.7009207047642644
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.04,
+      "days_since_review": 0.5,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.04,
+      "days_since_review": 1.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.04,
+      "days_since_review": 3.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.04,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.04,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.25,
+      "days_since_review": 0.0,
+      "expected": 0.9
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.25,
+      "days_since_review": 0.01,
+      "expected": 0.8647104952370909
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.25,
+      "days_since_review": 0.5,
+      "expected": 0.12180175491295143
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.25,
+      "days_since_review": 1.0,
+      "expected": 0.01648407499986076
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.25,
+      "days_since_review": 3.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.25,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 0.25,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 1.0,
+      "days_since_review": 0.0,
+      "expected": 0.9
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 1.0,
+      "days_since_review": 0.01,
+      "expected": 0.8910448503742513
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 1.0,
+      "days_since_review": 0.5,
+      "expected": 0.5458775937413701
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 1.0,
+      "days_since_review": 1.0,
+      "expected": 0.33109149705429813
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 1.0,
+      "days_since_review": 3.0,
+      "expected": 0.04480836153107755
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 1.0,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 1.0,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 7.0,
+      "days_since_review": 0.0,
+      "expected": 0.9
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 7.0,
+      "days_since_review": 0.01,
+      "expected": 0.898715203644471
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 7.0,
+      "days_since_review": 0.5,
+      "expected": 0.8379565017336205
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 7.0,
+      "days_since_review": 1.0,
+      "expected": 0.7801901097751635
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 7.0,
+      "days_since_review": 3.0,
+      "expected": 0.58629515177795
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 7.0,
+      "days_since_review": 14.0,
+      "expected": 0.12180175491295143
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 7.0,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 30.0,
+      "days_since_review": 0.0,
+      "expected": 0.9
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 30.0,
+      "days_since_review": 0.01,
+      "expected": 0.899700049994445
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 30.0,
+      "days_since_review": 0.5,
+      "expected": 0.8851243084394558
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 30.0,
+      "days_since_review": 1.0,
+      "expected": 0.8704944904338053
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 30.0,
+      "days_since_review": 3.0,
+      "expected": 0.8143536762323635
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 30.0,
+      "days_since_review": 14.0,
+      "expected": 0.5643801767457505
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 30.0,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 120.0,
+      "days_since_review": 0.0,
+      "expected": 0.9
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 120.0,
+      "days_since_review": 0.01,
+      "expected": 0.8999250031249133
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 120.0,
+      "days_since_review": 0.5,
+      "expected": 0.896257801660599
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 120.0,
+      "days_since_review": 1.0,
+      "expected": 0.8925311633749884
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 120.0,
+      "days_since_review": 3.0,
+      "expected": 0.8777789208254994
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 120.0,
+      "days_since_review": 14.0,
+      "expected": 0.8008935938892214
+    },
+    {
+      "mastery": 0.9,
+      "stability_days": 120.0,
+      "days_since_review": 365.0,
+      "expected": 0.042979707970944275
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.02,
+      "days_since_review": 0.0,
+      "expected": 0.98
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.02,
+      "days_since_review": 0.01,
+      "expected": 0.5944000465183807
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.02,
+      "days_since_review": 0.5,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.02,
+      "days_since_review": 1.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.02,
+      "days_since_review": 3.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.02,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.02,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.04,
+      "days_since_review": 0.0,
+      "expected": 0.98
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.04,
+      "days_since_review": 0.01,
+      "expected": 0.7632247674099768
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.04,
+      "days_since_review": 0.5,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.04,
+      "days_since_review": 1.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.04,
+      "days_since_review": 3.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.04,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.04,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.25,
+      "days_since_review": 0.0,
+      "expected": 0.98
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.25,
+      "days_since_review": 0.01,
+      "expected": 0.9415736503692766
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.25,
+      "days_since_review": 0.5,
+      "expected": 0.13262857757188046
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.25,
+      "days_since_review": 1.0,
+      "expected": 0.017949326110959493
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.25,
+      "days_since_review": 3.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.25,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 0.25,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 1.0,
+      "days_since_review": 0.0,
+      "expected": 0.98
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 1.0,
+      "days_since_review": 0.01,
+      "expected": 0.9702488370741847
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 1.0,
+      "days_since_review": 0.5,
+      "expected": 0.5944000465183807
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 1.0,
+      "days_since_review": 1.0,
+      "expected": 0.3605218523480135
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 1.0,
+      "days_since_review": 3.0,
+      "expected": 0.04879132700050667
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 1.0,
+      "days_since_review": 14.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 1.0,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 7.0,
+      "days_since_review": 0.0,
+      "expected": 0.98
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 7.0,
+      "days_since_review": 0.01,
+      "expected": 0.9786009995239795
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 7.0,
+      "days_since_review": 0.5,
+      "expected": 0.9124415241099423
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 7.0,
+      "days_since_review": 1.0,
+      "expected": 0.8495403417551779
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 7.0,
+      "days_since_review": 3.0,
+      "expected": 0.6384102763804345
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 7.0,
+      "days_since_review": 14.0,
+      "expected": 0.13262857757188046
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 7.0,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 30.0,
+      "days_since_review": 0.0,
+      "expected": 0.98
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 30.0,
+      "days_since_review": 0.01,
+      "expected": 0.9796733877717289
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 30.0,
+      "days_since_review": 0.5,
+      "expected": 0.9638020247451852
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 30.0,
+      "days_since_review": 1.0,
+      "expected": 0.9478717784723658
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 30.0,
+      "days_since_review": 3.0,
+      "expected": 0.8867406696752403
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 30.0,
+      "days_since_review": 14.0,
+      "expected": 0.6145473035675949
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 30.0,
+      "days_since_review": 365.0,
+      "expected": 0.01
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 120.0,
+      "days_since_review": 0.0,
+      "expected": 0.98
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 120.0,
+      "days_since_review": 0.01,
+      "expected": 0.9799183367360166
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 120.0,
+      "days_since_review": 0.5,
+      "expected": 0.9759251618082078
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 120.0,
+      "days_since_review": 1.0,
+      "expected": 0.9718672667860985
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 120.0,
+      "days_since_review": 3.0,
+      "expected": 0.955803713787766
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 120.0,
+      "days_since_review": 14.0,
+      "expected": 0.8720841355682633
+    },
+    {
+      "mastery": 0.98,
+      "stability_days": 120.0,
+      "days_since_review": 365.0,
+      "expected": 0.04680012645725043
+    }
+  ],
+  "selection_score": [
+    {
+      "seen_count": 0,
+      "recall": 0.01,
+      "expected": 5.72
+    },
+    {
+      "seen_count": 0,
+      "recall": 0.2,
+      "expected": 5.15
+    },
+    {
+      "seen_count": 0,
+      "recall": 0.5,
+      "expected": 4.25
+    },
+    {
+      "seen_count": 0,
+      "recall": 0.8,
+      "expected": 3.3499999999999996
+    },
+    {
+      "seen_count": 0,
+      "recall": 0.99,
+      "expected": 2.7800000000000002
+    },
+    {
+      "seen_count": 1,
+      "recall": 0.01,
+      "expected": 3.358908729652601
+    },
+    {
+      "seen_count": 1,
+      "recall": 0.2,
+      "expected": 2.7889087296526016
+    },
+    {
+      "seen_count": 1,
+      "recall": 0.5,
+      "expected": 1.8889087296526013
+    },
+    {
+      "seen_count": 1,
+      "recall": 0.8,
+      "expected": 0.988908729652601
+    },
+    {
+      "seen_count": 1,
+      "recall": 0.99,
+      "expected": 0.4189087296526012
+    },
+    {
+      "seen_count": 2,
+      "recall": 0.01,
+      "expected": 3.287542648054294
+    },
+    {
+      "seen_count": 2,
+      "recall": 0.2,
+      "expected": 2.7175426480542946
+    },
+    {
+      "seen_count": 2,
+      "recall": 0.5,
+      "expected": 1.8175426480542942
+    },
+    {
+      "seen_count": 2,
+      "recall": 0.8,
+      "expected": 0.9175426480542941
+    },
+    {
+      "seen_count": 2,
+      "recall": 0.99,
+      "expected": 0.34754264805429425
+    },
+    {
+      "seen_count": 5,
+      "recall": 0.01,
+      "expected": 3.1945365597551243
+    },
+    {
+      "seen_count": 5,
+      "recall": 0.2,
+      "expected": 2.624536559755125
+    },
+    {
+      "seen_count": 5,
+      "recall": 0.5,
+      "expected": 1.7245365597551248
+    },
+    {
+      "seen_count": 5,
+      "recall": 0.8,
+      "expected": 0.8245365597551246
+    },
+    {
+      "seen_count": 5,
+      "recall": 0.99,
+      "expected": 0.25453655975512474
+    },
+    {
+      "seen_count": 20,
+      "recall": 0.01,
+      "expected": 3.0900198396297958
+    },
+    {
+      "seen_count": 20,
+      "recall": 0.2,
+      "expected": 2.5200198396297964
+    },
+    {
+      "seen_count": 20,
+      "recall": 0.5,
+      "expected": 1.6200198396297958
+    },
+    {
+      "seen_count": 20,
+      "recall": 0.8,
+      "expected": 0.7200198396297957
+    },
+    {
+      "seen_count": 20,
+      "recall": 0.99,
+      "expected": 0.15001983962979587
+    }
+  ],
+  "update_memory_state": [
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.02,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.42828999999999995,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.02,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.42145,
+        "stability_days": 0.0723
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.42828999999999995,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.42828999999999995,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.25,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.42828999999999995,
+        "stability_days": 0.56575
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.25,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.42145,
+        "stability_days": 0.55875
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.42828999999999995,
+        "stability_days": 0.56575
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.42828999999999995,
+        "stability_days": 0.56575
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 1.0,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.42828999999999995,
+        "stability_days": 2.1729999999999996
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 1.0,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.42145,
+        "stability_days": 2.1449999999999996
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.42685463077798413,
+        "stability_days": 2.1671242195589993
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.42828999999999995,
+        "stability_days": 2.1729999999999996
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 30.0,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.42828999999999995,
+        "stability_days": 64.32
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 30.0,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.42145,
+        "stability_days": 63.48
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.4217303023408788,
+        "stability_days": 63.514423094493885
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.4246383883209154,
+        "stability_days": 63.871556460463296
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.05,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.05,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.02,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.54865,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.02,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.51625,
+        "stability_days": 0.0695
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.54865,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.54865,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.25,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.54865,
+        "stability_days": 0.56575
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.25,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.51625,
+        "stability_days": 0.5237499999999999
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.54865,
+        "stability_days": 0.56575
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.54865,
+        "stability_days": 0.56575
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 1.0,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.54865,
+        "stability_days": 2.1729999999999996
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 1.0,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.51625,
+        "stability_days": 2.005
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.5375840688604638,
+        "stability_days": 2.1156210977949974
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.54865,
+        "stability_days": 2.1729999999999996
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 30.0,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.54865,
+        "stability_days": 64.32
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 30.0,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.51625,
+        "stability_days": 59.279999999999994
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.5173564566087323,
+        "stability_days": 59.452115472469465
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.5288357433720343,
+        "stability_days": 61.237782302316454
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.25,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.1375,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.02,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.6991,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.02,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.655,
+        "stability_days": 0.066
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.6991,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.6991,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.25,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.6991,
+        "stability_days": 0.56575
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.25,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.655,
+        "stability_days": 0.48
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.6991,
+        "stability_days": 0.56575
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.6991,
+        "stability_days": 0.56575
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 1.0,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.6991,
+        "stability_days": 2.1729999999999996
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 1.0,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.655,
+        "stability_days": 1.8299999999999998
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.6834454251472851,
+        "stability_days": 2.0512421955899947
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.6991,
+        "stability_days": 2.1729999999999996
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 30.0,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.6991,
+        "stability_days": 64.32
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 30.0,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.655,
+        "stability_days": 54.029999999999994
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.6564752754783097,
+        "stability_days": 54.37423094493894
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.6717809911627125,
+        "stability_days": 57.945564604632914
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.5,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.275,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.02,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.84955,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.02,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.81625,
+        "stability_days": 0.0625
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.84955,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.84955,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.25,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.84955,
+        "stability_days": 0.56575
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.25,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.81625,
+        "stability_days": 0.43625
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.8493818471875052,
+        "stability_days": 0.5650960723958536
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.84955,
+        "stability_days": 0.56575
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 1.0,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.84955,
+        "stability_days": 2.1729999999999996
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 1.0,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.81625,
+        "stability_days": 1.655
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.8375840688604639,
+        "stability_days": 1.9868632933849926
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.84955,
+        "stability_days": 2.1729999999999996
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 30.0,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.84955,
+        "stability_days": 64.32
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 30.0,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.81625,
+        "stability_days": 48.78
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.8173564566087324,
+        "stability_days": 49.29634641740841
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.8288357433720344,
+        "stability_days": 54.653346906949366
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.75,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.41250000000000003,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.02,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.93982,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.02,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.9238000000000001,
+        "stability_days": 0.060399999999999995
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.93982,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.93982,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.25,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.93982,
+        "stability_days": 0.56575
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.25,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.9238000000000001,
+        "stability_days": 0.41000000000000003
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.9397032866500026,
+        "stability_days": 0.5646152868750244
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.93982,
+        "stability_days": 0.56575
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 1.0,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.93982,
+        "stability_days": 2.1729999999999996
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 1.0,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.9238000000000001,
+        "stability_days": 1.55
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.9340403530530227,
+        "stability_days": 1.9482359520619912
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.93982,
+        "stability_days": 2.1729999999999996
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 30.0,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.93982,
+        "stability_days": 64.32
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 30.0,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.9238000000000001,
+        "stability_days": 45.63
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.9243310991721915,
+        "stability_days": 46.24961570089008
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.9298411568185765,
+        "stability_days": 52.678016288339236
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.9,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.49500000000000005,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.02,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.02,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 0.05928
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 0.07286
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.02,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 0.02
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.25,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 0.56575
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.25,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 0.396
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 0.5643588679305821
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 0.56575
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 0.25,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 0.105
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 1.0,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 2.1729999999999996
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 1.0,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 1.494
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 1.9276347033563905
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 2.1729999999999996
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 1.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 0.42
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 30.0,
+        "last_reviewed_at": null
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 64.32
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 30.0,
+        "last_reviewed_at": null
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 43.95
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 44.62469265208032
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 12.6
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "right",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.98,
+        "stability_days": 51.62450662508051
+      }
+    },
+    {
+      "progress": {
+        "mastery": 0.98,
+        "stability_days": 30.0,
+        "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+      },
+      "result": "wrong",
+      "reviewed_at": "2026-03-01T12:00:00+00:00",
+      "expected": {
+        "mastery": 0.539,
+        "stability_days": 12.6
+      }
+    }
+  ],
+  "course_readiness": [
+    {
+      "cards": [],
+      "expected": 0.0
+    },
+    {
+      "cards": [
+        {
+          "seen_count": 0,
+          "mastery": 0.5,
+          "stability_days": 0.25,
+          "last_reviewed_at": null
+        }
+      ],
+      "expected": 0.0
+    },
+    {
+      "cards": [
+        {
+          "seen_count": 3,
+          "mastery": 0.9,
+          "stability_days": 7.0,
+          "last_reviewed_at": "2026-02-28T12:00:00+00:00"
+        },
+        {
+          "seen_count": 0,
+          "mastery": 0.5,
+          "stability_days": 0.25,
+          "last_reviewed_at": null
+        },
+        {
+          "seen_count": 1,
+          "mastery": 0.3,
+          "stability_days": 0.25,
+          "last_reviewed_at": "2026-02-15T12:00:00+00:00"
+        }
+      ],
+      "expected": 0.2633967032583878
+    },
+    {
+      "cards": [
+        {
+          "seen_count": 10,
+          "mastery": 0.98,
+          "stability_days": 120.0,
+          "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+        },
+        {
+          "seen_count": 10,
+          "mastery": 0.98,
+          "stability_days": 120.0,
+          "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+        },
+        {
+          "seen_count": 10,
+          "mastery": 0.98,
+          "stability_days": 120.0,
+          "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+        },
+        {
+          "seen_count": 10,
+          "mastery": 0.98,
+          "stability_days": 120.0,
+          "last_reviewed_at": "2026-03-01T12:00:00+00:00"
+        }
+      ],
+      "expected": 0.98
+    }
+  ]
+}
