@@ -7,10 +7,12 @@ Familiar was built to bring science-backed retrieval practice and expanding reca
 > **Privacy note:** roster PDFs and study history are local. Familiar does not use browser storage or a remote database; cards, sessions, and progress live in the local SQLite database at `app-data/flashcards.sqlite3`. `data/` and `app-data/` are ignored by Git. Do not commit or publish real roster PDFs, portraits, or the local database.
 >
 > The hosted version at its public URL loads Google Analytics. The page only records
-> anonymous visit counts for internal use — no cookie is set, no cross-site identifier
-> exists, and the URL is trimmed so course identifiers are not sent. No roster, portrait,
-> name, or study result ever leaves the browser. Analytics is skipped entirely on
-> `localhost`, so a local install like this one makes no third-party requests at all.
+> visit counts for internal use, so I can tell whether anyone is using it. It sets a
+> first-party cookie to distinguish a repeat visit from a new one. Advertising and
+> personalisation signals are disabled, and the URL is trimmed so course identifiers are
+> never sent. No roster, portrait, name, or study result ever leaves the browser.
+> Analytics is skipped entirely on `localhost`, so a local install like this one makes no
+> third-party requests at all.
 
 ## Screenshot
 

@@ -14,13 +14,16 @@
       //     third-party request at all, and my own study sessions are not most of
       //     the traffic.
       //
-      //   - Consent Mode with analytics_storage denied, which makes GA4 send
-      //     cookieless pings: no cookie, so no persistent or cross-site
-      //     identifier. Verified — `client_storage: 'none'` does NOT achieve this
-      //     in GA4; it still writes _ga. The cost is that returning visitors are
-      //     indistinguishable from new ones and low-traffic sites may see little
-      //     in the standard reports. Granting analytics_storage restores reliable
-      //     counts, but then the privacy note must stop saying "no cookie".
+      //   - Consent Mode grants analytics_storage but denies every advertising
+      //     signal, so GA4 sets its first-party _ga cookie (needed to tell a
+      //     repeat visit from a new one, and to report anything at all at low
+      //     traffic) while no advertising or personalisation data is collected.
+      //     This is a deliberate step back from the cookieless configuration:
+      //     denying analytics_storage makes GA4 fall back to modelled pings,
+      //     which report essentially nothing below Google's traffic thresholds.
+      //     Note `client_storage: 'none'` does NOT prevent the cookie in GA4 —
+      //     verified, it still writes _ga — so denying consent is the only real
+      //     way back to cookieless if that is ever wanted.
       //
       //   - page_location trimmed to origin + pathname. GA4 otherwise sends
       //     document.location.href, and the hash routes carry course ids. Never
@@ -37,7 +40,7 @@
           ad_storage: 'denied',
           ad_user_data: 'denied',
           ad_personalization: 'denied',
-          analytics_storage: 'denied',
+          analytics_storage: 'granted',
         });
         gtag('js', new Date());
         gtag('config', id, { page_location: location.origin + location.pathname });

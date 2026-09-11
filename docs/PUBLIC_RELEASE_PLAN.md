@@ -257,13 +257,18 @@ semester operation with a progress bar. If it proves worse, Option D is the fall
 
 - Nothing is uploaded; the site has no backend, and no roster, portrait, name, or
   study result leaves the browser.
-- The page records anonymous visit counts for internal use, via Google Analytics.
-  It sets no cookie (`client_storage: 'none'`), so there is no persistent or
-  cross-site identifier, and `page_location` is trimmed to origin plus pathname
-  because GA4 would otherwise send the hash route, which carries course ids.
-  Analytics is skipped on `localhost`, so a local install makes no third-party
-  requests. **Constraint this creates: never put a person's name, or anything
-  else identifying, in a URL.**
+- The page records visit counts for internal use, via Google Analytics, with a
+  first-party `_ga` cookie so repeat visits are distinguishable from new ones.
+  Advertising signals are denied through Consent Mode. `page_location` is
+  trimmed to origin plus pathname, because GA4 would otherwise send the hash
+  route, which carries course ids. Analytics is skipped on `localhost`, so a
+  local install makes no third-party requests. **Constraint this creates: never
+  put a person's name, or anything else identifying, in a URL.**
+- Setting an analytics cookie is the thing that would require a consent banner
+  for EU visitors. Not a concern for a BYU-facing tool today, worth revisiting
+  before promoting it more widely. A cookieless configuration exists
+  (`analytics_storage: 'denied'`) and was measured to report nothing useful at
+  low traffic, which is why it was not kept.
 - Storage is the visitor's browser; export is a manual file they control.
 - Sharing a roster between instructors is deliberately *not* a hosted feature — export a
   bundle and send it however they already send sensitive files.
