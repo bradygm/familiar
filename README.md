@@ -5,6 +5,14 @@
 Familiar was built to bring science-backed retrieval practice and expanding recall to the part of a semester that conventional flashcard apps do not handle especially well: quickly learning the names and faces of everyone in a room, then coming back for a low-friction refresher later. There are no forced due dates. You choose a course, start a useful session, and the app decides what deserves attention.
 
 > **Privacy note:** roster PDFs and study history are local. Familiar does not use browser storage or a remote database; cards, sessions, and progress live in the local SQLite database at `app-data/flashcards.sqlite3`. `data/` and `app-data/` are ignored by Git. Do not commit or publish real roster PDFs, portraits, or the local database.
+>
+> The hosted version at its public URL loads Google Analytics. The page only records
+> visit counts for internal use, so I can tell whether anyone is using it. It sets a
+> first-party cookie to distinguish a repeat visit from a new one. Advertising and
+> personalisation signals are disabled, and the URL is trimmed so course identifiers are
+> never sent. No roster, portrait, name, or study result ever leaves the browser.
+> Analytics is skipped entirely on `localhost`, so a local install like this one makes no
+> third-party requests at all.
 
 ## Screenshot
 
@@ -34,14 +42,36 @@ history. Use **Local backup → Export everything** on the home page to download
 zip of every course, portrait, and review event. See
 [docs/BACKUP_AND_RESTORE.md](docs/BACKUP_AND_RESTORE.md) for the restore procedure.
 
+## Project layout
+
+```text
+core/       the learning model in TypeScript: recall, mastery, selection. No DOM, no IO.
+backend/    FastAPI, SQLite, the PDF importer
+frontend/   the browser UI, which imports the compiled core
+tests/      Python tests, including the golden vectors both implementations share
+tools/      backup restore CLI
+```
+
+`core/` is shared by every build of Familiar. It is compiled to
+`frontend/vendor/core/`, which is generated rather than committed — `docker compose up
+--build` does it for you. To run natively you need to build it once yourself:
+
+```bash
+cd core && npm install && npm run build
+```
+
 ## Running the tests
 
 The learning model has golden vectors pinning its exact behaviour, so a changed
-coefficient cannot slip through unnoticed:
+coefficient cannot slip through unnoticed. The same fixture is asserted from both
+languages, which is what keeps the TypeScript core and the Python backend
+interchangeable:
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r backend/requirements-dev.txt
 .venv/bin/pytest
+
+cd core && npm test
 ```
 
 `tests/test_real_database_round_trip.py` additionally verifies that your own database

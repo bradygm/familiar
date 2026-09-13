@@ -5,6 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Familiar</title>
     <link rel="stylesheet" href="/static/styles.css" />
+    <script>
+      // Anonymous visit counts, hosted site only.
+      //
+      // Three deliberate constraints, so this stays a visit count and nothing more:
+      //
+      //   - Skipped on localhost and *.localhost, so a local install makes no
+      //     third-party request at all, and my own study sessions are not most of
+      //     the traffic.
+      //
+      //   - Consent Mode grants analytics_storage but denies every advertising
+      //     signal, so GA4 sets its first-party _ga cookie (needed to tell a
+      //     repeat visit from a new one, and to report anything at all at low
+      //     traffic) while no advertising or personalisation data is collected.
+      //     This is a deliberate step back from the cookieless configuration:
+      //     denying analytics_storage makes GA4 fall back to modelled pings,
+      //     which report essentially nothing below Google's traffic thresholds.
+      //     Note `client_storage: 'none'` does NOT prevent the cookie in GA4 —
+      //     verified, it still writes _ga — so denying consent is the only real
+      //     way back to cookieless if that is ever wanted.
+      //
+      //   - page_location trimmed to origin + pathname. GA4 otherwise sends
+      //     document.location.href, and the hash routes carry course ids.
+      //     Measured: one page_view per load, none on hash navigation, and the
+      //     bare origin is reported even when landing directly on a deep link.
+      //     The remaining exposure is document.title, which GA sends as `dt` —
+      //     keep it static, and keep names out of routes.
+      (function () {
+        var host = location.hostname;
+        var local = ['localhost', '127.0.0.1', '[::1]', ''];
+        var isLocal = local.indexOf(host) !== -1 || /\.localhost$/.test(host);
+        if (isLocal || location.protocol === 'file:') return;
+        var id = 'G-ZKRH21WV3V';
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { dataLayer.push(arguments); };
+        gtag('consent', 'default', {
+          ad_storage: 'denied',
+          ad_user_data: 'denied',
+          ad_personalization: 'denied',
+          analytics_storage: 'granted',
+        });
+        gtag('js', new Date());
+        gtag('config', id, { page_location: location.origin + location.pathname });
+        var tag = document.createElement('script');
+        tag.async = true;
+        tag.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+        document.head.appendChild(tag);
+      })();
+    </script>
   </head>
   <body>
     <header class="topbar"><a class="brand" href="#/">familiar<span>.</span></a><p>Science-backed practice for learning every name.</p></header>

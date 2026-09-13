@@ -6,3 +6,5 @@ app-data/
 data/*.pdf
 .pytest_cache/
 app-data/backups/
+frontend/vendor/
+core/node_modules/

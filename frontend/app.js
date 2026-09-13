@@ -1,3 +1,5 @@
+import { cardPredictedRecall, learningStatus as recallStatus } from './vendor/core/index.js';
+
 const app = document.querySelector('#app');
 let currentCourse = null;
 let study = null;
@@ -15,12 +17,12 @@ const portraitUrl = (card) => `/assets/${encodeURI(card.image_path)}`;
 const portrait = (card) => card.image_path ? `<img class="avatar portrait" src="${portraitUrl(card)}" alt="Portrait of ${esc(card.first_name)} ${esc(card.last_name)}">` : `<div class="avatar">${initials(card)}</div>`;
 const studiedLabel = (timestamp) => timestamp ? `Last studied ${new Intl.DateTimeFormat(undefined, {month:'short', day:'numeric', year:'numeric'}).format(new Date(timestamp))}` : 'Ready to learn';
 const shortDate = (timestamp) => timestamp ? new Intl.DateTimeFormat(undefined, {month:'short', day:'numeric'}).format(new Date(timestamp)) : 'Not yet';
-const learningStatus = (card) => !card.seen_count ? 'New' : card.mastery >= .75 ? 'Familiar' : 'Learning';
-const predictedRecall = (card) => {
-  const daysSinceReview = card.last_reviewed_at ? Math.max(0, (Date.now() - new Date(card.last_reviewed_at).getTime()) / 86_400_000) : 365;
-  const estimate = Number(card.mastery) * Math.exp(-daysSinceReview / Math.max(Number(card.stability_days), .02));
-  return Math.max(.01, Math.min(.99, estimate));
-};
+// The learning model lives in core/ and is shared by every build, so these are
+// thin label wrappers rather than a second implementation. The previous local
+// copy of the recall formula also truncated stored timestamps to milliseconds.
+const STATUS_LABELS = {new: 'New', learning: 'Learning', familiar: 'Familiar'};
+const learningStatus = (card) => STATUS_LABELS[recallStatus(card)];
+const predictedRecall = (card) => cardPredictedRecall(card, Date.now());
 
 function recallMeter(card) {
   if (!card.seen_count) return `<div class="recall-meter is-new"><div><span>Predicted recall</span><strong>New</strong></div><div class="recall-track"><i></i></div></div>`;

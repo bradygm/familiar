@@ -62,8 +62,20 @@ def card_row(row) -> dict:
     return item
 
 
+CORE_BUNDLE = FRONTEND / "vendor" / "core" / "index.js"
+
+
 @app.on_event("startup")
 def startup() -> None:
+    # The learning model is TypeScript compiled into frontend/vendor/, which is
+    # generated rather than committed. Without it the page loads and then dies
+    # on a missing module, so say so here instead.
+    if not CORE_BUNDLE.is_file():
+        raise RuntimeError(
+            f"The shared learning core is not built ({CORE_BUNDLE} is missing).\n"
+            "Docker builds it automatically: docker compose up --build\n"
+            "Running natively: cd core && npm install && npm run build"
+        )
     initialize_database()
 
 
