@@ -1,4 +1,11 @@
-import { cardPredictedRecall, learningStatus as recallStatus } from './vendor/core/index.js';
+import {
+  adaptiveCards,
+  cardPredictedRecall,
+  courseReadiness,
+  learningStatus as recallStatus,
+  summariseCourse,
+  updateMemoryState,
+} from './vendor/core/index.js';
 
 const app = document.querySelector('#app');
 let currentCourse = null;
@@ -48,7 +55,7 @@ async function home() {
   setView(`
     <section class="hero"><div class="eyebrow">For BYU instructors</div><h1>Know every student<br>before the first day.</h1><p>Import a BYU Flashcards roster, confirm the people it finds, and build familiarity in short, adaptive sessions.</p></section>
     <section class="section-head"><div><div class="eyebrow">Courses</div><h1>Your courses</h1></div><p>${courses.length ? `${courses.length} imported` : 'Nothing imported yet'}</p></section>
-    ${courses.length ? `<div class="course-grid">${courses.map(course => `<a class="course" href="${courseLink(course)}"><div class="course-top"><span class="course-kicker">Course roster</span><span class="course-state">${studiedLabel(course.last_studied_at)}</span></div><h2>${esc(course.title)}</h2><dl class="course-metrics"><div><dt>People</dt><dd>${course.card_count}</dd></div><div><dt>Familiar</dt><dd>${course.familiar_percent}%</dd></div><div><dt>Sessions</dt><dd>${course.session_count}</dd></div></dl><p class="course-cta">${course.last_studied_at ? 'Continue studying' : 'Start learning'} <span aria-hidden="true">→</span></p></a>`).join('')}</div>` : `<div class="empty"><h2>Your first course starts with a PDF.</h2><p>Source files remain on this machine. Imported information is saved in the local app database.</p></div>`}
+    ${courses.length ? `<div class="course-grid">${courses.map(course => { const summary = summariseCourse(course.progress || [], Date.now()); return `<a class="course" href="${courseLink(course)}"><div class="course-top"><span class="course-kicker">Course roster</span><span class="course-state">${studiedLabel(course.last_studied_at)}</span></div><h2>${esc(course.title)}</h2><dl class="course-metrics"><div><dt>People</dt><dd>${course.card_count}</dd></div><div><dt>Familiar</dt><dd>${summary.familiarPercent}%</dd></div><div><dt>Sessions</dt><dd>${course.session_count}</dd></div></dl><p class="course-cta">${course.last_studied_at ? 'Continue studying' : 'Start learning'} <span aria-hidden="true">→</span></p></a>`; }).join('')}</div>` : `<div class="empty"><h2>Your first course starts with a PDF.</h2><p>Source files remain on this machine. Imported information is saved in the local app database.</p></div>`}
     <section class="importer" style="margin-top:28px"><div class="eyebrow">Local import</div><h2>Import from <code>data/</code></h2><p class="fine">The importer extracts only high-confidence name lines first. You approve its candidates before they are included in study sessions.</p><div class="import-list">${pdfs.length ? pdfs.map(pdf => `<button class="chip" data-import="${esc(pdf.filename)}">Import ${esc(pdf.filename)}</button>`).join('') : '<span class="fine">No PDFs found in the mounted data directory.</span>'}</div><div id="import-message"></div></section>
     <section class="importer" style="margin-top:28px"><div class="eyebrow">Local backup</div><h2>Download a portable backup</h2><p class="fine">A single zip holding every course, portrait, and review event. It is the restore path if this database is ever lost, and the only supported way to move your history somewhere else. <code>app-data/</code> is not covered by Git.</p><div class="import-list"><a class="chip" href="/api/export" download>Export everything</a><a class="chip" href="/api/export?include_progress=false" download>Export rosters only (no progress)</a></div></section>`);
   document.querySelectorAll('[data-import]').forEach(button => button.addEventListener('click', async () => {
@@ -58,7 +65,7 @@ async function home() {
 }
 
 function learningPulse(stats) {
-  const distribution = stats.distribution || {new: 0, learning: 0, familiar: 0};
+  const distribution = summariseCourse(stats.progress || [], Date.now()).distribution;
   const total = distribution.new + distribution.learning + distribution.familiar || 1;
   const segment = (name) => Math.round(distribution[name] / total * 100);
   const trend = stats.readiness_trend?.length ? readinessTrend(stats.readiness_trend) : '<p class="fine">Complete a session to begin your readiness trend.</p>';
@@ -83,7 +90,8 @@ function readinessTrend(sessions) {
 async function courseView(courseId) {
   const [course, cards, candidates, stats] = await Promise.all([api(`/courses/${courseId}`), api(`/courses/${courseId}/cards?sort=first`), api(`/courses/${courseId}/candidates`), api(`/courses/${courseId}/stats`)]);
   currentCourse = course;
-  setView(`<a class="back" href="#/">← All courses</a><section class="section-head" style="margin-top:25px"><div><div class="eyebrow">${esc(course.source_filename)}</div><h1>${esc(course.title)}</h1><p>${cards.length} approved cards · ${candidates.length} waiting for review</p></div><div class="actions"><a class="button secondary" id="export-course" href="/api/courses/${encodeURIComponent(course.id)}/export" download>Export course</a><button class="button secondary" id="review-candidates">Review imports</button><button class="button secondary" id="add-card">Add person</button><button class="button" id="start-study">Start session</button></div></section><section class="stats" aria-label="Course statistics"><article class="stat panel"><strong>${stats.familiar_percent}%</strong><span>familiar</span></article><article class="stat panel"><strong>${stats.readiness}%</strong><span>avg. predicted recall</span></article><article class="stat panel"><strong>${stats.session_count}</strong><span>sessions</span></article><article class="stat panel"><strong>${stats.wrong_count} / ${stats.reviews}</strong><span>misses / answers</span></article></section>${learningPulse(stats)}<div class="toolbar"><input class="search" id="search" placeholder="Search people" aria-label="Search people"><select class="select" id="sort" aria-label="Sort roster"><option value="first">First name</option><option value="last">Last name</option><option value="confidence">Predicted recall (low first)</option></select></div><div id="roster"></div>`);
+  const summary = summariseCourse(stats.progress || [], Date.now());
+  setView(`<a class="back" href="#/">← All courses</a><section class="section-head" style="margin-top:25px"><div><div class="eyebrow">${esc(course.source_filename)}</div><h1>${esc(course.title)}</h1><p>${cards.length} approved cards · ${candidates.length} waiting for review</p></div><div class="actions"><a class="button secondary" id="export-course" href="/api/courses/${encodeURIComponent(course.id)}/export" download>Export course</a><button class="button secondary" id="review-candidates">Review imports</button><button class="button secondary" id="add-card">Add person</button><button class="button" id="start-study">Start session</button></div></section><section class="stats" aria-label="Course statistics"><article class="stat panel"><strong>${summary.familiarPercent}%</strong><span>familiar</span></article><article class="stat panel"><strong>${summary.readiness}%</strong><span>avg. predicted recall</span></article><article class="stat panel"><strong>${stats.session_count}</strong><span>sessions</span></article><article class="stat panel"><strong>${stats.wrong_count} / ${stats.reviews}</strong><span>misses / answers</span></article></section>${learningPulse(stats)}<div class="toolbar"><input class="search" id="search" placeholder="Search people" aria-label="Search people"><select class="select" id="sort" aria-label="Sort roster"><option value="first">First name</option><option value="last">Last name</option><option value="confidence">Predicted recall (low first)</option></select></div><div id="roster"></div>`);
   const roster = document.querySelector('#roster');
   const flippedCards = new Set();
   const histories = new Map();
@@ -116,8 +124,16 @@ async function courseView(courseId) {
   }
   renderRoster(cards);
   document.querySelector('#search').addEventListener('input', event => { const query = event.target.value.toLowerCase(); renderRoster(cards.filter(card => `${card.first_name} ${card.last_name}`.toLowerCase().includes(query))); });
-  document.querySelector('#sort').addEventListener('change', async event => { const sorted = await api(`/courses/${courseId}/cards?sort=${event.target.value}`); cards.splice(0, cards.length, ...sorted); renderRoster(cards.filter(card => `${card.first_name} ${card.last_name}`.toLowerCase().includes(document.querySelector('#search').value.toLowerCase()))); });
-  document.querySelector('#start-study').addEventListener('click', () => setupView(course, cards.length));
+  document.querySelector('#sort').addEventListener('change', async event => {
+    const choice = event.target.value;
+    // Name order is plain SQL; recall order is the model's, so the core does it.
+    const sorted = choice === 'confidence'
+      ? [...cards].sort((left, right) => cardPredictedRecall(left, Date.now()) - cardPredictedRecall(right, Date.now()) || left.seen_count - right.seen_count || left.last_name.localeCompare(right.last_name) || left.first_name.localeCompare(right.first_name))
+      : await api(`/courses/${courseId}/cards?sort=${choice}`);
+    cards.splice(0, cards.length, ...sorted);
+    renderRoster(cards.filter(card => `${card.first_name} ${card.last_name}`.toLowerCase().includes(document.querySelector('#search').value.toLowerCase())));
+  });
+  document.querySelector('#start-study').addEventListener('click', () => setupView(course, cards));
   document.querySelector('#review-candidates').addEventListener('click', () => { location.hash = `#/course/${course.id}/review`; });
   document.querySelector('#add-card').addEventListener('click', () => { location.hash = `#/course/${course.id}/add`; });
 }
@@ -132,7 +148,8 @@ function manualCardView(course) {
   document.querySelector('#card-form').addEventListener('submit', async event => { event.preventDefault(); const form = new FormData(event.currentTarget); const facts = form.get('facts').split('\n').map(item => item.trim()).filter(Boolean); try { await api(`/courses/${course.id}/cards`, {method:'POST', body:JSON.stringify({first_name:form.get('first'),last_name:form.get('last'),facts})}); courseView(course.id); } catch(error) { document.querySelector('#form-notice').innerHTML = notice(error.message); } });
 }
 
-function setupView(course, count) {
+function setupView(course, courseCards) {
+  const count = courseCards.length;
   let mode = 'adaptive';
   let adaptiveLength = Math.min(15, count);
   let morrisLength = Math.min(7, count);
@@ -140,7 +157,30 @@ function setupView(course, count) {
   document.querySelector('#setup-back').addEventListener('click', event => { event.preventDefault(); courseView(course.id); });
   document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => { mode = button.dataset.mode; document.querySelectorAll('[data-mode]').forEach(item => item.classList.toggle('selected', item === button)); document.querySelector('.range').classList.toggle('hidden', mode === 'all'); document.querySelector('#base-size').firstChild.textContent = mode === 'morris' ? 'Base people: ' : 'Adaptive session length: '; const input = document.querySelector('#length'); input.max = mode === 'morris' ? Math.max(5, Math.min(15, count)) : Math.max(5, Math.min(50, count)); input.value = mode === 'morris' ? Math.min(morrisLength, +input.max) : Math.min(adaptiveLength, +input.max); document.querySelector('#length-label').textContent = input.value; }));
   document.querySelector('#length').addEventListener('input', event => { const length = +event.target.value; if (mode === 'morris') morrisLength = length; else adaptiveLength = length; document.querySelector('#length-label').textContent = length; });
-  document.querySelector('#begin').addEventListener('click', async () => { try { const result = await api(`/courses/${course.id}/sessions`, {method:'POST', body:JSON.stringify({mode,limit:+document.querySelector('#length').value})}); initializeStudy(result); await preloadPortrait(currentCard()); studyView(); } catch(error) { document.querySelector('#setup-notice').innerHTML = notice(error.message); } });
+  document.querySelector('#begin').addEventListener('click', async () => {
+    try {
+      const limit = +document.querySelector('#length').value;
+      const chosen = selectSessionCards(courseCards, mode, limit);
+      const result = await api(`/courses/${course.id}/sessions`, {method:'POST', body:JSON.stringify({mode, card_ids: chosen.cards.map(card => card.id)})});
+      initializeStudy({...result, ...chosen});
+      await preloadPortrait(currentCard());
+      studyView();
+    } catch(error) {
+      document.querySelector('#setup-notice').innerHTML = notice(error.message);
+    }
+  });
+}
+
+// Selection moved from the server to here, so the browser build can do it with
+// no backend at all. `all` is every card once; expanding recall needs the rest
+// of the roster as interleaved filler to hold its gaps open.
+function selectSessionCards(courseCards, mode, limit) {
+  const shuffle = (items) => items.map(item => [Math.random(), item]).sort((a, b) => a[0] - b[0]).map(([, item]) => item);
+  if (mode === 'all') return {cards: shuffle(courseCards), filler_cards: []};
+  const cards = adaptiveCards(courseCards, limit);
+  if (mode !== 'morris') return {cards, filler_cards: []};
+  const chosen = new Set(cards.map(card => card.id));
+  return {cards, filler_cards: shuffle(courseCards.filter(card => !chosen.has(card.id)))};
 }
 
 function initializeStudy(result) {
@@ -205,7 +245,15 @@ async function score(result) {
   scoring = true;
   const card = currentCard();
   try {
-    await api(`/sessions/${study.id}/reviews`, {method:'POST',body:JSON.stringify({card_id:card.id,result})});
+    // The core owns the memory model; the server stores what it produces. The
+    // instant is computed once and sent along, so the stored timestamp is the
+    // one the computation actually used.
+    const reviewedAt = new Date().toISOString();
+    const memory = updateMemoryState(card, result, reviewedAt);
+    await api(`/sessions/${study.id}/reviews`, {method:'POST',body:JSON.stringify({card_id:card.id, result, mastery:memory.mastery, stability_days:memory.stability_days, reviewed_at:reviewedAt})});
+    // Keep the in-memory card in step, so a repeat within this session scores
+    // against its updated state rather than the state it started with.
+    Object.assign(card, memory, {last_reviewed_at: reviewedAt, seen_count: (card.seen_count || 0) + 1});
     if (study.mode === 'morris') {
       study.reviews += 1;
       if (!study.currentIsFiller) {
@@ -230,7 +278,12 @@ async function score(result) {
 async function completeStudy() {
   if (!study) return;
   const finishedStudy = study;
-  const result = await api(`/sessions/${finishedStudy.id}/complete`, {method:'POST'});
+  // Re-read the roster so readiness is computed from what was actually stored,
+  // rather than from whatever this session happened to touch.
+  const readiness = currentCourse
+    ? courseReadiness(await api(`/courses/${currentCourse.id}/cards?sort=first`), Date.now())
+    : null;
+  const result = await api(`/sessions/${finishedStudy.id}/complete`, {method:'POST', body:JSON.stringify({readiness})});
   const accuracy = result.reviewed_count ? Math.round(result.right_count / result.reviewed_count * 100) : 0;
   const restart = finishedStudy.mode === 'all' ? '' : `<button class="button secondary" id="restart-same">Study these ${finishedStudy.cards.length} people again</button>`;
   // Expanding recall shows a person several times and interleaves other cards,
@@ -247,8 +300,8 @@ async function completeStudy() {
     button.disabled = true;
     button.textContent = 'Starting…';
     try {
-      const result = await api(`/courses/${currentCourse.id}/sessions`, {method:'POST', body:JSON.stringify({mode:finishedStudy.mode,limit:finishedStudy.cards.length,card_ids:finishedStudy.cards.map(card => card.id)})});
-      initializeStudy(result);
+      const result = await api(`/courses/${currentCourse.id}/sessions`, {method:'POST', body:JSON.stringify({mode:finishedStudy.mode, card_ids:finishedStudy.cards.map(card => card.id)})});
+      initializeStudy({...result, cards:[...finishedStudy.cards], filler_cards:[...(finishedStudy.fillers || [])]});
       await preloadPortrait(currentCard());
       studyView();
     } catch (error) {

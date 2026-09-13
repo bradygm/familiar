@@ -46,7 +46,7 @@ zip of every course, portrait, and review event. See
 
 ```text
 core/       the learning model in TypeScript: recall, mastery, selection. No DOM, no IO.
-backend/    FastAPI, SQLite, the PDF importer
+backend/    FastAPI, SQLite, the PDF importer. Stores what the core computes; no model logic.
 frontend/   the browser UI, which imports the compiled core
 tests/      Python tests, including the golden vectors both implementations share
 tools/      backup restore CLI
@@ -63,16 +63,18 @@ cd core && npm install && npm run build
 ## Running the tests
 
 The learning model has golden vectors pinning its exact behaviour, so a changed
-coefficient cannot slip through unnoticed. The same fixture is asserted from both
-languages, which is what keeps the TypeScript core and the Python backend
-interchangeable:
+coefficient cannot slip through unnoticed — see
+[tests/fixtures/README.md](tests/fixtures/README.md):
 
 ```bash
+cd core && npm test
+
 python3 -m venv .venv && .venv/bin/pip install -r backend/requirements-dev.txt
 .venv/bin/pytest
-
-cd core && npm test
 ```
+
+The TypeScript suite covers the learning model. The Python suite covers storage:
+the portable bundle format and its restore path.
 
 `tests/test_real_database_round_trip.py` additionally verifies that your own database
 survives an export and restore unchanged. It opens the live database read-only and skips

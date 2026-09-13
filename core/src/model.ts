@@ -134,3 +134,31 @@ export function learningStatus(progress: CardProgress): 'new' | 'learning' | 'fa
   if (progress.seen_count === 0) return 'new';
   return progress.mastery >= FAMILIAR_MASTERY ? 'familiar' : 'learning';
 }
+
+export interface CourseSummary {
+  /** Average chance of naming a uniformly chosen person, as a percentage. */
+  readonly readiness: number;
+  /** Share of the roster that is seen and at or above the familiar threshold. */
+  readonly familiarPercent: number;
+  readonly distribution: { new: number; learning: number; familiar: number };
+}
+
+/**
+ * Everything the course and home screens report about a roster.
+ *
+ * Kept here rather than in the UI so the browser build and the local build
+ * describe a course identically, and so "familiar" has one definition.
+ */
+export function summariseCourse(
+  cards: readonly CardProgress[],
+  at: string | number | Date,
+): CourseSummary {
+  const distribution = { new: 0, learning: 0, familiar: 0 };
+  for (const card of cards) distribution[learningStatus(card)] += 1;
+  const percent = (count: number) => (cards.length === 0 ? 0 : Math.round((count / cards.length) * 100));
+  return {
+    readiness: Math.round(courseReadiness(cards, at) * 100),
+    familiarPercent: percent(distribution.familiar),
+    distribution,
+  };
+}

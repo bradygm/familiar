@@ -28,8 +28,10 @@ export {
   learningStatus,
   predictedRecall,
   selectionScore,
+  summariseCourse,
   updateMemoryState,
   type CardProgress,
+  type CourseSummary,
   type MemoryState,
   type ReviewResult,
 } from './model.js';

@@ -11,7 +11,6 @@ from pydantic import BaseModel, Field
 from .database import app_data_dir, connection, initialize_database
 from .importer import available_pdfs, import_pdf
 from .portable import build_bundle
-from .study import adaptive_cards, course_readiness, days_since, predicted_recall, update_memory_state
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -43,17 +42,60 @@ class CreateCardRequest(BaseModel):
 
 class StartSessionRequest(BaseModel):
     mode: str
-    limit: int = Field(default=15, ge=1, le=200)
-    card_ids: list[str] | None = Field(default=None, max_length=200)
+    # The client selects the cards, using the shared core. The server records
+    # which ones were chosen; it does not decide.
+    card_ids: list[str] = Field(min_length=1, max_length=500)
 
 
 class ReviewRequest(BaseModel):
     card_id: str
     result: str
+    # Computed by the shared core in the client. Bounds are a sanity check on
+    # the wire format, deliberately wider than the model's own clamps so they
+    # do not have to be kept in step with its coefficients.
+    mastery: float = Field(ge=0.0, le=1.0)
+    stability_days: float = Field(gt=0.0, le=400.0)
+    # The instant the client used when computing the values above. Stored so the
+    # state is exactly reproducible from its own inputs; without it the recorded
+    # timestamp is the server's and disagrees with the computation by the
+    # round-trip time.
+    reviewed_at: str | None = None
+
+
+class CompleteSessionRequest(BaseModel):
+    """Readiness is the course average at completion, computed by the client."""
+
+    readiness: float | None = Field(default=None, ge=0.0, le=1.0)
 
 
 def now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+# How far a client clock may differ from the server's before it is distrusted.
+CLIENT_CLOCK_TOLERANCE_SECONDS = 300
+
+
+def _client_timestamp(value: str | None) -> str:
+    """Prefer the client's instant, falling back to the server's if implausible.
+
+    The client computes the memory update against its own clock, so storing that
+    same instant keeps the saved state reproducible. A badly set clock would
+    otherwise write timestamps that distort every later recall prediction, so
+    anything far from the server's own time is discarded rather than trusted.
+    """
+    server_now = datetime.now(timezone.utc)
+    if not value:
+        return server_now.isoformat()
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return server_now.isoformat()
+    if parsed.tzinfo is None:
+        return server_now.isoformat()
+    if abs((server_now - parsed).total_seconds()) > CLIENT_CLOCK_TOLERANCE_SECONDS:
+        return server_now.isoformat()
+    return parsed.isoformat()
 
 
 def card_row(row) -> dict:
@@ -117,23 +159,21 @@ def courses():
             ORDER BY c.imported_at DESC
             """
         ).fetchall()
-        current_time = datetime.now(timezone.utc)
         items = [dict(row) for row in rows]
         for item in items:
-            progress_rows = conn.execute(
-                """
-                SELECT progress.seen_count, progress.mastery, progress.stability_days, progress.last_reviewed_at
-                FROM card_progress AS progress
-                JOIN cards ON cards.id = progress.card_id
-                WHERE cards.course_id = ? AND cards.reviewed = 1
-                """,
-                (item["id"],),
-            ).fetchall()
-            progress = [dict(row) for row in progress_rows]
-            item["readiness"] = round(course_readiness(progress, current_time) * 100)
-            item["familiar_percent"] = round(
-                sum(row["seen_count"] > 0 and row["mastery"] >= 0.75 for row in progress) / len(progress) * 100
-            ) if progress else 0
+            # Raw progress, summarised by the client through the shared core.
+            item["progress"] = [
+                dict(row)
+                for row in conn.execute(
+                    """
+                    SELECT progress.seen_count, progress.mastery, progress.stability_days, progress.last_reviewed_at
+                    FROM card_progress AS progress
+                    JOIN cards ON cards.id = progress.card_id
+                    WHERE cards.course_id = ? AND cards.reviewed = 1
+                    """,
+                    (item["id"],),
+                ).fetchall()
+            ]
         return items
 
 
@@ -164,18 +204,9 @@ def cards(course_id: str, sort: str = "last"):
             """,
             (course_id,),
         ).fetchall()
-        items = [card_row(row) for row in rows]
-        if sort == "confidence":
-            current_time = datetime.now(timezone.utc)
-            items.sort(
-                key=lambda card: (
-                    predicted_recall(card["mastery"], card["stability_days"], days_since(card["last_reviewed_at"], current_time)),
-                    card["seen_count"],
-                    card["last_name"],
-                    card["first_name"],
-                )
-            )
-        return items
+        # Ordering by predicted recall is a model question, so the client does it
+        # with the shared core. Name ordering is plain SQL and stays here.
+        return [card_row(row) for row in rows]
 
 
 @app.get("/api/courses/{course_id}/candidates")
@@ -206,7 +237,6 @@ def course_stats(course_id: str):
             """,
             (course_id,),
         ).fetchone()
-        distribution = {"new": 0, "learning": 0, "familiar": 0}
         progress_rows = conn.execute(
             """
             SELECT seen_count, mastery, stability_days, last_reviewed_at
@@ -215,13 +245,6 @@ def course_stats(course_id: str):
             """,
             (course_id,),
         ).fetchall()
-        for progress in progress_rows:
-            if progress["seen_count"] == 0:
-                distribution["new"] += 1
-            elif progress["mastery"] >= 0.75:
-                distribution["familiar"] += 1
-            else:
-                distribution["learning"] += 1
         trend_rows = conn.execute(
             """
             SELECT ended_at, readiness_at_completion
@@ -241,9 +264,9 @@ def course_stats(course_id: str):
             for row in reversed(trend_rows)
         ]
         result = dict(totals)
-        result["readiness"] = round(course_readiness([dict(row) for row in progress_rows], datetime.now(timezone.utc)) * 100)
-        result["familiar_percent"] = round(distribution["familiar"] / len(progress_rows) * 100) if progress_rows else 0
-        result["distribution"] = distribution
+        # Readiness, familiarity and the new/learning/familiar split are all model
+        # questions; the client derives them from these rows via the shared core.
+        result["progress"] = [dict(row) for row in progress_rows]
         result["readiness_trend"] = trend
         return result
 
@@ -294,45 +317,24 @@ def start_session(course_id: str, request: StartSessionRequest):
     if request.mode not in {"all", "adaptive", "morris"}:
         raise HTTPException(status_code=400, detail="Mode must be all, adaptive, or morris")
     with connection() as conn:
-        rows = conn.execute(
-            """
-            SELECT cards.*, progress.seen_count, progress.right_count, progress.wrong_count,
-                   progress.mastery, progress.stability_days, progress.last_reviewed_at
-            FROM cards JOIN card_progress progress ON progress.card_id = cards.id
-            WHERE cards.course_id = ? AND cards.reviewed = 1
-            """,
-            (course_id,),
-        ).fetchall()
-        cards_to_choose = [card_row(row) for row in rows]
-        if not cards_to_choose:
+        available = {
+            row["id"]
+            for row in conn.execute(
+                "SELECT id FROM cards WHERE course_id = ? AND reviewed = 1", (course_id,)
+            )
+        }
+        if not available:
             raise HTTPException(status_code=400, detail="Approve or add cards before starting a session")
-        if request.card_ids is not None:
-            selected_ids = list(dict.fromkeys(request.card_ids))
-            if not selected_ids:
-                raise HTTPException(status_code=400, detail="Choose at least one card to restart a session")
-            cards_by_id = {card["id"]: card for card in cards_to_choose}
-            missing_ids = [card_id for card_id in selected_ids if card_id not in cards_by_id]
-            if missing_ids:
-                raise HTTPException(status_code=400, detail="One or more cards are no longer available")
-            selected = [cards_by_id[card_id] for card_id in selected_ids]
-        elif request.mode == "all":
-            import random
-            random.shuffle(cards_to_choose)
-            selected = cards_to_choose
-        else:
-            selected = adaptive_cards(cards_to_choose, request.limit)
-        filler_cards = []
-        if request.mode == "morris":
-            selected_ids = {card["id"] for card in selected}
-            filler_cards = [card for card in cards_to_choose if card["id"] not in selected_ids]
-            import random
-            random.shuffle(filler_cards)
+        selected_ids = list(dict.fromkeys(request.card_ids))
+        missing_ids = [card_id for card_id in selected_ids if card_id not in available]
+        if missing_ids:
+            raise HTTPException(status_code=400, detail="One or more cards are no longer available")
         session_id = uuid.uuid4().hex
         conn.execute(
             "INSERT INTO study_sessions (id, course_id, mode, started_at, selected_count) VALUES (?, ?, ?, ?, ?)",
-            (session_id, course_id, request.mode, now(), len(selected)),
+            (session_id, course_id, request.mode, now(), len(selected_ids)),
         )
-        return {"id": session_id, "mode": request.mode, "cards": selected, "filler_cards": filler_cards}
+        return {"id": session_id, "mode": request.mode, "selected_count": len(selected_ids)}
 
 
 @app.post("/api/sessions/{session_id}/reviews")
@@ -349,10 +351,11 @@ def review(session_id: str, request: ReviewRequest):
         ).fetchone()
         if not card:
             raise HTTPException(status_code=400, detail="Card is not part of this course")
-        reviewed_at = now()
+        reviewed_at = _client_timestamp(request.reviewed_at)
         right_increment = 1 if request.result == "right" else 0
         wrong_increment = 1 if request.result == "wrong" else 0
-        updated_memory = update_memory_state(dict(card), request.result, datetime.fromisoformat(reviewed_at))
+        # The client computed these with the shared core; the server records them.
+        # `confidence` is a legacy column kept in step with mastery for old rows.
         conn.execute(
             """
             UPDATE card_progress
@@ -360,7 +363,7 @@ def review(session_id: str, request: ReviewRequest):
                 confidence = ?, mastery = ?, stability_days = ?, last_reviewed_at = ?, last_result = ?
             WHERE card_id = ?
             """,
-            (right_increment, wrong_increment, updated_memory["mastery"], updated_memory["mastery"], updated_memory["stability_days"], reviewed_at, request.result, request.card_id),
+            (right_increment, wrong_increment, request.mastery, request.mastery, request.stability_days, reviewed_at, request.result, request.card_id),
         )
         conn.execute(
             "INSERT INTO review_events (session_id, card_id, reviewed_at, result) VALUES (?, ?, ?, ?)",
@@ -374,29 +377,19 @@ def review(session_id: str, request: ReviewRequest):
 
 
 @app.post("/api/sessions/{session_id}/complete")
-def complete_session(session_id: str):
+def complete_session(session_id: str, request: CompleteSessionRequest | None = None):
     with connection() as conn:
         session = conn.execute("SELECT * FROM study_sessions WHERE id = ?", (session_id,)).fetchone()
         if not session:
             raise HTTPException(status_code=404, detail="Session not found")
         completed_at = now()
-        progress_rows = conn.execute(
-            """
-            SELECT progress.seen_count, progress.mastery, progress.stability_days, progress.last_reviewed_at
-            FROM card_progress AS progress
-            JOIN cards ON cards.id = progress.card_id
-            WHERE cards.course_id = ? AND cards.reviewed = 1
-            """,
-            (session["course_id"],),
-        ).fetchall()
-        readiness = course_readiness([dict(row) for row in progress_rows], datetime.fromisoformat(completed_at))
         conn.execute(
             """
             UPDATE study_sessions
             SET ended_at = COALESCE(ended_at, ?), readiness_at_completion = COALESCE(readiness_at_completion, ?)
             WHERE id = ?
             """,
-            (completed_at, readiness, session_id),
+            (completed_at, request.readiness if request else None, session_id),
         )
         session = conn.execute("SELECT * FROM study_sessions WHERE id = ?", (session_id,)).fetchone()
         result = dict(session)
