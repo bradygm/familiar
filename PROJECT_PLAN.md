@@ -140,7 +140,8 @@ Defer:
 - [x] Write the local run and course-importing guide.
 - [x] Write the local backup guide.
 - [x] Pin the learning model with golden vectors before extracting a shared core.
-- [ ] Extract the learning model into a shared TypeScript core (see docs/PUBLIC_RELEASE_PLAN.md).
+- [x] Extract the learning model into a shared TypeScript core (see docs/PUBLIC_RELEASE_PLAN.md).
+- [x] Make the backend storage-only: the client computes, the server stores.
 
 ## Proposed project layout
 

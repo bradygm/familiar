@@ -174,13 +174,13 @@ written and tested with no UI at all.
 Golden vectors, portable export, the miscount fix, reset/remove. Ship on the current
 Docker app. Nothing architectural yet.
 
-### Phase 1 — Extract the core
+### Phase 1 — Extract the core — **done**
 Restructure to `core/` (pure TypeScript: model, selection, scheduling — no DOM, no IO),
 `web/`, `backend/`. Port `study.py` and verify against the Phase 0 vectors with Vitest,
 then delete it and the duplicated JS `predicted_recall`. FastAPI stops computing mastery
 and starts accepting it; the app keeps running on SQLite throughout.
 
-### Phase 2 — Finish the learning features in the core
+### Phase 2 — Finish the learning features in the core — **next**
 Continuous mode, the new sorts, calibration groundwork. All headless, all test-driven,
 all written exactly once. This is where "the couple of last features" actually land.
 
