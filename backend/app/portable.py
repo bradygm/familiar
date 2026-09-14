@@ -24,7 +24,7 @@ from pathlib import Path
 BUNDLE_SCHEMA = 1
 MANIFEST_NAME = "familiar-bundle.json"
 
-COURSE_FIELDS = ("id", "title", "source_filename", "source_checksum", "imported_at", "active")
+COURSE_FIELDS = ("id", "title", "source_filename", "imported_at", "active")
 CARD_FIELDS = ("id", "first_name", "last_name", "prompt_text", "image_path", "reviewed", "created_at")
 PROGRESS_FIELDS = (
     "seen_count",
@@ -188,8 +188,13 @@ def restore_bundle(bundle: bytes, conn, assets_dir: Path) -> dict:
 
     restored = {"courses": 0, "cards": 0, "sessions": 0, "reviews": 0, "assets": 0}
     for course in manifest["courses"]:
+        # Bundles written before courses stopped carrying a checksum still have
+        # that field. It is ignored rather than rejected, so existing backups
+        # keep restoring; the schema number is unchanged for the same reason —
+        # bumping it would make older bundles unreadable, which is the opposite
+        # of what a backup format is for.
         conn.execute(
-            "INSERT INTO courses (id, title, source_filename, source_checksum, imported_at, active) VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO courses (id, title, source_filename, imported_at, active) VALUES (?, ?, ?, ?, ?)",
             tuple(course[field] for field in COURSE_FIELDS),
         )
         restored["courses"] += 1
