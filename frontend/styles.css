@@ -277,3 +277,7 @@ button { cursor: pointer; }
 .course-data { margin-top: 26px; padding: 20px 22px; }
 .course-data h2 { margin: 0 0 4px; font-family: var(--display); font-size: 1.15rem; color: var(--navy); }
 .course-data .import-list { margin-top: 13px; }
+
+/* A file input styled as a chip: the label is the control, the input is hidden. */
+label.chip { cursor: pointer; }
+label.chip:focus-within { outline: 3px solid var(--orange); outline-offset: 3px; }

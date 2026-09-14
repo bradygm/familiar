@@ -1,15 +1,16 @@
 import json
+import tempfile
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .database import app_data_dir, connection, initialize_database
-from .importer import available_pdfs, import_pdf
+from .importer import MissingOcrTools, import_pdf
 from .portable import build_bundle
 
 
@@ -28,10 +29,6 @@ async def disable_frontend_cache(request: Request, call_next):
     if request.url.path == "/" or request.url.path.startswith("/static/"):
         response.headers["Cache-Control"] = "no-store"
     return response
-
-
-class ImportRequest(BaseModel):
-    filename: str
 
 
 class CreateCardRequest(BaseModel):
@@ -132,20 +129,61 @@ def health():
     return {"status": "ok"}
 
 
-@app.get("/api/imports/available")
-def imports_available():
-    return available_pdfs()
+# Generous on purpose. A real 69-person BYU export of scanned pages is ~62 MB,
+# so a cap chosen from intuition rather than from a real file would have
+# rejected an ordinary class. This is a guard against a mistaken upload filling
+# the disk, not an opinion about how big a roster should be.
+MAX_UPLOAD_BYTES = 250 * 1024 * 1024
 
 
-@app.post("/api/imports")
-def create_import(request: ImportRequest):
-    with connection() as conn:
-        try:
-            return import_pdf(request.filename, conn)
-        except ValueError as exc:
-            raise HTTPException(status_code=400, detail=str(exc)) from exc
-        except Exception as exc:
-            raise HTTPException(status_code=422, detail=f"PDF import failed: {exc}") from exc
+async def _run_import(upload: UploadFile, course_id: str | None, title: str | None) -> dict:
+    """Extract a roster into a course, without keeping the PDF.
+
+    The file is processed in a temporary location and discarded. The learner
+    already has it on their own machine, so retaining a roster of student
+    photographs buys nothing and is the kind of thing this app should not do.
+    Provenance — filename, checksum, counts, warnings — is recorded in
+    import_runs.
+    """
+    if not (upload.filename or "").lower().endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Choose a PDF roster exported from BYU Flashcards.")
+
+    contents = await upload.read()
+    if not contents:
+        raise HTTPException(status_code=400, detail="That file is empty.")
+    if len(contents) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="That file is larger than 60 MB.")
+
+    with tempfile.TemporaryDirectory(prefix="familiar-upload-") as directory:
+        staged = Path(directory) / "roster.pdf"
+        staged.write_bytes(contents)
+        with connection() as conn:
+            try:
+                return import_pdf(staged, upload.filename, conn, course_id, title)
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
+            except MissingOcrTools as exc:
+                raise HTTPException(status_code=503, detail=str(exc)) from exc
+            except HTTPException:
+                raise
+            except Exception as exc:
+                raise HTTPException(status_code=422, detail=f"Could not read that PDF: {exc}") from exc
+
+
+@app.post("/api/courses")
+async def create_course(file: UploadFile = File(...), title: str | None = Form(default=None)):
+    """Start a new class from an uploaded roster."""
+    return await _run_import(file, None, (title or "").strip() or None)
+
+
+@app.post("/api/courses/{course_id}/imports")
+async def import_into_course(course_id: str, file: UploadFile = File(...)):
+    """Add people to an existing class from another roster export.
+
+    The caller chose this course, so nothing is inferred from the file. That is
+    what makes merging two sections, or re-importing an updated roster, safe.
+    """
+    return await _run_import(file, course_id, None)
 
 
 @app.get("/api/courses")

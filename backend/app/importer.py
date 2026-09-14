@@ -1,6 +1,6 @@
 import hashlib
-import os
 import re
+import shutil
 import subprocess
 import tempfile
 import uuid
@@ -18,20 +18,6 @@ NAME_PATTERNS = (
     re.compile(r"^\s*([A-Z][A-Za-z'\-]+),\s*([A-Z][A-Za-z'\-]+)\s*$"),
     re.compile(r"^\s*(?:Name\s*:\s*)?([A-Z][A-Za-z'\-]+)\s+([A-Za-z][A-Za-z'\-]*(?:\s+[A-Za-z][A-Za-z'\-]*){0,2})\s*$"),
 )
-
-
-def source_dir() -> Path:
-    return Path(os.environ.get("FLASHCARDS_DATA_DIR", "data"))
-
-
-def available_pdfs() -> list[dict]:
-    root = source_dir()
-    if not root.exists():
-        return []
-    return [
-        {"filename": item.name, "size": item.stat().st_size}
-        for item in sorted(root.glob("*.pdf"))
-    ]
 
 
 def _checksum(path: Path) -> str:
@@ -120,8 +106,20 @@ def _save_portrait(image: Image.Image, course_id: str, page_number: int, ordinal
     return f"{course_id}/{filename}"
 
 
+class MissingOcrTools(RuntimeError):
+    """Raised when the local OCR binaries are not installed."""
+
+
 def _ocr_pdf(path: Path, course_id: str) -> tuple[str, int, list[dict]]:
     """Render image-based PDFs locally, then OCR them page by page."""
+    # Scanned rosters need poppler and tesseract. Docker installs both; a native
+    # run may not have them, and "No such file or directory: 'pdftoppm'" tells
+    # a user nothing about what to do.
+    if shutil.which("pdftoppm") is None:
+        raise MissingOcrTools(
+            "This roster has no embedded text, so it needs local OCR, and poppler is not installed. "
+            "Run Familiar with Docker (which includes it), or install poppler and tesseract on this machine."
+        )
     with tempfile.TemporaryDirectory(prefix="flashcards-ocr-") as directory:
         output_prefix = Path(directory) / "page"
         subprocess.run(
@@ -161,31 +159,32 @@ def _ocr_pdf(path: Path, course_id: str) -> tuple[str, int, list[dict]]:
         return text, len(pages), candidates
 
 
-def import_pdf(filename: str, conn) -> dict:
-    path = (source_dir() / filename).resolve()
-    if path.parent != source_dir().resolve() or path.suffix.lower() != ".pdf" or not path.is_file():
-        raise ValueError("Choose a PDF from the local data directory.")
+def import_pdf(path: Path, original_filename: str, conn, course_id: str | None = None, title: str | None = None) -> dict:
+    """Extract people from a roster PDF into a course the caller chose.
 
+    The caller says which course this roster belongs to, so nothing here has to
+    guess. That is what makes it safe to build one class from several exports,
+    to re-import an updated roster without creating a duplicate class, and to
+    merge two sections deliberately. Passing no course creates one.
+
+    New people arrive unreviewed, so they go through the same approval step as
+    the very first import. People already in the course are left exactly as they
+    are, keeping their study history; only a missing portrait is filled in.
+    """
     checksum = _checksum(path)
-    existing = conn.execute(
-        """
-        SELECT id, title,
-               (SELECT COUNT(*) FROM cards WHERE course_id = courses.id) AS card_count,
-               (SELECT COUNT(*) FROM cards WHERE course_id = courses.id AND reviewed = 1) AS approved_count,
-               (SELECT COUNT(*) FROM review_events
-                  JOIN cards ON cards.id = review_events.card_id
-                  WHERE cards.course_id = courses.id) AS review_count
-        FROM courses WHERE source_checksum = ?
-        """,
-        (checksum,),
-    ).fetchone()
-    course_id = existing["id"] if existing else f"course-{uuid.uuid4().hex[:12]}"
-    title = existing["title"] if existing else path.stem.replace("_", " ")
+    created = course_id is None
+    now = datetime.now(timezone.utc).isoformat()
 
-    started_at = datetime.now(timezone.utc).isoformat()
+    if created:
+        course_id = f"course-{uuid.uuid4().hex[:12]}"
+    else:
+        if not conn.execute("SELECT 1 FROM courses WHERE id = ?", (course_id,)).fetchone():
+            raise ValueError("That course no longer exists.")
+
+    started_at = now
     run = conn.execute(
         "INSERT INTO import_runs (source_filename, source_checksum, started_at, status) VALUES (?, ?, ?, 'running')",
-        (filename, checksum, started_at),
+        (original_filename, checksum, started_at),
     )
     try:
         reader = PdfReader(str(path))
@@ -199,22 +198,31 @@ def import_pdf(filename: str, conn) -> dict:
         if not candidates:
             ocr_text, ocr_pages, candidates = _ocr_pdf(path, course_id)
             text = f"{embedded_text}\n{ocr_text}"
-        now = datetime.now(timezone.utc).isoformat()
-        if not existing:
+
+        if created:
             conn.execute(
-                "INSERT INTO courses (id, title, source_filename, source_checksum, imported_at) VALUES (?, ?, ?, ?, ?)",
-                (course_id, title, filename, checksum, now),
+                "INSERT INTO courses (id, title, source_filename, imported_at) VALUES (?, ?, ?, ?)",
+                (course_id, title or Path(original_filename).stem.replace("_", " "), original_filename, now),
             )
+
+        # Exact first-and-last-name matching, mirroring core/src/import.ts.
+        # A fuzzy match would silently merge two people's histories; an extra
+        # candidate only costs a click during review.
         existing_cards = {
-            (row["first_name"], row["last_name"]): row["id"]
+            (row["first_name"].strip(), row["last_name"].strip()): row["id"]
             for row in conn.execute("SELECT id, first_name, last_name FROM cards WHERE course_id = ?", (course_id,))
         }
         added = 0
+        already_present = 0
         for candidate in candidates:
-            key = (candidate["first_name"], candidate["last_name"])
+            key = (candidate["first_name"].strip(), candidate["last_name"].strip())
             if key in existing_cards:
+                already_present += 1
                 if candidate["image_path"]:
-                    conn.execute("UPDATE cards SET image_path = ? WHERE id = ?", (candidate["image_path"], existing_cards[key]))
+                    conn.execute(
+                        "UPDATE cards SET image_path = COALESCE(image_path, ?) WHERE id = ?",
+                        (candidate["image_path"], existing_cards[key]),
+                    )
                 continue
             card_id = f"{course_id}-card-{uuid.uuid4().hex[:8]}"
             conn.execute(
@@ -222,15 +230,28 @@ def import_pdf(filename: str, conn) -> dict:
                 (card_id, course_id, candidate["first_name"], candidate["last_name"], candidate["image_path"], now),
             )
             conn.execute("INSERT INTO card_progress (card_id) VALUES (?)", (card_id,))
+            existing_cards[key] = card_id
             added += 1
+
         warning = None
         if not candidates:
-            warning = "No high-confidence name lines were found, even after local OCR. Add cards manually or improve the importer for this PDF layout."
+            warning = "No high-confidence name lines were found, even after local OCR. Add people manually, or check that this is a 3-students-per-page BYU Flashcards export."
+        elif not added:
+            warning = "Everybody in this roster is already in the course, so nothing was added."
         conn.execute(
             "UPDATE import_runs SET finished_at = ?, status = 'complete', pages = ?, extracted_text_length = ?, candidate_count = ?, warning = ? WHERE id = ?",
             (now, len(reader.pages), len(text), len(candidates), warning, run.lastrowid),
         )
-        return {"status": "updated" if existing else "imported", "course_id": course_id, "title": title, "pages": len(reader.pages), "ocr_pages": ocr_pages, "cards": len(candidates), "added": added, "warning": warning}
+        return {
+            "status": "created" if created else "updated",
+            "course_id": course_id,
+            "pages": len(reader.pages),
+            "ocr_pages": ocr_pages,
+            "found": len(candidates),
+            "added": added,
+            "already_present": already_present,
+            "warning": warning,
+        }
     except Exception as exc:
         conn.execute(
             "UPDATE import_runs SET finished_at = ?, status = 'failed', warning = ? WHERE id = ?",

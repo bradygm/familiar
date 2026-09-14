@@ -4,8 +4,6 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./data:/app/data:ro
       - ./app-data:/app/app-data
     environment:
-      FLASHCARDS_DATA_DIR: /app/data
       FLASHCARDS_APP_DATA_DIR: /app/app-data

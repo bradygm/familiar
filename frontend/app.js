@@ -20,6 +20,24 @@ async function api(path, options = {}) {
   if (!response.ok) throw new Error((await response.json()).detail || 'Something went wrong.');
   return response.json();
 }
+
+// Uploads must not set Content-Type: the browser has to add the multipart
+// boundary itself.
+async function upload(path, file, extra = {}) {
+  const body = new FormData();
+  body.append('file', file);
+  for (const [key, value] of Object.entries(extra)) if (value) body.append(key, value);
+  const response = await fetch(`/api${path}`, {method: 'POST', body});
+  if (!response.ok) throw new Error((await response.json()).detail || 'Something went wrong.');
+  return response.json();
+}
+
+function importSummary(result) {
+  if (result.warning) return result.warning;
+  const people = result.added === 1 ? 'person' : 'people';
+  const skipped = result.already_present ? `, and ${result.already_present} already in the class` : '';
+  return `Found ${result.found} on the roster: ${result.added} new ${people} to review${skipped}.`;
+}
 const esc = (value) => String(value).replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
 const initials = (card) => `${card.first_name[0] || ''}${card.last_name[0] || ''}`.toUpperCase();
 const courseLink = (course) => `#/course/${course.id}`;
@@ -54,17 +72,31 @@ function notice(message) { return `<p class="notice">${esc(message)}</p>`; }
 
 async function home() {
   setView(document.querySelector('#loading').innerHTML);
-  const [courses, pdfs] = await Promise.all([api('/courses'), api('/imports/available')]);
+  const courses = await api('/courses');
   setView(`
     <section class="hero"><div class="eyebrow">For BYU instructors</div><h1>Know every student<br>before the first day.</h1><p>Import a BYU Flashcards roster, confirm the people it finds, and build familiarity in short, adaptive sessions.</p></section>
     <section class="section-head"><div><div class="eyebrow">Courses</div><h1>Your courses</h1></div><p>${courses.length ? `${courses.length} imported` : 'Nothing imported yet'}</p></section>
     ${courses.length ? `<div class="course-grid">${courses.map(course => { const summary = summariseCourse(course.progress || [], Date.now()); return `<a class="course" href="${courseLink(course)}"><div class="course-top"><span class="course-kicker">Course roster</span><span class="course-state">${studiedLabel(course.last_studied_at)}</span></div><h2>${esc(course.title)}</h2><dl class="course-metrics"><div><dt>People</dt><dd>${course.card_count}</dd></div><div><dt>Familiar</dt><dd>${summary.familiarPercent}%</dd></div><div><dt>Sessions</dt><dd>${course.session_count}</dd></div></dl><p class="course-cta">${course.last_studied_at ? 'Continue studying' : 'Start learning'} <span aria-hidden="true">→</span></p></a>`; }).join('')}</div>` : `<div class="empty"><h2>Your first course starts with a PDF.</h2><p>Source files remain on this machine. Imported information is saved in the local app database.</p></div>`}
-    <section class="importer" style="margin-top:28px"><div class="eyebrow">Local import</div><h2>Import from <code>data/</code></h2><p class="fine">The importer extracts only high-confidence name lines first. You approve its candidates before they are included in study sessions.</p><div class="import-list">${pdfs.length ? pdfs.map(pdf => `<button class="chip" data-import="${esc(pdf.filename)}">Import ${esc(pdf.filename)}</button>`).join('') : '<span class="fine">No PDFs found in the mounted data directory.</span>'}</div><div id="import-message"></div></section>
+    <section class="importer" style="margin-top:28px"><div class="eyebrow">New class</div><h2>Start a class from a roster</h2><p class="fine">Choose a roster PDF exported from BYU Flashcards (3 students per page). The file is read on this machine and not kept — only the names and portraits are saved. You approve everyone it finds before they appear in study sessions.</p><div class="import-list"><label class="chip" for="new-class-file">Choose a roster PDF…<input id="new-class-file" type="file" accept="application/pdf,.pdf" hidden></label></div><div id="import-message"></div></section>
     <section class="importer" style="margin-top:28px"><div class="eyebrow">Local backup</div><h2>Download a portable backup</h2><p class="fine">A single zip holding every course, portrait, and review event. It is the restore path if this database is ever lost, and the only supported way to move your history somewhere else. <code>app-data/</code> is not covered by Git.</p><div class="import-list"><a class="chip" href="/api/export" download>Export everything</a><a class="chip" href="/api/export?include_progress=false" download>Export rosters only (no progress)</a></div></section>`);
-  document.querySelectorAll('[data-import]').forEach(button => button.addEventListener('click', async () => {
-    const message = document.querySelector('#import-message'); button.disabled = true; button.textContent = 'Importing…';
-    try { const result = await api('/imports', {method:'POST', body:JSON.stringify({filename:button.dataset.import})}); message.innerHTML = notice(result.status === 'already_imported' ? 'That exact PDF was already imported.' : `Imported ${result.cards} candidate cards from ${result.pages} pages. Review the candidates next.`); if (result.warning) message.innerHTML += notice(result.warning); setTimeout(home, 1100); } catch (error) { message.innerHTML = notice(error.message); button.disabled = false; button.textContent = `Import ${button.dataset.import}`; }
-  }));
+  const newClassInput = document.querySelector('#new-class-file');
+  newClassInput.addEventListener('change', async () => {
+    const file = newClassInput.files?.[0];
+    if (!file) return;
+    const message = document.querySelector('#import-message');
+    const label = document.querySelector('[for="new-class-file"]');
+    label.textContent = `Reading ${file.name}…`;
+    message.innerHTML = notice('Reading the roster. Scanned PDFs need local OCR, which can take a minute.');
+    try {
+      const result = await upload('/courses', file);
+      message.innerHTML = notice(importSummary(result));
+      location.hash = `#/course/${result.course_id}/review`;
+    } catch (error) {
+      message.innerHTML = notice(error.message);
+      label.textContent = 'Choose a roster PDF…';
+      newClassInput.value = '';
+    }
+  });
 }
 
 function learningPulse(stats) {
@@ -94,7 +126,7 @@ async function courseView(courseId) {
   const [course, cards, candidates, stats] = await Promise.all([api(`/courses/${courseId}`), api(`/courses/${courseId}/cards?sort=first`), api(`/courses/${courseId}/candidates`), api(`/courses/${courseId}/stats`)]);
   currentCourse = course;
   const summary = summariseCourse(stats.progress || [], Date.now());
-  setView(`<a class="back" href="#/">← All courses</a><section class="section-head" style="margin-top:25px"><div><div class="eyebrow">${esc(course.source_filename)}</div><h1>${esc(course.title)}</h1><p>${cards.length} ${cards.length === 1 ? 'person' : 'people'}</p></div><div class="actions">${candidates.length ? `<button class="button secondary" id="review-candidates">Review ${candidates.length} new ${candidates.length === 1 ? 'name' : 'names'}</button>` : ''}<button class="button secondary" id="add-card">Add person</button><button class="button" id="start-study">Start session</button></div></section><section class="stats" aria-label="Course statistics"><article class="stat panel"><strong>${summary.familiarPercent}%</strong><span>familiar</span></article><article class="stat panel"><strong>${summary.readiness}%</strong><span>avg. predicted recall</span></article><article class="stat panel"><strong>${stats.session_count}</strong><span>sessions</span></article><article class="stat panel"><strong>${stats.wrong_count} / ${stats.reviews}</strong><span>misses / answers</span></article></section>${learningPulse(stats)}<div class="toolbar"><input class="search" id="search" placeholder="Search people" aria-label="Search people"><select class="select" id="sort" aria-label="Sort roster"><option value="first">First name</option><option value="last">Last name</option><option value="recall">Predicted recall (low first)</option><option value="strength">Learning strength (low first)</option><option value="difficulty">Hardest to learn</option></select></div><div id="roster"></div><section class="course-data panel"><div class="eyebrow">Course data</div><h2>Backup and clean-up</h2><p class="fine">Study history lives only in this app's local database. Export before anything destructive.</p><div class="import-list"><a class="chip" href="/api/courses/${encodeURIComponent(course.id)}/export" download>Export course</a><button class="chip" id="remove-person">Remove someone who left</button><button class="chip" id="reset-progress">Reset all progress</button></div></section>`);
+  setView(`<a class="back" href="#/">← All courses</a><section class="section-head" style="margin-top:25px"><div><div class="eyebrow">${esc(course.source_filename)}</div><h1>${esc(course.title)}</h1><p>${cards.length} ${cards.length === 1 ? 'person' : 'people'}</p></div><div class="actions">${candidates.length ? `<button class="button secondary" id="review-candidates">Review ${candidates.length} new ${candidates.length === 1 ? 'name' : 'names'}</button>` : ''}<button class="button secondary" id="add-card">Add person</button><button class="button" id="start-study">Start session</button></div></section><section class="stats" aria-label="Course statistics"><article class="stat panel"><strong>${summary.familiarPercent}%</strong><span>familiar</span></article><article class="stat panel"><strong>${summary.readiness}%</strong><span>avg. predicted recall</span></article><article class="stat panel"><strong>${stats.session_count}</strong><span>sessions</span></article><article class="stat panel"><strong>${stats.wrong_count} / ${stats.reviews}</strong><span>misses / answers</span></article></section>${learningPulse(stats)}<div class="toolbar"><input class="search" id="search" placeholder="Search people" aria-label="Search people"><select class="select" id="sort" aria-label="Sort roster"><option value="first">First name</option><option value="last">Last name</option><option value="recall">Predicted recall (low first)</option><option value="strength">Learning strength (low first)</option><option value="difficulty">Hardest to learn</option></select></div><div id="roster"></div><section class="course-data panel"><div class="eyebrow">Course data</div><h2>Roster and clean-up</h2><p class="fine">Upload another export to add people who joined late — anyone already here keeps their history, and only new names need approving. Study history lives only in this app's local database, so export before anything destructive.</p><div class="import-list"><label class="chip" for="add-roster-file">Add people from a roster…<input id="add-roster-file" type="file" accept="application/pdf,.pdf" hidden></label><a class="chip" href="/api/courses/${encodeURIComponent(course.id)}/export" download>Export course</a><button class="chip" id="remove-person">Remove someone who left</button><button class="chip" id="reset-progress">Reset all progress</button></div><div id="course-import-message"></div></section>`);
   const roster = document.querySelector('#roster');
   const flippedCards = new Set();
   const histories = new Map();
@@ -134,6 +166,27 @@ async function courseView(courseId) {
     renderRoster(cards.filter(card => `${card.first_name} ${card.last_name}`.toLowerCase().includes(document.querySelector('#search').value.toLowerCase())));
   });
   document.querySelector('#start-study').addEventListener('click', () => setupView(course, cards));
+  const rosterInput = document.querySelector('#add-roster-file');
+  rosterInput.addEventListener('change', async () => {
+    const file = rosterInput.files?.[0];
+    if (!file) return;
+    const message = document.querySelector('#course-import-message');
+    const label = document.querySelector('[for="add-roster-file"]');
+    label.textContent = `Reading ${file.name}…`;
+    message.innerHTML = notice('Reading the roster. Scanned PDFs need local OCR, which can take a minute.');
+    try {
+      const result = await upload(`/courses/${course.id}/imports`, file);
+      message.innerHTML = notice(importSummary(result));
+      // Straight to review when there is something to approve; people already
+      // in the class are left untouched and need no attention.
+      if (result.added) location.hash = `#/course/${course.id}/review`;
+      else { label.textContent = 'Add people from a roster…'; rosterInput.value = ''; }
+    } catch (error) {
+      message.innerHTML = notice(error.message);
+      label.textContent = 'Add people from a roster…';
+      rosterInput.value = '';
+    }
+  });
   document.querySelector('#remove-person').addEventListener('click', () => removePersonDialog(course, cards));
   document.querySelector('#reset-progress').addEventListener('click', () => resetProgressDialog(course, stats));
   document.querySelector('#review-candidates')?.addEventListener('click', () => { location.hash = `#/course/${course.id}/review`; });

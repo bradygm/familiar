@@ -49,3 +49,10 @@ export {
 } from './continuous.js';
 
 export { sortRoster, type RosterCard, type RosterSort } from './roster.js';
+
+export {
+  personKey,
+  splitNewPeople,
+  type ImportSplit,
+  type NamedPerson,
+} from './import.js';

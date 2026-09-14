@@ -114,3 +114,65 @@ def initialize_database() -> None:
         session_columns = {row["name"] for row in conn.execute("PRAGMA table_info(study_sessions)")}
         if "readiness_at_completion" not in session_columns:
             conn.execute("ALTER TABLE study_sessions ADD COLUMN readiness_at_completion REAL")
+
+    _drop_course_checksum()
+
+
+def _drop_course_checksum() -> None:
+    """Remove courses.source_checksum, which encoded "one course per PDF file".
+
+    Imports now target a course the user picked, so a course is no longer
+    identified by the file that created it: a class can be built from several
+    exports, and the same export can seed more than one class. The column's
+    UNIQUE constraint actively prevents both. Per-import provenance is kept in
+    import_runs, which is the honest place for it now that one course can have
+    many sources.
+
+    SQLite cannot drop a UNIQUE column, so this rebuilds the table. Foreign keys
+    are disabled for the duration: cards reference courses ON DELETE CASCADE, and
+    dropping the old table with them enforced would take every card with it.
+    """
+    connection_path = database_path()
+    conn = sqlite3.connect(connection_path)
+    try:
+        columns = {row[1] for row in conn.execute("PRAGMA table_info(courses)")}
+        if "source_checksum" not in columns:
+            return
+
+        # Must be set outside a transaction to take effect.
+        conn.execute("PRAGMA foreign_keys = OFF")
+        conn.execute("BEGIN IMMEDIATE")
+        conn.execute(
+            """
+            CREATE TABLE courses_rebuilt (
+              id TEXT PRIMARY KEY,
+              title TEXT NOT NULL,
+              source_filename TEXT NOT NULL,
+              imported_at TEXT NOT NULL,
+              active INTEGER NOT NULL DEFAULT 1
+            )
+            """
+        )
+        conn.execute(
+            "INSERT INTO courses_rebuilt (id, title, source_filename, imported_at, active) "
+            "SELECT id, title, source_filename, imported_at, active FROM courses"
+        )
+        moved = conn.execute("SELECT COUNT(*) FROM courses_rebuilt").fetchone()[0]
+        original = conn.execute("SELECT COUNT(*) FROM courses").fetchone()[0]
+        if moved != original:
+            raise RuntimeError(f"Course rebuild would lose rows: {original} -> {moved}")
+
+        conn.execute("DROP TABLE courses")
+        conn.execute("ALTER TABLE courses_rebuilt RENAME TO courses")
+
+        # Prove nothing was orphaned before making it permanent.
+        violations = conn.execute("PRAGMA foreign_key_check").fetchall()
+        if violations:
+            raise RuntimeError(f"Course rebuild broke referential integrity: {violations[:3]}")
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.execute("PRAGMA foreign_keys = ON")
+        conn.close()

@@ -65,7 +65,14 @@ def test_real_database_survives_an_export_and_restore(real_conn, tmp_path, monke
     assert counts["reviews"] == len(before["review_events"])
 
     after = {table: rows(restored_conn, table) for table in TABLES}
-    assert after["courses"] == before["courses"]
+    # Compare the fields the bundle carries rather than the raw row shape: a
+    # local database may still predate a schema change that the restore target,
+    # created fresh, already has.
+    def course_fields(table):
+        keep = ("id", "title", "source_filename", "imported_at", "active")
+        return [{field: row[field] for field in keep} for row in table]
+
+    assert course_fields(after["courses"]) == course_fields(before["courses"])
     assert after["cards"] == before["cards"]
     assert after["study_sessions"] == before["study_sessions"]
 

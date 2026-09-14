@@ -30,8 +30,8 @@ def make_database(path: Path, monkeypatch) -> sqlite3.Connection:
 
 def seed(conn, assets_dir: Path) -> None:
     conn.execute(
-        "INSERT INTO courses (id, title, source_filename, source_checksum, imported_at) VALUES (?, ?, ?, ?, ?)",
-        (FIXTURE_COURSE, "Test Course", "test.pdf", "abc123", "2026-01-01T00:00:00+00:00"),
+        "INSERT INTO courses (id, title, source_filename, imported_at) VALUES (?, ?, ?, ?)",
+        (FIXTURE_COURSE, "Test Course", "test.pdf", "2026-01-01T00:00:00+00:00"),
     )
     people = [("Ada", "Lovelace", "one.jpg"), ("Grace", "Hopper", "two.jpg"), ("Alan", "Turing", None)]
     for index, (first, last, image) in enumerate(people):

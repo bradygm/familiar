@@ -37,7 +37,7 @@ def client(tmp_path, monkeypatch):
     with TestClient(main.app) as test_client:
         with sqlite3.connect(app_data / "flashcards.sqlite3") as conn:
             conn.execute(
-                "INSERT INTO courses (id, title, source_filename, source_checksum, imported_at) VALUES (?, 'API Test', 'api.pdf', 'sum', '2026-01-01T00:00:00+00:00')",
+                "INSERT INTO courses (id, title, source_filename, imported_at) VALUES (?, 'API Test', 'api.pdf', '2026-01-01T00:00:00+00:00')",
                 (COURSE,),
             )
             for index in range(4):
@@ -396,3 +396,160 @@ def test_a_course_can_be_studied_again_after_a_reset(client):
     session_id = start_session(client, [card])
     assert client.post(f"/api/sessions/{session_id}/reviews", json={"card_id": card, "result": "right", "mastery": 0.6, "stability_days": 1.5}).status_code == 200
     assert progress_row(client, card)["seen_count"] == 1
+
+
+# --- starting a class from an upload --------------------------------------
+
+
+def roster_pdf(names, path):
+    """A text-based roster PDF, so the importer's fast path reads it without OCR."""
+    from pypdf import PdfWriter
+    import io
+
+    try:
+        from reportlab.pdfgen import canvas  # noqa: F401
+    except ImportError:
+        pytest.skip("reportlab not installed; upload tests need a generated PDF")
+    from reportlab.pdfgen import canvas
+
+    buffer = io.BytesIO()
+    page = canvas.Canvas(buffer)
+    for index, (first, last) in enumerate(names):
+        page.drawString(100, 780 - index * 40, f"{first} {last}")
+    page.save()
+    path.write_bytes(buffer.getvalue())
+    return path
+
+
+def upload_roster(client, path, url="/api/courses", **fields):
+    with path.open("rb") as handle:
+        return client.post(url, files={"file": (path.name, handle, "application/pdf")}, data=fields)
+
+
+def test_a_class_is_created_from_an_uploaded_roster(client, tmp_path):
+    pdf = roster_pdf([("Ada", "Lovelace"), ("Alan", "Turing")], tmp_path / "ME EN 101.pdf")
+    body = upload_roster(client, pdf).json()
+    assert body["status"] == "created"
+    assert body["added"] == 2
+    candidates = client.get(f"/api/courses/{body['course_id']}/candidates").json()
+    assert {(c["first_name"], c["last_name"]) for c in candidates} == {("Ada", "Lovelace"), ("Alan", "Turing")}
+
+
+def test_new_people_arrive_unapproved_so_they_go_through_review(client, tmp_path):
+    pdf = roster_pdf([("Ada", "Lovelace")], tmp_path / "roster.pdf")
+    course_id = upload_roster(client, pdf).json()["course_id"]
+    assert client.get(f"/api/courses/{course_id}/cards").json() == []
+    assert len(client.get(f"/api/courses/{course_id}/candidates").json()) == 1
+
+
+def test_the_same_roster_can_seed_two_separate_classes(client, tmp_path):
+    """Two sections of one course are a real case; the old UNIQUE checksum banned it."""
+    pdf = roster_pdf([("Ada", "Lovelace")], tmp_path / "shared.pdf")
+    first = upload_roster(client, pdf).json()
+    second = upload_roster(client, pdf).json()
+    assert first["course_id"] != second["course_id"]
+    assert second["added"] == 1
+
+
+def test_a_title_can_be_given_and_otherwise_comes_from_the_filename(client, tmp_path):
+    pdf = roster_pdf([("Ada", "Lovelace")], tmp_path / "ME_EN_101_W26.pdf")
+    named = upload_roster(client, pdf, title="Thermodynamics").json()
+    assert client.get(f"/api/courses/{named['course_id']}").json()["title"] == "Thermodynamics"
+    unnamed = upload_roster(client, pdf).json()
+    assert client.get(f"/api/courses/{unnamed['course_id']}").json()["title"] == "ME EN 101 W26"
+
+
+@pytest.mark.parametrize("filename,content", [("notes.txt", b"hello"), ("roster.pdf", b"")])
+def test_an_unusable_upload_is_refused(client, tmp_path, filename, content):
+    path = tmp_path / filename
+    path.write_bytes(content)
+    assert upload_roster(client, path).status_code == 400
+
+
+def test_a_file_that_is_not_really_a_pdf_is_refused_without_creating_a_class(client, tmp_path):
+    path = tmp_path / "pretend.pdf"
+    path.write_bytes(b"this is not a pdf")
+    assert upload_roster(client, path).status_code == 422
+    assert client.get("/api/courses").json() == [] or all(
+        course["id"] != "pretend" for course in client.get("/api/courses").json()
+    )
+
+
+# --- adding people to a class that already exists -------------------------
+
+
+def test_a_later_roster_adds_only_the_new_people(client, tmp_path):
+    """The whole point: somebody joins late, and nobody else is disturbed."""
+    first = roster_pdf([("Ada", "Lovelace"), ("Alan", "Turing")], tmp_path / "week1.pdf")
+    course_id = upload_roster(client, first).json()["course_id"]
+    for candidate in client.get(f"/api/courses/{course_id}/candidates").json():
+        client.post(f"/api/courses/{course_id}/candidates/{candidate['id']}/approve")
+
+    # Study one of them, so there is history that must survive.
+    studied = client.get(f"/api/courses/{course_id}/cards").json()[0]["id"]
+    session = client.post(f"/api/courses/{course_id}/sessions", json={"mode": "adaptive", "card_ids": [studied]})
+    assert session.status_code == 200, session.text
+    client.post(f"/api/sessions/{session.json()['id']}/reviews", json={"card_id": studied, "result": "right", "mastery": 0.9, "stability_days": 6.0})
+
+    later = roster_pdf([("Ada", "Lovelace"), ("Alan", "Turing"), ("Grace", "Hopper")], tmp_path / "week3.pdf")
+    body = upload_roster(client, later, url=f"/api/courses/{course_id}/imports").json()
+    assert body["status"] == "updated"
+    assert body["added"] == 1
+    assert body["already_present"] == 2
+    assert body["course_id"] == course_id
+
+    candidates = client.get(f"/api/courses/{course_id}/candidates").json()
+    assert [(c["first_name"], c["last_name"]) for c in candidates] == [("Grace", "Hopper")]
+    assert progress_row(client, studied)["seen_count"] == 1, "existing study history must survive a re-import"
+
+
+def test_re_importing_an_unchanged_roster_adds_nobody(client, tmp_path):
+    pdf = roster_pdf([("Ada", "Lovelace"), ("Alan", "Turing")], tmp_path / "roster.pdf")
+    course_id = upload_roster(client, pdf).json()["course_id"]
+    body = upload_roster(client, pdf, url=f"/api/courses/{course_id}/imports").json()
+    assert body["added"] == 0
+    assert body["already_present"] == 2
+    assert "already in the course" in body["warning"]
+
+
+def test_importing_creates_no_second_class(client, tmp_path):
+    """The bug this design removes: a re-export used to become a duplicate class."""
+    first = roster_pdf([("Ada", "Lovelace")], tmp_path / "a.pdf")
+    course_id = upload_roster(client, first).json()["course_id"]
+    before = len(client.get("/api/courses").json())
+    later = roster_pdf([("Ada", "Lovelace"), ("Grace", "Hopper")], tmp_path / "b.pdf")
+    upload_roster(client, later, url=f"/api/courses/{course_id}/imports")
+    assert len(client.get("/api/courses").json()) == before
+
+
+def test_two_sections_can_be_merged_into_one_class(client, tmp_path):
+    section_one = roster_pdf([("Ada", "Lovelace")], tmp_path / "s1.pdf")
+    section_two = roster_pdf([("Grace", "Hopper")], tmp_path / "s2.pdf")
+    course_id = upload_roster(client, section_one).json()["course_id"]
+    body = upload_roster(client, section_two, url=f"/api/courses/{course_id}/imports").json()
+    assert body["added"] == 1
+    assert len(client.get(f"/api/courses/{course_id}/candidates").json()) == 2
+
+
+def test_importing_into_a_course_that_does_not_exist_is_refused(client, tmp_path):
+    pdf = roster_pdf([("Ada", "Lovelace")], tmp_path / "roster.pdf")
+    assert upload_roster(client, pdf, url="/api/courses/nope/imports").status_code == 400
+
+
+def test_the_uploaded_pdf_is_not_kept(client, tmp_path):
+    """The learner has the file already; keeping student rosters buys nothing."""
+    pdf = roster_pdf([("Ada", "Lovelace")], tmp_path / "roster.pdf")
+    upload_roster(client, pdf)
+    stored = [path.name for path in Path(client.app_data).rglob("*.pdf")]
+    assert stored == []
+
+
+def test_provenance_is_recorded_even_though_the_file_is_discarded(client, tmp_path):
+    pdf = roster_pdf([("Ada", "Lovelace")], tmp_path / "ME EN 101.pdf")
+    upload_roster(client, pdf)
+    with sqlite3.connect(client.db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        run = dict(conn.execute("SELECT * FROM import_runs ORDER BY id DESC LIMIT 1").fetchone())
+    assert run["source_filename"] == "ME EN 101.pdf"
+    assert len(run["source_checksum"]) == 64
+    assert run["status"] == "complete"

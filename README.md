@@ -4,7 +4,7 @@
 
 Familiar was built to bring science-backed retrieval practice and expanding recall to the part of a semester that conventional flashcard apps do not handle especially well: quickly learning the names and faces of everyone in a room, then coming back for a low-friction refresher later. There are no forced due dates. You choose a course, start a useful session, and the app decides what deserves attention.
 
-> **Privacy note:** roster PDFs and study history are local. Familiar does not use browser storage or a remote database; cards, sessions, and progress live in the local SQLite database at `app-data/flashcards.sqlite3`. `data/` and `app-data/` are ignored by Git. Do not commit or publish real roster PDFs, portraits, or the local database.
+> **Privacy note:** roster PDFs and study history are local. Familiar does not use browser storage or a remote database; cards, sessions, and progress live in the local SQLite database at `app-data/flashcards.sqlite3`. An uploaded roster PDF is read and then discarded — only the names and portraits it yields are saved. `app-data/` is ignored by Git. Do not commit or publish real roster PDFs, portraits, or the local database.
 >
 > The hosted version at its public URL loads Google Analytics. The page only records
 > visit counts for internal use, so I can tell whether anyone is using it. It sets a
@@ -23,7 +23,7 @@ Familiar was built to bring science-backed retrieval practice and expanding reca
 ## Quick start
 
 1. Install and start [Docker Desktop](https://www.docker.com/products/docker-desktop/).
-2. Export a course roster PDF (3 students per page) from BYU Flashcards (instructions below) and put it in `data/`.
+2. Export a course roster PDF (3 students per page) from BYU Flashcards (instructions below). Keep it anywhere on your computer.
 3. Start the app from this directory:
 
    ```bash
@@ -87,10 +87,10 @@ Familiar expects the roster-style PDF exported by [BYU Flashcards](https://flash
 1. Open the course in BYU Flashcards.
 2. Find and select **Export**.
 3. Choose **3 students per page**.
-4. Download the PDF and copy it into this repository's `data/` directory.
-5. Import it from Familiar's home page.
+4. Download the PDF and keep it anywhere you like — Familiar reads it through a file picker.
+5. On Familiar's home page, choose **Start a class from a roster** and select the file.
 
-Keep one exported PDF per course. You can retain PDFs from previous semesters, import each as its own course, and review any course independently.
+You decide which class each export belongs to, so nothing is inferred from the file itself. That makes three things straightforward: starting a class, adding people who joined late by uploading a newer export into the same class, and merging two sections by importing both into one class.
 
 ## Study modes
 
@@ -214,9 +214,25 @@ how hard someone was to learn is not a question their record can answer yet.
 
 ## Data and import behavior
 
-The importer first reads embedded PDF text. For scanned rosters, it renders pages and runs local OCR on the name column. It records the source-file checksum, so importing an unchanged PDF will not create duplicates. Review and approve candidates before they appear in study sessions; missed names can be added manually from the course page.
+The importer first reads embedded PDF text. For scanned rosters it renders pages and runs
+local OCR on the name column — a 23-page scanned export takes around 25 seconds in Docker.
+Review and approve candidates before they appear in study sessions; missed names can be
+added manually from the course page.
 
-The application stores courses, cards, progress, sessions, and review events in SQLite under the gitignored `app-data/` directory. The PDFs remain in the gitignored `data/` directory.
+**Adding people who joined late.** Export a fresh roster from BYU Flashcards and upload it
+into the existing class from the **Roster and clean-up** panel. People already in the class
+are left exactly as they are, keeping every bit of their study history; only names that are
+new to the class appear for approval.
+
+Matching is exact on first and last name. That is deliberate: a fuzzy matcher that folded
+"Mike Chen" into "Michael Chen" would silently merge two people's histories, which cannot
+be undone. If a name is spelled differently between exports it arrives as a new candidate,
+and rejecting it during review costs one click.
+
+Running natively, scanned rosters need `poppler` and `tesseract` installed. Docker includes
+both; without them Familiar says so rather than failing obscurely.
+
+The application stores courses, cards, progress, sessions, and review events in SQLite under the gitignored `app-data/` directory. Uploaded PDFs are not retained; each import records the filename, checksum, page count and any warning in `import_runs` for provenance.
 
 ## Current limitations
 
