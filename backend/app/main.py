@@ -62,6 +62,12 @@ class ReviewRequest(BaseModel):
     reviewed_at: str | None = None
 
 
+class ResetCourseRequest(BaseModel):
+    """Resetting destroys review history, so the caller must name what it is destroying."""
+
+    confirm_title: str
+
+
 class CompleteSessionRequest(BaseModel):
     """Readiness is the course average at completion, computed by the client."""
 
@@ -430,6 +436,80 @@ def export_course(course_id: str, include_progress: bool = True):
             raise HTTPException(status_code=404, detail=str(exc)) from exc
     stem = course_id if include_progress else f"{course_id}-roster"
     return _export_response(bundle, stem)
+
+
+@app.delete("/api/courses/{course_id}/cards/{card_id}")
+def remove_card(course_id: str, card_id: str):
+    """Remove somebody who left the course, with their photo and their history.
+
+    Deleting the portrait is deliberate rather than tidy-minded: a person who is
+    no longer in the class should not leave their photograph on disk.
+    """
+    with connection() as conn:
+        card = conn.execute(
+            "SELECT * FROM cards WHERE id = ? AND course_id = ?", (card_id, course_id)
+        ).fetchone()
+        if not card:
+            raise HTTPException(status_code=404, detail="That person is not in this course")
+
+        image_path = card["image_path"]
+        conn.execute("DELETE FROM cards WHERE id = ?", (card_id,))
+        # card_progress and review_events cascade from the cards row.
+
+        removed_asset = False
+        if image_path:
+            still_used = conn.execute(
+                "SELECT 1 FROM cards WHERE image_path = ? LIMIT 1", (image_path,)
+            ).fetchone()
+            if not still_used:
+                asset = (ASSETS / image_path).resolve()
+                # Refuse to follow a path out of the asset directory.
+                if asset.is_file() and asset.is_relative_to(ASSETS.resolve()):
+                    asset.unlink()
+                    removed_asset = True
+        return {"status": "removed", "removed_portrait": removed_asset}
+
+
+@app.post("/api/courses/{course_id}/reset")
+def reset_course_progress(course_id: str, request: ResetCourseRequest):
+    """Return every person in a course to unseen, discarding the study history.
+
+    This is the one irreversible operation in the app, and what it destroys —
+    timestamped review events — cannot be reconstructed from anything else. The
+    caller has to repeat the course title back, so a stray request cannot do it.
+    """
+    with connection() as conn:
+        course = conn.execute("SELECT * FROM courses WHERE id = ?", (course_id,)).fetchone()
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found")
+        if request.confirm_title.strip() != course["title"]:
+            raise HTTPException(
+                status_code=400,
+                detail="Type the course title exactly to confirm resetting its progress.",
+            )
+
+        discarded = conn.execute(
+            """
+            SELECT COUNT(*) AS reviews,
+                   (SELECT COUNT(*) FROM study_sessions WHERE course_id = ?) AS sessions
+            FROM review_events
+            WHERE session_id IN (SELECT id FROM study_sessions WHERE course_id = ?)
+            """,
+            (course_id, course_id),
+        ).fetchone()
+
+        conn.execute(
+            """
+            UPDATE card_progress
+            SET seen_count = 0, right_count = 0, wrong_count = 0, confidence = 0,
+                mastery = 0.5, stability_days = 0.25, last_reviewed_at = NULL, last_result = NULL
+            WHERE card_id IN (SELECT id FROM cards WHERE course_id = ?)
+            """,
+            (course_id,),
+        )
+        # review_events cascade from study_sessions.
+        conn.execute("DELETE FROM study_sessions WHERE course_id = ?", (course_id,))
+        return {"status": "reset", "discarded_reviews": discarded["reviews"], "discarded_sessions": discarded["sessions"]}
 
 
 @app.get("/")

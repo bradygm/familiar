@@ -14,8 +14,6 @@ let currentCourse = null;
 let study = null;
 let scoring = false;
 let helpOpen = false;
-// Where focus was before the help dialog opened, so it can be handed back.
-let focusBeforeHelp = null;
 
 async function api(path, options = {}) {
   const response = await fetch(`/api${path}`, { headers: { 'Content-Type': 'application/json' }, ...options });
@@ -96,7 +94,7 @@ async function courseView(courseId) {
   const [course, cards, candidates, stats] = await Promise.all([api(`/courses/${courseId}`), api(`/courses/${courseId}/cards?sort=first`), api(`/courses/${courseId}/candidates`), api(`/courses/${courseId}/stats`)]);
   currentCourse = course;
   const summary = summariseCourse(stats.progress || [], Date.now());
-  setView(`<a class="back" href="#/">← All courses</a><section class="section-head" style="margin-top:25px"><div><div class="eyebrow">${esc(course.source_filename)}</div><h1>${esc(course.title)}</h1><p>${cards.length} approved cards · ${candidates.length} waiting for review</p></div><div class="actions"><a class="button secondary" id="export-course" href="/api/courses/${encodeURIComponent(course.id)}/export" download>Export course</a><button class="button secondary" id="review-candidates">Review imports</button><button class="button secondary" id="add-card">Add person</button><button class="button" id="start-study">Start session</button></div></section><section class="stats" aria-label="Course statistics"><article class="stat panel"><strong>${summary.familiarPercent}%</strong><span>familiar</span></article><article class="stat panel"><strong>${summary.readiness}%</strong><span>avg. predicted recall</span></article><article class="stat panel"><strong>${stats.session_count}</strong><span>sessions</span></article><article class="stat panel"><strong>${stats.wrong_count} / ${stats.reviews}</strong><span>misses / answers</span></article></section>${learningPulse(stats)}<div class="toolbar"><input class="search" id="search" placeholder="Search people" aria-label="Search people"><select class="select" id="sort" aria-label="Sort roster"><option value="first">First name</option><option value="last">Last name</option><option value="recall">Predicted recall (low first)</option><option value="strength">Learning strength (low first)</option><option value="difficulty">Hardest to learn</option></select></div><div id="roster"></div>`);
+  setView(`<a class="back" href="#/">← All courses</a><section class="section-head" style="margin-top:25px"><div><div class="eyebrow">${esc(course.source_filename)}</div><h1>${esc(course.title)}</h1><p>${cards.length} ${cards.length === 1 ? 'person' : 'people'}</p></div><div class="actions">${candidates.length ? `<button class="button secondary" id="review-candidates">Review ${candidates.length} new ${candidates.length === 1 ? 'name' : 'names'}</button>` : ''}<button class="button secondary" id="add-card">Add person</button><button class="button" id="start-study">Start session</button></div></section><section class="stats" aria-label="Course statistics"><article class="stat panel"><strong>${summary.familiarPercent}%</strong><span>familiar</span></article><article class="stat panel"><strong>${summary.readiness}%</strong><span>avg. predicted recall</span></article><article class="stat panel"><strong>${stats.session_count}</strong><span>sessions</span></article><article class="stat panel"><strong>${stats.wrong_count} / ${stats.reviews}</strong><span>misses / answers</span></article></section>${learningPulse(stats)}<div class="toolbar"><input class="search" id="search" placeholder="Search people" aria-label="Search people"><select class="select" id="sort" aria-label="Sort roster"><option value="first">First name</option><option value="last">Last name</option><option value="recall">Predicted recall (low first)</option><option value="strength">Learning strength (low first)</option><option value="difficulty">Hardest to learn</option></select></div><div id="roster"></div><section class="course-data panel"><div class="eyebrow">Course data</div><h2>Backup and clean-up</h2><p class="fine">Study history lives only in this app's local database. Export before anything destructive.</p><div class="import-list"><a class="chip" href="/api/courses/${encodeURIComponent(course.id)}/export" download>Export course</a><button class="chip" id="remove-person">Remove someone who left</button><button class="chip" id="reset-progress">Reset all progress</button></div></section>`);
   const roster = document.querySelector('#roster');
   const flippedCards = new Set();
   const histories = new Map();
@@ -136,7 +134,9 @@ async function courseView(courseId) {
     renderRoster(cards.filter(card => `${card.first_name} ${card.last_name}`.toLowerCase().includes(document.querySelector('#search').value.toLowerCase())));
   });
   document.querySelector('#start-study').addEventListener('click', () => setupView(course, cards));
-  document.querySelector('#review-candidates').addEventListener('click', () => { location.hash = `#/course/${course.id}/review`; });
+  document.querySelector('#remove-person').addEventListener('click', () => removePersonDialog(course, cards));
+  document.querySelector('#reset-progress').addEventListener('click', () => resetProgressDialog(course, stats));
+  document.querySelector('#review-candidates')?.addEventListener('click', () => { location.hash = `#/course/${course.id}/review`; });
   document.querySelector('#add-card').addEventListener('click', () => { location.hash = `#/course/${course.id}/add`; });
 }
 
@@ -249,6 +249,69 @@ function studyView() {
   document.querySelector('#wrong')?.addEventListener('click', () => score('wrong'));
 }
 
+function removePersonDialog(course, cards) {
+  const row = (card) => `<div class="remove-row" data-remove="${card.id}">${portrait(card)}<span>${esc(card.first_name)} ${esc(card.last_name)}<br><small>${card.seen_count ? `${card.right_count}/${card.seen_count} correct` : 'Never studied'}</small></span><button class="button secondary" data-remove-button="${card.id}">Remove</button></div>`;
+  showDialog(
+    `${dialogHead('Remove someone who left')}<p class="fine">Removing a person deletes their photo and their review history along with them. Everyone else is untouched.</p><label for="remove-search">Find a person</label><input class="search" id="remove-search" autofocus placeholder="Search by name" aria-label="Search people to remove"><div class="remove-list" id="remove-list">${cards.map(row).join('')}</div>`,
+    (backdrop) => {
+      const list = backdrop.querySelector('#remove-list');
+      backdrop.querySelector('#remove-search').addEventListener('input', event => {
+        const term = event.target.value.toLowerCase();
+        list.innerHTML = cards.filter(card => `${card.first_name} ${card.last_name}`.toLowerCase().includes(term)).map(row).join('');
+      });
+      list.addEventListener('click', async event => {
+        const button = event.target.closest('[data-remove-button]');
+        if (!button) return;
+        const card = cards.find(item => item.id === button.dataset.removeButton);
+        // Confirming in place rather than in a second dialog: the row already
+        // names the person, so a two-step click is enough to prevent a slip.
+        if (button.dataset.confirming !== 'yes') {
+          list.querySelectorAll('[data-confirming]').forEach(other => { other.dataset.confirming = 'no'; other.textContent = 'Remove'; });
+          button.dataset.confirming = 'yes';
+          button.textContent = 'Really remove?';
+          return;
+        }
+        button.disabled = true;
+        button.textContent = 'Removing…';
+        try {
+          await api(`/courses/${course.id}/cards/${card.id}`, {method: 'DELETE'});
+          closeDialog();
+          courseView(course.id);
+        } catch (error) {
+          button.disabled = false;
+          button.textContent = error.message;
+        }
+      });
+    },
+  );
+}
+
+function resetProgressDialog(course, stats) {
+  const sessions = stats.session_count || 0;
+  const reviews = stats.reviews || 0;
+  showDialog(
+    `${dialogHead('Reset all progress')}<div class="danger-note"><strong>This cannot be undone.</strong> It discards ${reviews} recorded ${reviews === 1 ? 'answer' : 'answers'} across ${sessions} ${sessions === 1 ? 'session' : 'sessions'}, and returns everyone in this course to never-studied. The people themselves stay.</div><p class="fine">Timestamped review history cannot be reconstructed from anything else. <a href="/api/courses/${encodeURIComponent(course.id)}/export" download>Export a backup first</a>.</p><label for="reset-confirm">Type <strong>${esc(course.title)}</strong> to confirm</label><input class="search" id="reset-confirm" autofocus autocomplete="off" aria-label="Type the course title to confirm"><div id="reset-notice"></div><div class="modal-actions"><button class="button secondary" data-close>Cancel</button><button class="button danger" id="reset-confirm-button" disabled>Reset progress</button></div>`,
+    (backdrop) => {
+      const input = backdrop.querySelector('#reset-confirm');
+      const confirm = backdrop.querySelector('#reset-confirm-button');
+      input.addEventListener('input', () => { confirm.disabled = input.value.trim() !== course.title; });
+      confirm.addEventListener('click', async () => {
+        confirm.disabled = true;
+        confirm.textContent = 'Resetting…';
+        try {
+          await api(`/courses/${course.id}/reset`, {method: 'POST', body: JSON.stringify({confirm_title: input.value})});
+          closeDialog();
+          courseView(course.id);
+        } catch (error) {
+          backdrop.querySelector('#reset-notice').innerHTML = notice(error.message);
+          confirm.disabled = false;
+          confirm.textContent = 'Reset progress';
+        }
+      });
+    },
+  );
+}
+
 const SHORTCUTS = [
   {keys: ['Space', 'Enter'], action: 'Flip the card over'},
   {keys: ['R'], action: 'Mark right — works before flipping, for a name you already know'},
@@ -260,29 +323,47 @@ const SHORTCUTS = [
 function shortcutHelp() {
   const rows = SHORTCUTS.map(({keys, action}) =>
     `<div class="shortcut-row"><dt>${keys.map(key => `<span class="key">${esc(key)}</span>`).join('<span class="shortcut-or">or</span>')}</dt><dd>${esc(action)}</dd></div>`).join('');
-  return `<div class="help-backdrop" id="help-backdrop"><div class="help-panel panel" role="dialog" aria-modal="true" aria-labelledby="help-title"><div class="help-head"><h2 id="help-title">Keyboard shortcuts</h2><button class="button secondary" id="help-close" aria-label="Close shortcuts">Close <span class="key">Esc</span></button></div><dl class="shortcut-list">${rows}</dl><p class="fine">Shortcuts are ignored while you are typing in a search or text field.</p></div></div>`;
+  return `${dialogHead('Keyboard shortcuts')}<dl class="shortcut-list">${rows}</dl><p class="fine">Shortcuts are ignored while you are typing in a search or text field.</p>`;
+}
+
+// A dialog that owns focus while it is open and hands it back on close. The
+// shortcut list, the remove-a-person list and the reset confirmation all use it.
+let openDialog = null;
+
+function showDialog(html, wire) {
+  closeDialog();
+  const returnFocusTo = document.activeElement;
+  document.body.insertAdjacentHTML('beforeend', `<div class="modal-backdrop" id="modal-backdrop"><div class="modal-panel panel" role="dialog" aria-modal="true" aria-labelledby="modal-title">${html}</div></div>`);
+  const backdrop = document.querySelector('#modal-backdrop');
+  backdrop.addEventListener('click', event => { if (event.target === backdrop) closeDialog(); });
+  backdrop.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', closeDialog));
+  openDialog = {backdrop, returnFocusTo};
+  wire?.(backdrop);
+  (backdrop.querySelector('[autofocus]') || backdrop.querySelector('[data-close]'))?.focus();
+}
+
+function closeDialog() {
+  if (!openDialog) return;
+  const {backdrop, returnFocusTo} = openDialog;
+  openDialog = null;
+  backdrop.remove();
+  returnFocusTo?.focus?.();
+}
+
+function dialogHead(title) {
+  return `<div class="modal-head"><h2 id="modal-title">${esc(title)}</h2><button class="button secondary" data-close aria-label="Close">Close <span class="key">Esc</span></button></div>`;
 }
 
 function closeHelp() {
   if (!helpOpen) return;
   helpOpen = false;
-  document.querySelector('#help-backdrop')?.remove();
-  // Give focus back to whatever had it, so keyboard users are not dropped at
-  // the top of the document.
-  focusBeforeHelp?.focus?.();
-  focusBeforeHelp = null;
+  closeDialog();
 }
 
 function openHelp() {
   if (helpOpen || !study) return;
   helpOpen = true;
-  focusBeforeHelp = document.activeElement;
-  document.body.insertAdjacentHTML('beforeend', shortcutHelp());
-  const panel = document.querySelector('#help-backdrop');
-  panel.querySelector('#help-close').addEventListener('click', closeHelp);
-  // A click on the backdrop itself dismisses; one inside the panel does not.
-  panel.addEventListener('click', event => { if (event.target === panel) closeHelp(); });
-  panel.querySelector('#help-close').focus();
+  showDialog(shortcutHelp());
 }
 
 function continuousProgress(stats) {
@@ -389,6 +470,8 @@ async function completeStudy() {
 }
 
 document.addEventListener('keydown', event => {
+  // A dialog outside a study session still answers Escape.
+  if (openDialog && !helpOpen && event.key === 'Escape') { closeDialog(); return; }
   if (!study || ['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName)) return;
   // While the shortcut list is open it owns the keyboard: Escape closes it
   // rather than ending the session, and scoring keys are inert.
