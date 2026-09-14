@@ -162,3 +162,31 @@ export function summariseCourse(
     distribution,
   };
 }
+
+/** Progress plus the running tallies the roster views sort on. */
+export interface CardHistory extends CardProgress {
+  readonly right_count: number;
+  readonly wrong_count: number;
+}
+
+/** Damping on the difficulty estimate, in notional extra correct sightings. */
+export const DIFFICULTY_SMOOTHING = 3;
+
+/**
+ * How much trouble a person has given the learner. Higher is harder.
+ *
+ * Misses per sighting, damped so that thin evidence reads as "not known to be
+ * hard" rather than as hard. A raw miss rate is far too jumpy to sort by — one
+ * miss out of two sightings would score 0.5 and outrank someone missed twelve
+ * times in forty. Damping toward zero also puts people who have never been
+ * studied at the bottom, which is the honest place for them: how hard someone
+ * was to learn is not a question their record can answer yet.
+ *
+ * The figure rises both with the miss rate and with the sheer number of
+ * misses, so a person missed ten times in twenty ranks above one missed five
+ * times in ten. That matches what the ordering is for: finding who actually
+ * cost effort.
+ */
+export function learningDifficulty(history: CardHistory): number {
+  return history.wrong_count / (history.seen_count + DIFFICULTY_SMOOTHING);
+}

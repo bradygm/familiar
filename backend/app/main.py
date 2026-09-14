@@ -314,8 +314,8 @@ def approve_candidate(course_id: str, card_id: str):
 
 @app.post("/api/courses/{course_id}/sessions")
 def start_session(course_id: str, request: StartSessionRequest):
-    if request.mode not in {"all", "adaptive", "morris"}:
-        raise HTTPException(status_code=400, detail="Mode must be all, adaptive, or morris")
+    if request.mode not in {"all", "adaptive", "morris", "continuous"}:
+        raise HTTPException(status_code=400, detail="Mode must be all, adaptive, morris, or continuous")
     with connection() as conn:
         available = {
             row["id"]

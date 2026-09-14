@@ -1,8 +1,10 @@
 import {
+  ContinuousSession,
   adaptiveCards,
   cardPredictedRecall,
   courseReadiness,
   learningStatus as recallStatus,
+  sortRoster,
   summariseCourse,
   updateMemoryState,
 } from './vendor/core/index.js';
@@ -91,7 +93,7 @@ async function courseView(courseId) {
   const [course, cards, candidates, stats] = await Promise.all([api(`/courses/${courseId}`), api(`/courses/${courseId}/cards?sort=first`), api(`/courses/${courseId}/candidates`), api(`/courses/${courseId}/stats`)]);
   currentCourse = course;
   const summary = summariseCourse(stats.progress || [], Date.now());
-  setView(`<a class="back" href="#/">← All courses</a><section class="section-head" style="margin-top:25px"><div><div class="eyebrow">${esc(course.source_filename)}</div><h1>${esc(course.title)}</h1><p>${cards.length} approved cards · ${candidates.length} waiting for review</p></div><div class="actions"><a class="button secondary" id="export-course" href="/api/courses/${encodeURIComponent(course.id)}/export" download>Export course</a><button class="button secondary" id="review-candidates">Review imports</button><button class="button secondary" id="add-card">Add person</button><button class="button" id="start-study">Start session</button></div></section><section class="stats" aria-label="Course statistics"><article class="stat panel"><strong>${summary.familiarPercent}%</strong><span>familiar</span></article><article class="stat panel"><strong>${summary.readiness}%</strong><span>avg. predicted recall</span></article><article class="stat panel"><strong>${stats.session_count}</strong><span>sessions</span></article><article class="stat panel"><strong>${stats.wrong_count} / ${stats.reviews}</strong><span>misses / answers</span></article></section>${learningPulse(stats)}<div class="toolbar"><input class="search" id="search" placeholder="Search people" aria-label="Search people"><select class="select" id="sort" aria-label="Sort roster"><option value="first">First name</option><option value="last">Last name</option><option value="confidence">Predicted recall (low first)</option></select></div><div id="roster"></div>`);
+  setView(`<a class="back" href="#/">← All courses</a><section class="section-head" style="margin-top:25px"><div><div class="eyebrow">${esc(course.source_filename)}</div><h1>${esc(course.title)}</h1><p>${cards.length} approved cards · ${candidates.length} waiting for review</p></div><div class="actions"><a class="button secondary" id="export-course" href="/api/courses/${encodeURIComponent(course.id)}/export" download>Export course</a><button class="button secondary" id="review-candidates">Review imports</button><button class="button secondary" id="add-card">Add person</button><button class="button" id="start-study">Start session</button></div></section><section class="stats" aria-label="Course statistics"><article class="stat panel"><strong>${summary.familiarPercent}%</strong><span>familiar</span></article><article class="stat panel"><strong>${summary.readiness}%</strong><span>avg. predicted recall</span></article><article class="stat panel"><strong>${stats.session_count}</strong><span>sessions</span></article><article class="stat panel"><strong>${stats.wrong_count} / ${stats.reviews}</strong><span>misses / answers</span></article></section>${learningPulse(stats)}<div class="toolbar"><input class="search" id="search" placeholder="Search people" aria-label="Search people"><select class="select" id="sort" aria-label="Sort roster"><option value="first">First name</option><option value="last">Last name</option><option value="recall">Predicted recall (low first)</option><option value="strength">Learning strength (low first)</option><option value="difficulty">Hardest to learn</option></select></div><div id="roster"></div>`);
   const roster = document.querySelector('#roster');
   const flippedCards = new Set();
   const histories = new Map();
@@ -124,13 +126,10 @@ async function courseView(courseId) {
   }
   renderRoster(cards);
   document.querySelector('#search').addEventListener('input', event => { const query = event.target.value.toLowerCase(); renderRoster(cards.filter(card => `${card.first_name} ${card.last_name}`.toLowerCase().includes(query))); });
-  document.querySelector('#sort').addEventListener('change', async event => {
-    const choice = event.target.value;
-    // Name order is plain SQL; recall order is the model's, so the core does it.
-    const sorted = choice === 'confidence'
-      ? [...cards].sort((left, right) => cardPredictedRecall(left, Date.now()) - cardPredictedRecall(right, Date.now()) || left.seen_count - right.seen_count || left.last_name.localeCompare(right.last_name) || left.first_name.localeCompare(right.first_name))
-      : await api(`/courses/${courseId}/cards?sort=${choice}`);
-    cards.splice(0, cards.length, ...sorted);
+  document.querySelector('#sort').addEventListener('change', event => {
+    // Every ordering comes from the core, so "hardest" and "weakest" mean the
+    // same thing here as they will in the browser build.
+    cards.splice(0, cards.length, ...sortRoster(cards, event.target.value, Date.now()));
     renderRoster(cards.filter(card => `${card.first_name} ${card.last_name}`.toLowerCase().includes(document.querySelector('#search').value.toLowerCase())));
   });
   document.querySelector('#start-study').addEventListener('click', () => setupView(course, cards));
@@ -153,9 +152,9 @@ function setupView(course, courseCards) {
   let mode = 'adaptive';
   let adaptiveLength = Math.min(15, count);
   let morrisLength = Math.min(7, count);
-  setView(`<a class="back" href="${courseLink(course)}" id="setup-back">← ${esc(course.title)}</a><section class="setup"><div class="eyebrow">Study setup</div><h1>What feels useful today?</h1><p class="fine">Every card is available whenever you are. Adaptive review simply makes a varied, helpful choice.</p><div class="mode-grid"><button class="mode selected" data-mode="adaptive"><h2>Adaptive review</h2><p>Prioritizes people with the lowest predicted recall.</p></button><button class="mode" data-mode="morris"><h2>Expanding recall</h2><p>Repeats a focused base set inside one capped session with widening gaps.</p></button><button class="mode" data-mode="all"><h2>All cards</h2><p>See every approved person once, in a fresh random order.</p></button></div><label class="range" id="base-size">Adaptive session length: <strong id="length-label">${adaptiveLength}</strong><input id="length" type="range" min="5" max="${Math.max(5, Math.min(50, count))}" value="${adaptiveLength}"></label><div class="actions"><button class="button" id="begin">Begin studying</button></div><div id="setup-notice"></div></section>`);
+  setView(`<a class="back" href="${courseLink(course)}" id="setup-back">← ${esc(course.title)}</a><section class="setup"><div class="eyebrow">Study setup</div><h1>What feels useful today?</h1><p class="fine">Every card is available whenever you are. Adaptive review simply makes a varied, helpful choice.</p><div class="mode-grid"><button class="mode selected" data-mode="adaptive"><h2>Adaptive review</h2><p>Prioritizes people with the lowest predicted recall.</p></button><button class="mode" data-mode="morris"><h2>Expanding recall</h2><p>Repeats a focused base set inside one capped session with widening gaps.</p></button><button class="mode" data-mode="all"><h2>All cards</h2><p>See every approved person once, in a fresh random order.</p></button><button class="mode" data-mode="continuous"><h2>Continuous</h2><p>Keeps going and keeps re-ranking. Miss someone and they come back at widening gaps. Ends when you do.</p></button></div><label class="range" id="base-size">Adaptive session length: <strong id="length-label">${adaptiveLength}</strong><input id="length" type="range" min="5" max="${Math.max(5, Math.min(50, count))}" value="${adaptiveLength}"></label><div class="actions"><button class="button" id="begin">Begin studying</button></div><div id="setup-notice"></div></section>`);
   document.querySelector('#setup-back').addEventListener('click', event => { event.preventDefault(); courseView(course.id); });
-  document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => { mode = button.dataset.mode; document.querySelectorAll('[data-mode]').forEach(item => item.classList.toggle('selected', item === button)); document.querySelector('.range').classList.toggle('hidden', mode === 'all'); document.querySelector('#base-size').firstChild.textContent = mode === 'morris' ? 'Base people: ' : 'Adaptive session length: '; const input = document.querySelector('#length'); input.max = mode === 'morris' ? Math.max(5, Math.min(15, count)) : Math.max(5, Math.min(50, count)); input.value = mode === 'morris' ? Math.min(morrisLength, +input.max) : Math.min(adaptiveLength, +input.max); document.querySelector('#length-label').textContent = input.value; }));
+  document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => { mode = button.dataset.mode; document.querySelectorAll('[data-mode]').forEach(item => item.classList.toggle('selected', item === button)); document.querySelector('.range').classList.toggle('hidden', mode === 'all' || mode === 'continuous'); document.querySelector('#base-size').firstChild.textContent = mode === 'morris' ? 'Base people: ' : 'Adaptive session length: '; const input = document.querySelector('#length'); input.max = mode === 'morris' ? Math.max(5, Math.min(15, count)) : Math.max(5, Math.min(50, count)); input.value = mode === 'morris' ? Math.min(morrisLength, +input.max) : Math.min(adaptiveLength, +input.max); document.querySelector('#length-label').textContent = input.value; }));
   document.querySelector('#length').addEventListener('input', event => { const length = +event.target.value; if (mode === 'morris') morrisLength = length; else adaptiveLength = length; document.querySelector('#length-label').textContent = length; });
   document.querySelector('#begin').addEventListener('click', async () => {
     try {
@@ -176,6 +175,8 @@ function setupView(course, courseCards) {
 // of the roster as interleaved filler to hold its gaps open.
 function selectSessionCards(courseCards, mode, limit) {
   const shuffle = (items) => items.map(item => [Math.random(), item]).sort((a, b) => a[0] - b[0]).map(([, item]) => item);
+  // Continuous re-ranks the whole roster as it goes, so it starts with all of it.
+  if (mode === 'continuous') return {cards: [...courseCards], filler_cards: []};
   if (mode === 'all') return {cards: shuffle(courseCards), filler_cards: []};
   const cards = adaptiveCards(courseCards, limit);
   if (mode !== 'morris') return {cards, filler_cards: []};
@@ -185,6 +186,12 @@ function selectSessionCards(courseCards, mode, limit) {
 
 function initializeStudy(result) {
   study = {...result, index:0, revealed:false};
+  if (study.mode === 'continuous') {
+    // The core owns the ranking and the miss-recovery cycle; this just draws it.
+    study.session = new ContinuousSession(result.cards);
+    study.session.next();
+    return;
+  }
   if (study.mode === 'morris') {
     study = {...study, remaining:[...result.cards], pending:[], fillers:[...(result.filler_cards || [])], fillerIndex:0, current:null, currentIsFiller:false, stages:{}, reviews:0, maxReviews:Math.min(60, Math.max(20, result.cards.length * 7))};
     advanceMorris();
@@ -192,6 +199,7 @@ function initializeStudy(result) {
 }
 
 function currentCard() {
+  if (study?.mode === 'continuous') return study.session.current;
   return study?.mode === 'morris' ? study.current : study?.cards[study.index];
 }
 
@@ -215,16 +223,34 @@ function advanceMorris() {
 function studyView() {
   const card = currentCard();
   if (!card) return completeStudy();
-  const complete = study.mode === 'morris' ? Math.round((study.reviews / study.maxReviews) * 100) : Math.round((study.index / study.cards.length) * 100);
-  const sessionTitle = study.mode === 'all' ? 'All cards' : study.mode === 'morris' ? (study.currentIsFiller ? 'Expanding recall · interleaved review' : 'Expanding recall') : 'Adaptive review';
-  const position = study.mode === 'morris' ? `${study.reviews + 1} / up to ${study.maxReviews}` : `${study.index + 1} / ${study.cards.length}`;
-  const morrisProgress = study.mode === 'morris' ? expandingProgress(card) : '';
-  setView(`<div class="study-wrap"><div class="session-meta"><span>${sessionTitle}</span><span>${position}</span></div>${morrisProgress}<div class="study-card" id="flashcard" role="button" tabindex="0" aria-label="Flip card">${portrait(card)}<div class="study-copy">${study.revealed ? `<div class="answer"><div class="eyebrow">The answer</div><div class="name">${esc(card.first_name)} ${esc(card.last_name)}</div>${card.facts.length ? `<ul>${card.facts.map(fact=>`<li>${esc(fact)}</li>`).join('')}</ul>` : ''}</div>` : `<div><div class="eyebrow">Your turn</div><h1>Name this student.</h1><p>Flip when you have an answer in mind.</p></div>`}</div></div><div class="study-actions">${study.revealed ? `<button class="button danger" id="wrong">Wrong <span class="key">W</span></button><button class="button" id="right">Right <span class="key">R</span></button>` : `<button class="button secondary" id="flip">Flip card <span class="key">Space</span></button><button class="button" id="right">Right <span class="key">R</span></button>`}</div><div class="fine" style="margin-top:18px">${complete}% complete · <span class="key">Esc</span> to end session</div></div>`);
+  const continuousStats = study.mode === 'continuous' ? study.session.stats : null;
+  const complete = study.mode === 'continuous' ? null
+    : study.mode === 'morris' ? Math.round((study.reviews / study.maxReviews) * 100)
+    : Math.round((study.index / study.cards.length) * 100);
+  const sessionTitle = study.mode === 'all' ? 'All cards'
+    : study.mode === 'continuous' ? (study.session.currentIsRevisit ? 'Continuous · bringing this one back' : 'Continuous')
+    : study.mode === 'morris' ? (study.currentIsFiller ? 'Expanding recall · interleaved review' : 'Expanding recall')
+    : 'Adaptive review';
+  const position = study.mode === 'continuous' ? `${continuousStats.reviews + 1} reviewed`
+    : study.mode === 'morris' ? `${study.reviews + 1} / up to ${study.maxReviews}`
+    : `${study.index + 1} / ${study.cards.length}`;
+  const morrisProgress = study.mode === 'morris' ? expandingProgress(card)
+    : study.mode === 'continuous' ? continuousProgress(continuousStats)
+    : '';
+  setView(`<div class="study-wrap"><div class="session-meta"><span>${sessionTitle}</span><span>${position}</span></div>${morrisProgress}<div class="study-card" id="flashcard" role="button" tabindex="0" aria-label="Flip card">${portrait(card)}<div class="study-copy">${study.revealed ? `<div class="answer"><div class="eyebrow">The answer</div><div class="name">${esc(card.first_name)} ${esc(card.last_name)}</div>${card.facts.length ? `<ul>${card.facts.map(fact=>`<li>${esc(fact)}</li>`).join('')}</ul>` : ''}</div>` : `<div><div class="eyebrow">Your turn</div><h1>Name this student.</h1><p>Flip when you have an answer in mind.</p></div>`}</div></div><div class="study-actions">${study.revealed ? `<button class="button danger" id="wrong">Wrong <span class="key">W</span></button><button class="button" id="right">Right <span class="key">R</span></button>` : `<button class="button secondary" id="flip">Flip card <span class="key">Space</span></button><button class="button" id="right">Right <span class="key">R</span></button>`}</div><div class="fine" style="margin-top:18px">${complete === null ? 'No set length' : `${complete}% complete`} · <span class="key">Esc</span> to end session</div></div>`);
   const reveal = () => { if (!study.revealed) { study.revealed = true; studyView(); } };
   document.querySelector('#flashcard').addEventListener('click', reveal); document.querySelector('#flashcard').addEventListener('keydown', event => { if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); reveal(); } });
   document.querySelector('#flip')?.addEventListener('click', reveal);
   document.querySelector('#right')?.addEventListener('click', () => score('right'));
   document.querySelector('#wrong')?.addEventListener('click', () => score('wrong'));
+}
+
+function continuousProgress(stats) {
+  const working = stats.queued
+    ? `<strong>${stats.queued}</strong> ${stats.queued === 1 ? 'person is' : 'people are'} being brought back`
+    : '<strong>Nobody</strong> is waiting to come back';
+  const recovered = stats.recovered ? ` · ${stats.recovered} recovered after a miss` : '';
+  return `<section class="morris-progress" aria-label="Continuous session progress"><div>${working}${recovered}</div><p>Miss someone and they return after a short gap, then at widening gaps until you have named them three times running.</p></section>`;
 }
 
 function expandingProgress(card) {
@@ -249,12 +275,22 @@ async function score(result) {
     // instant is computed once and sent along, so the stored timestamp is the
     // one the computation actually used.
     const reviewedAt = new Date().toISOString();
-    const memory = updateMemoryState(card, result, reviewedAt);
+    // In continuous mode the core's session applies the update itself, because
+    // its ranking and its miss-recovery queue both depend on the new state.
+    const memory = study.mode === 'continuous'
+      ? study.session.record(result, reviewedAt).memory
+      : updateMemoryState(card, result, reviewedAt);
     await api(`/sessions/${study.id}/reviews`, {method:'POST',body:JSON.stringify({card_id:card.id, result, mastery:memory.mastery, stability_days:memory.stability_days, reviewed_at:reviewedAt})});
-    // Keep the in-memory card in step, so a repeat within this session scores
-    // against its updated state rather than the state it started with.
-    Object.assign(card, memory, {last_reviewed_at: reviewedAt, seen_count: (card.seen_count || 0) + 1});
-    if (study.mode === 'morris') {
+    if (study.mode === 'continuous') {
+      study.session.next();
+    } else {
+      // Keep the in-memory card in step, so a repeat within this session scores
+      // against its updated state rather than the state it started with.
+      Object.assign(card, memory, {last_reviewed_at: reviewedAt, seen_count: (card.seen_count || 0) + 1});
+    }
+    if (study.mode === 'continuous') {
+      // No end condition: the session runs until the learner stops it.
+    } else if (study.mode === 'morris') {
       study.reviews += 1;
       if (!study.currentIsFiller) {
         const stage = result === 'right' ? (study.stages[card.id] || 0) + 1 : 0;
@@ -285,7 +321,7 @@ async function completeStudy() {
     : null;
   const result = await api(`/sessions/${finishedStudy.id}/complete`, {method:'POST', body:JSON.stringify({readiness})});
   const accuracy = result.reviewed_count ? Math.round(result.right_count / result.reviewed_count * 100) : 0;
-  const restart = finishedStudy.mode === 'all' ? '' : `<button class="button secondary" id="restart-same">Study these ${finishedStudy.cards.length} people again</button>`;
+  const restart = finishedStudy.mode === 'all' || finishedStudy.mode === 'continuous' ? '' : `<button class="button secondary" id="restart-same">Study these ${finishedStudy.cards.length} people again</button>`;
   // Expanding recall shows a person several times and interleaves other cards,
   // so attempts and people are different numbers and are reported separately.
   const people = result.people_count ?? result.reviewed_count;

@@ -24,12 +24,15 @@ export {
   MIN_RECALL,
   MIN_STABILITY_DAYS,
   cardPredictedRecall,
+  DIFFICULTY_SMOOTHING,
   courseReadiness,
+  learningDifficulty,
   learningStatus,
   predictedRecall,
   selectionScore,
   summariseCourse,
   updateMemoryState,
+  type CardHistory,
   type CardProgress,
   type CourseSummary,
   type MemoryState,
@@ -37,3 +40,12 @@ export {
 } from './model.js';
 
 export { adaptiveCards, type AdaptiveOptions, type Random } from './selection.js';
+
+export {
+  ContinuousSession,
+  type ContinuousCard,
+  type ContinuousOptions,
+  type ContinuousStats,
+} from './continuous.js';
+
+export { sortRoster, type RosterCard, type RosterSort } from './roster.js';
