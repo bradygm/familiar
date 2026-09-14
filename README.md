@@ -170,6 +170,11 @@ For example, a brand-new card begins with a conservative prior rather than 0% or
 - `R`: mark right (before or after flipping)
 - `W`: mark wrong (after flipping)
 - `Esc`: end the current session
+- `?`: show and hide the shortcut list
+
+Press `?` during a session for the same list on screen, or use the **Shortcuts** link below
+the card. While that list is open it takes over the keyboard: `Esc` closes it rather than
+ending the session.
 
 The difference between `R` and `W` is deliberate. If you already know the person, `R` scores the card right away and you never have to reveal it — the study screen shows **Right** next to **Flip card** for exactly that reason. Marking a card wrong always requires the flip, so you see who it was you missed.
 

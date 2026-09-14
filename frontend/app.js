@@ -13,6 +13,9 @@ const app = document.querySelector('#app');
 let currentCourse = null;
 let study = null;
 let scoring = false;
+let helpOpen = false;
+// Where focus was before the help dialog opened, so it can be handed back.
+let focusBeforeHelp = null;
 
 async function api(path, options = {}) {
   const response = await fetch(`/api${path}`, { headers: { 'Content-Type': 'application/json' }, ...options });
@@ -237,12 +240,49 @@ function studyView() {
   const morrisProgress = study.mode === 'morris' ? expandingProgress(card)
     : study.mode === 'continuous' ? continuousProgress(continuousStats)
     : '';
-  setView(`<div class="study-wrap"><div class="session-meta"><span>${sessionTitle}</span><span>${position}</span></div>${morrisProgress}<div class="study-card" id="flashcard" role="button" tabindex="0" aria-label="Flip card">${portrait(card)}<div class="study-copy">${study.revealed ? `<div class="answer"><div class="eyebrow">The answer</div><div class="name">${esc(card.first_name)} ${esc(card.last_name)}</div>${card.facts.length ? `<ul>${card.facts.map(fact=>`<li>${esc(fact)}</li>`).join('')}</ul>` : ''}</div>` : `<div><div class="eyebrow">Your turn</div><h1>Name this student.</h1><p>Flip when you have an answer in mind.</p></div>`}</div></div><div class="study-actions">${study.revealed ? `<button class="button danger" id="wrong">Wrong <span class="key">W</span></button><button class="button" id="right">Right <span class="key">R</span></button>` : `<button class="button secondary" id="flip">Flip card <span class="key">Space</span></button><button class="button" id="right">Right <span class="key">R</span></button>`}</div><div class="fine" style="margin-top:18px">${complete === null ? 'No set length' : `${complete}% complete`} · <span class="key">Esc</span> to end session</div></div>`);
+  setView(`<div class="study-wrap"><div class="session-meta"><span>${sessionTitle}</span><span>${position}</span></div>${morrisProgress}<div class="study-card" id="flashcard" role="button" tabindex="0" aria-label="Flip card">${portrait(card)}<div class="study-copy">${study.revealed ? `<div class="answer"><div class="eyebrow">The answer</div><div class="name">${esc(card.first_name)} ${esc(card.last_name)}</div>${card.facts.length ? `<ul>${card.facts.map(fact=>`<li>${esc(fact)}</li>`).join('')}</ul>` : ''}</div>` : `<div><div class="eyebrow">Your turn</div><h1>Name this student.</h1><p>Flip when you have an answer in mind.</p></div>`}</div></div><div class="study-actions">${study.revealed ? `<button class="button danger" id="wrong">Wrong <span class="key">W</span></button><button class="button" id="right">Right <span class="key">R</span></button>` : `<button class="button secondary" id="flip">Flip card <span class="key">Space</span></button><button class="button" id="right">Right <span class="key">R</span></button>`}</div><div class="fine" style="margin-top:18px">${complete === null ? 'No set length' : `${complete}% complete`} · <span class="key">Esc</span> to end session · <button class="link-button" id="show-help" aria-haspopup="dialog">Shortcuts <span class="key">?</span></button></div></div>`);
   const reveal = () => { if (!study.revealed) { study.revealed = true; studyView(); } };
+  document.querySelector('#show-help').addEventListener('click', openHelp);
   document.querySelector('#flashcard').addEventListener('click', reveal); document.querySelector('#flashcard').addEventListener('keydown', event => { if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); reveal(); } });
   document.querySelector('#flip')?.addEventListener('click', reveal);
   document.querySelector('#right')?.addEventListener('click', () => score('right'));
   document.querySelector('#wrong')?.addEventListener('click', () => score('wrong'));
+}
+
+const SHORTCUTS = [
+  {keys: ['Space', 'Enter'], action: 'Flip the card over'},
+  {keys: ['R'], action: 'Mark right — works before flipping, for a name you already know'},
+  {keys: ['W'], action: 'Mark wrong — available once the card is flipped'},
+  {keys: ['Esc'], action: 'End the session and see the summary'},
+  {keys: ['?'], action: 'Show and hide this list'},
+];
+
+function shortcutHelp() {
+  const rows = SHORTCUTS.map(({keys, action}) =>
+    `<div class="shortcut-row"><dt>${keys.map(key => `<span class="key">${esc(key)}</span>`).join('<span class="shortcut-or">or</span>')}</dt><dd>${esc(action)}</dd></div>`).join('');
+  return `<div class="help-backdrop" id="help-backdrop"><div class="help-panel panel" role="dialog" aria-modal="true" aria-labelledby="help-title"><div class="help-head"><h2 id="help-title">Keyboard shortcuts</h2><button class="button secondary" id="help-close" aria-label="Close shortcuts">Close <span class="key">Esc</span></button></div><dl class="shortcut-list">${rows}</dl><p class="fine">Shortcuts are ignored while you are typing in a search or text field.</p></div></div>`;
+}
+
+function closeHelp() {
+  if (!helpOpen) return;
+  helpOpen = false;
+  document.querySelector('#help-backdrop')?.remove();
+  // Give focus back to whatever had it, so keyboard users are not dropped at
+  // the top of the document.
+  focusBeforeHelp?.focus?.();
+  focusBeforeHelp = null;
+}
+
+function openHelp() {
+  if (helpOpen || !study) return;
+  helpOpen = true;
+  focusBeforeHelp = document.activeElement;
+  document.body.insertAdjacentHTML('beforeend', shortcutHelp());
+  const panel = document.querySelector('#help-backdrop');
+  panel.querySelector('#help-close').addEventListener('click', closeHelp);
+  // A click on the backdrop itself dismisses; one inside the panel does not.
+  panel.addEventListener('click', event => { if (event.target === panel) closeHelp(); });
+  panel.querySelector('#help-close').focus();
 }
 
 function continuousProgress(stats) {
@@ -313,6 +353,7 @@ async function score(result) {
 
 async function completeStudy() {
   if (!study) return;
+  closeHelp();
   const finishedStudy = study;
   // Re-read the roster so readiness is computed from what was actually stored,
   // rather than from whatever this session happened to touch.
@@ -347,7 +388,21 @@ async function completeStudy() {
   });
 }
 
-document.addEventListener('keydown', event => { if (!study || scoring || ['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName)) return; if ((event.key === ' ' || event.key === 'Enter') && !study.revealed) { event.preventDefault(); study.revealed = true; studyView(); } if (event.key.toLowerCase() === 'r') score('right'); if (study.revealed && event.key.toLowerCase() === 'w') score('wrong'); if (event.key === 'Escape') completeStudy(); });
+document.addEventListener('keydown', event => {
+  if (!study || ['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+  // While the shortcut list is open it owns the keyboard: Escape closes it
+  // rather than ending the session, and scoring keys are inert.
+  if (helpOpen) {
+    if (event.key === 'Escape' || event.key === '?') { event.preventDefault(); closeHelp(); }
+    return;
+  }
+  if (event.key === '?') { event.preventDefault(); openHelp(); return; }
+  if (scoring) return;
+  if ((event.key === ' ' || event.key === 'Enter') && !study.revealed) { event.preventDefault(); study.revealed = true; studyView(); }
+  if (event.key.toLowerCase() === 'r') score('right');
+  if (study.revealed && event.key.toLowerCase() === 'w') score('wrong');
+  if (event.key === 'Escape') completeStudy();
+});
 window.addEventListener('hashchange', route);
 async function route() {
   const match = location.hash.match(/^#\/course\/([^/]+)(?:\/(review|add))?$/);

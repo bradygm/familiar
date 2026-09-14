@@ -61,7 +61,7 @@ Show these controls on screen and provide clickable equivalents for touch device
 | `Space` or `Enter` | Flip card |
 | `R` | Mark right (before or after flip) |
 | `W` | Mark wrong (only after flip) |
-| `Esc` | Pause / leave session |
+| `Esc` | End the session and show its summary |
 | `?` | Show shortcut help |
 
 The asymmetry is deliberate. `R` is a fast path for a learner who already knows the name and gains nothing from the reveal, so the study screen offers it alongside `Flip card`. `W` stays behind the flip, because a learner who missed a person should always see who it was before the session moves on.
