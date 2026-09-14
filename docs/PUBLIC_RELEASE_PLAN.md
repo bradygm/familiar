@@ -184,6 +184,24 @@ and starts accepting it; the app keeps running on SQLite throughout.
 Continuous mode, the new sorts, calibration groundwork. All headless, all test-driven,
 all written exactly once. This is where "the couple of last features" actually land.
 
+### Before Phase 3 — finish the write surface
+The `Store` interface should be extracted once, against the complete set of operations,
+rather than amended each time a new write appears. Two writes are still missing, both
+small and both already on the backlog:
+
+- **Course-progress reset** — the last unchecked item from Phase 0.
+- **Removing somebody who dropped the class** — currently only possible by editing the
+  database by hand.
+
+Neither is hard. The reason to do them first is that each adds a method to an interface
+that does not exist yet; adding them after means changing both implementations instead of
+one.
+
+Phase 3 itself should then also add **bundle import in the app**. Phase 0 built the export
+and a restore CLI, but nothing in the browser can read a bundle back — and that is how an
+`IndexedDbStore` gets populated before browser OCR exists in Phase 4, and how the local
+database migrates into it.
+
 ### Phase 3 — The storage adapter seam
 Formalise `api()` into a `Store` interface with two implementations: the existing
 `HttpStore` (extracted as-is, keeps your SQLite) and a new `IndexedDbStore`
@@ -201,17 +219,31 @@ native binaries that are faster and already working. This is additive, not a mig
 
 ### Phase 5 — Ship the public build
 GitHub Pages via Actions, PWA + service worker, `navigator.storage.persist()`, backup
-prompting, a demo course with synthetic faces, and a privacy page. Custom domain if you
-want it on your own site — Pages supports one with HTTPS. Your Docker build is unaffected
-by this phase and keeps working the whole time.
+prompting, a demo course with synthetic faces, and accessibility and error-handling QA.
+Custom domain if you want it on your own site — Pages supports one with HTTPS. Your Docker
+build is unaffected by this phase and keeps working the whole time.
 
-### Phase 6 — Make it usable beyond BYU
-Generic CSV + photos import, a stronger review/correct step, accessibility pass, logo,
-docs. See the generality note below.
+**The page has to explain itself.** A visitor arrives with no README: nothing tells them
+what this is, which roster layout it supports, that their data stays on their device, or
+what to do first. That is a launch requirement, not polish — a page that cannot answer
+those questions has no usable audience, however good the study modes are. In particular
+the privacy statement has to be *in the page*, because it is the thing that decides
+whether an instructor is willing to load a roster of student photos at all.
 
-Web visitors have no README, so the page has to explain itself: what it does, which roster
-layout it supports, and where the data lives. The privacy statement in particular has to
-be in the page, not only in the repository.
+Concretely: a landing state that says what it does in a sentence, the demo course reachable
+without importing anything, the supported roster layout named plainly, and the privacy
+statement visible without scrolling for it.
+
+### Phase 6 — Reach beyond BYU — **optional**
+Generic CSV + photos import, a stronger review/correct step for arbitrary layouts, logo.
+See the generality note below.
+
+This phase is severable, and worth being honest about: the audience is BYU faculty, who all
+get the same roster layout from the same tool. Everything needed to serve them is done by
+the end of Phase 5. Phase 6 only matters if the audience widens to instructors at other
+institutions, and it is a large amount of work — a generic importer means supporting layouts
+nobody has seen. Cutting it is a legitimate outcome, not a failure; nothing in Phases 0-5
+depends on it.
 
 ## Risks worth designing around now
 
@@ -290,6 +322,8 @@ Your repo is currently clean — only the two anonymized screenshots are tracked
 ## Acceptance criteria for the public release
 
 - A visitor can open the URL, load the demo course, and study without importing anything.
+- A visitor who has never seen the repository can tell, from the page alone, what it does,
+  whether their roster is supported, and where their data goes.
 - A visitor can import a supported roster, correct mistakes, and study — with devtools
   showing no outbound request carrying roster data, and no request at all beyond the
   single analytics page view.

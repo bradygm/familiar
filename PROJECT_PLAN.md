@@ -135,7 +135,8 @@ Defer:
 - [x] Build the study setup and all-cards session flow.
 - [x] Add SQLite persistence, statistics, and session history.
 - [x] Add a portable backup/export bundle with a verified restore path.
-- [ ] Add course-progress reset.
+- [ ] Add course-progress reset. (Wanted before the storage adapter seam: it is a Store write.)
+- [ ] Add a way to remove somebody who dropped the class. (Same reason.)
 - [x] Implement the adaptive-session selector with module-level checks.
 - [x] Replace the fixed confidence score with a mastery/stability recall model and add a capped expanding-retrieval session mode.
 - [ ] Add responsive/accessibility QA, empty states, error handling, and sample-data safeguards.
