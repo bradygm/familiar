@@ -345,6 +345,34 @@ def create_card(course_id: str, request: CreateCardRequest):
         return {"id": card_id}
 
 
+@app.delete("/api/courses/{course_id}/candidates/{card_id}")
+def reject_candidate(course_id: str, card_id: str):
+    """Discard somebody the importer found who should not be in the course.
+
+    Only unreviewed candidates can be rejected. An approved person is removed
+    through the course's remove action instead, which is a different decision:
+    that one may be discarding real study history.
+    """
+    with connection() as conn:
+        card = conn.execute(
+            "SELECT * FROM cards WHERE id = ? AND course_id = ? AND reviewed = 0", (card_id, course_id)
+        ).fetchone()
+        if not card:
+            raise HTTPException(status_code=404, detail="No such candidate awaiting review")
+
+        image_path = card["image_path"]
+        conn.execute("DELETE FROM cards WHERE id = ?", (card_id,))
+        removed_asset = False
+        if image_path and not conn.execute(
+            "SELECT 1 FROM cards WHERE image_path = ? LIMIT 1", (image_path,)
+        ).fetchone():
+            asset = (ASSETS / image_path).resolve()
+            if asset.is_file() and asset.is_relative_to(ASSETS.resolve()):
+                asset.unlink()
+                removed_asset = True
+        return {"status": "rejected", "removed_portrait": removed_asset}
+
+
 @app.post("/api/courses/{course_id}/candidates/{card_id}/approve")
 def approve_candidate(course_id: str, card_id: str):
     with connection() as conn:

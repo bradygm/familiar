@@ -553,3 +553,193 @@ def test_provenance_is_recorded_even_though_the_file_is_discarded(client, tmp_pa
     assert run["source_filename"] == "ME EN 101.pdf"
     assert len(run["source_checksum"]) == 64
     assert run["status"] == "complete"
+
+
+# --- portraits must not collide between imports ---------------------------
+
+
+class _FakePage:
+    """A page with no embedded text, so the importer takes its OCR path."""
+
+    def extract_text(self):
+        return ""
+
+
+def fake_pdf_reader(_path):
+    return type("FakeReader", (), {"pages": [_FakePage()]})()
+
+
+def portrait_paths(client, course_id):
+    with sqlite3.connect(client.db_path) as conn:
+        return [
+            row[0]
+            for row in conn.execute(
+                "SELECT image_path FROM cards WHERE course_id = ? AND image_path IS NOT NULL", (course_id,)
+            )
+        ]
+
+
+def test_two_people_never_share_a_portrait_file(client, tmp_path, monkeypatch):
+    """The bug this guards: portraits were named page-NN-person-NN, which is only
+    unique within one PDF. A second roster imported into the same class
+    overwrote the first roster's files, silently giving existing people
+    somebody else's face."""
+    from backend.app import importer
+
+    # Stand in for OCR: every roster yields a portrait for each person, and the
+    # crops are named identically across imports, exactly as page/position would.
+    def fake_ocr(path, staging):
+        names = [line.split(" ", 1) for line in path.read_text().splitlines() if line.strip()]
+        candidates = []
+        for index, (first, last) in enumerate(names, start=1):
+            crop = staging / f"page-01-person-{index:02d}.jpg"
+            crop.write_bytes(f"portrait of {first} {last}".encode())
+            candidates.append({"first_name": first, "last_name": last, "staged_portrait": crop})
+        return "", 1, candidates
+
+    monkeypatch.setattr(importer, "_ocr_pdf", fake_ocr)
+    monkeypatch.setattr(importer, "PdfReader", fake_pdf_reader)
+
+    first = tmp_path / "first.pdf"
+    first.write_text("Ada Lovelace\nAlan Turing\n")
+    with first.open("rb") as handle:
+        created = client.post("/api/courses", files={"file": ("first.pdf", handle, "application/pdf")}).json()
+    course_id = created["course_id"]
+    before = portrait_paths(client, course_id)
+    assert len(before) == 2
+
+    # A later roster: the same two people plus one more, crops named the same.
+    second = tmp_path / "second.pdf"
+    second.write_text("Ada Lovelace\nAlan Turing\nGrace Hopper\n")
+    with second.open("rb") as handle:
+        client.post(f"/api/courses/{course_id}/imports", files={"file": ("second.pdf", handle, "application/pdf")})
+
+    after = portrait_paths(client, course_id)
+    assert len(after) == 3
+    assert len(set(after)) == 3, "every person must have their own portrait file"
+    assert set(before).issubset(set(after)), "existing people must keep the portrait they had"
+
+    # And the files themselves must still hold the right faces.
+    assets = Path(client.app_data) / "assets"
+    with sqlite3.connect(client.db_path) as conn:
+        for first_name, last_name, image_path in conn.execute(
+            "SELECT first_name, last_name, image_path FROM cards WHERE course_id = ? AND image_path IS NOT NULL",
+            (course_id,),
+        ):
+            assert (assets / image_path).read_bytes() == f"portrait of {first_name} {last_name}".encode()
+
+
+def test_a_third_roster_cannot_overwrite_a_portrait_from_the_second(client, tmp_path, monkeypatch):
+    """The naming half of the fix.
+
+    Not storing portraits for people already present stops the obvious
+    collision, but a *new* person in a later roster can still land in the same
+    page-and-position slot as a new person from an earlier one. If portrait
+    names came from that slot, the later import would overwrite the earlier
+    person's face. Names are unrelated to position for exactly this reason.
+    """
+    from backend.app import importer
+
+    def fake_ocr(path, staging):
+        candidates = []
+        for index, line in enumerate(path.read_text().splitlines(), start=1):
+            if not line.strip():
+                continue
+            first, last = line.split(" ", 1)
+            # Named by slot, as a page-and-position crop inevitably is.
+            crop = staging / f"page-01-person-{index:02d}.jpg"
+            crop.write_bytes(f"portrait of {first} {last}".encode())
+            candidates.append({"first_name": first, "last_name": last, "staged_portrait": crop})
+        return "", 1, candidates
+
+    monkeypatch.setattr(importer, "_ocr_pdf", fake_ocr)
+    monkeypatch.setattr(importer, "PdfReader", fake_pdf_reader)
+
+    def send(text, url="/api/courses"):
+        roster = tmp_path / "roster.pdf"
+        roster.write_text(text)
+        with roster.open("rb") as handle:
+            return client.post(url, files={"file": ("roster.pdf", handle, "application/pdf")}).json()
+
+    course_id = send("Ada Lovelace\n")["course_id"]
+    # Grace is new, and lands in slot 2.
+    send("Ada Lovelace\nGrace Hopper\n", f"/api/courses/{course_id}/imports")
+    # Zed is new too, and lands in slot 2 as well — Grace is not on this roster.
+    send("Ada Lovelace\nZed Zhang\n", f"/api/courses/{course_id}/imports")
+
+    assets = Path(client.app_data) / "assets"
+    with sqlite3.connect(client.db_path) as conn:
+        stored = list(
+            conn.execute(
+                "SELECT first_name, last_name, image_path FROM cards WHERE course_id = ? AND image_path IS NOT NULL",
+                (course_id,),
+            )
+        )
+    assert len(stored) == 3
+    assert len({row[2] for row in stored}) == 3, "each person needs their own file"
+    for first_name, last_name, image_path in stored:
+        assert (assets / image_path).read_bytes() == f"portrait of {first_name} {last_name}".encode(), (
+            f"{first_name} {last_name} is showing somebody else's face"
+        )
+
+
+def test_an_import_writes_no_portrait_for_somebody_already_present(client, tmp_path, monkeypatch):
+    """Otherwise every re-import leaves a full set of orphaned files behind."""
+    from backend.app import importer
+
+    def fake_ocr(path, staging):
+        candidates = []
+        for index, line in enumerate(path.read_text().splitlines(), start=1):
+            if not line.strip():
+                continue
+            first, last = line.split(" ", 1)
+            crop = staging / f"page-01-person-{index:02d}.jpg"
+            crop.write_bytes(b"x")
+            candidates.append({"first_name": first, "last_name": last, "staged_portrait": crop})
+        return "", 1, candidates
+
+    monkeypatch.setattr(importer, "_ocr_pdf", fake_ocr)
+    monkeypatch.setattr(importer, "PdfReader", fake_pdf_reader)
+
+    roster = tmp_path / "roster.pdf"
+    roster.write_text("Ada Lovelace\n")
+    with roster.open("rb") as handle:
+        course_id = client.post("/api/courses", files={"file": ("r.pdf", handle, "application/pdf")}).json()["course_id"]
+
+    assets = Path(client.app_data) / "assets"
+    after_first = sorted(p.name for p in assets.rglob("*.jpg"))
+    with roster.open("rb") as handle:
+        client.post(f"/api/courses/{course_id}/imports", files={"file": ("r.pdf", handle, "application/pdf")})
+    assert sorted(p.name for p in assets.rglob("*.jpg")) == after_first
+
+
+# --- rejecting a candidate -------------------------------------------------
+
+
+def test_a_candidate_can_be_rejected(client):
+    with sqlite3.connect(client.db_path) as conn:
+        conn.execute(
+            "INSERT INTO cards (id, course_id, first_name, last_name, facts, reviewed, created_at) VALUES ('cand-x', ?, 'Not', 'Astudent', '', 0, '2026-01-01T00:00:00+00:00')",
+            (COURSE,),
+        )
+        conn.execute("INSERT INTO card_progress (card_id) VALUES ('cand-x')")
+        conn.commit()
+
+    assert len(client.get(f"/api/courses/{COURSE}/candidates").json()) == 1
+    assert client.delete(f"/api/courses/{COURSE}/candidates/cand-x").status_code == 200
+    assert client.get(f"/api/courses/{COURSE}/candidates").json() == []
+    with sqlite3.connect(client.db_path) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM cards WHERE id = 'cand-x'").fetchone()[0] == 0
+        assert conn.execute("SELECT COUNT(*) FROM card_progress WHERE card_id = 'cand-x'").fetchone()[0] == 0
+
+
+def test_rejecting_does_not_touch_approved_people(client):
+    """An approved person may have study history; discarding them is a different
+    decision, made through the course's remove action."""
+    approved = f"{COURSE}-card-0"
+    assert client.delete(f"/api/courses/{COURSE}/candidates/{approved}").status_code == 404
+    assert any(card["id"] == approved for card in client.get(f"/api/courses/{COURSE}/cards").json())
+
+
+def test_rejecting_an_unknown_candidate_is_404(client):
+    assert client.delete(f"/api/courses/{COURSE}/candidates/nobody").status_code == 404
