@@ -101,6 +101,7 @@ All modes are intentionally **no-deadline**: every approved card remains availab
 | **Adaptive review** | Selects a varied set with an emphasis on people with low predicted recall, newly imported people, and uncertain estimates. | A quick, helpful session when you do not want to decide what to study. |
 | **Expanding recall** | Starts with an adaptively chosen base set (up to 15 people), then brings a correctly recalled person back after increasingly large within-session gaps. Other course cards are interleaved when needed to preserve those gaps. A miss returns sooner. The session is capped. | Rapidly learning a smaller group at the beginning of a semester. |
 | **All cards** | Shows every approved person once in a fresh random order. | A broad check-in or a refresher later in the semester. |
+| **Continuous** | Never ends. Re-ranks the whole roster after every answer, and a person you miss enters an expanding-retrieval cycle straight away — back after 2 intervening reviews, then 3, then 7, leaving the cycle once you have named them three times running. | Settling in for a long session without deciding a length up front. |
 
 Expanding recall is inspired by retrieval-practice research rather than an attempt to reproduce a commercial spaced-repetition scheduler. In a study of face-name learning, Morris and colleagues found substantially better later name recall from retrieval practice on an expanding schedule than from restudying on the same schedule: [Morris et al., 2005, *Strategies for learning proper names: expanding retrieval practice, meaning and imagery*](https://doi.org/10.1002/acp.1115). Familiar uses that idea inside one finite session: after a correct answer, it schedules another attempt after 3, then 7 intervening reviews; after the third correct answer, the card leaves that session. A wrong answer returns after 2 intervening reviews. If no base card is due, Familiar shows an interleaved course card instead of breaking that gap.
 
@@ -169,6 +170,25 @@ For example, a brand-new card begins with a conservative prior rather than 0% or
 - `R`: mark right (before or after flipping)
 - `W`: mark wrong (after flipping)
 - `Esc`: end the current session
+
+The difference between `R` and `W` is deliberate. If you already know the person, `R` scores the card right away and you never have to reveal it — the study screen shows **Right** next to **Flip card** for exactly that reason. Marking a card wrong always requires the flip, so you see who it was you missed.
+
+## Sorting the roster
+
+Beyond first and last name, the course page can order people by what the learning model
+knows about them:
+
+| Sort | Orders by | Useful for |
+| --- | --- | --- |
+| **Predicted recall (low first)** | Current chance of naming them, i.e. strength decayed by time since the last review. | Who would you fail on right now. |
+| **Learning strength (low first)** | Stored strength, ignoring how long it has been. | Who have you never really got solid. |
+| **Hardest to learn** | Misses per sighting, damped so thin evidence does not dominate. | Who has actually cost you effort. |
+
+The first two differ only in whether time counts. Somebody drilled hard last month can have
+high strength and low predicted recall; the first view surfaces them, the second does not.
+
+"Hardest" deliberately puts people you have never studied last rather than in the middle —
+how hard someone was to learn is not a question their record can answer yet.
 
 ## Data and import behavior
 

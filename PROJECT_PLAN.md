@@ -48,7 +48,7 @@ SQLite and imported image/data files live in a named Docker volume or a clearly 
 1. **Course picker** - choose a course/semester, see card count and last study time.
 2. **Roster list** - searchable list view for first exposure. Sort by first or last name; show thumbnail, full name, and a small set of safe facts.
 3. **Study setup** - choose `All cards` or `Adaptive review`; display the number of cards available and an estimated session size.
-4. **Study session** - one distraction-free card at a time. The front is usually a photo/prompt; the back identifies the person and relevant facts. The learner flips, then marks the response right or wrong.
+4. **Study session** - one distraction-free card at a time. The front is usually a photo/prompt; the back identifies the person and relevant facts. The learner flips, then marks the response right or wrong. A learner who already knows the name can mark it right without flipping first.
 5. **Session summary** - reviewed, correct, incorrect, accuracy, and a concise learning summary.
 6. **Progress and data** - per-course totals, recent sessions, reset course progress, import status, and local backup/export.
 
@@ -59,10 +59,12 @@ Show these controls on screen and provide clickable equivalents for touch device
 | Key | Action |
 | --- | --- |
 | `Space` or `Enter` | Flip card |
-| `R` | Mark right (only after flip) |
+| `R` | Mark right (before or after flip) |
 | `W` | Mark wrong (only after flip) |
 | `Esc` | Pause / leave session |
 | `?` | Show shortcut help |
+
+The asymmetry is deliberate. `R` is a fast path for a learner who already knows the name and gains nothing from the reveal, so the study screen offers it alongside `Flip card`. `W` stays behind the flip, because a learner who missed a person should always see who it was before the session moves on.
 
 Avoid intercepting shortcuts while a search field or other text input has focus. Buttons must remain accessible with keyboard focus and screen readers.
 
@@ -173,7 +175,7 @@ flashcards/
 - A local PDF can be imported, reviewed, and saved as a separate course without exposing its data to the network.
 - The roster search works and first-name / last-name sorts are deterministic.
 - A session can be started in both modes, controlled with both buttons and the documented keys.
-- A card cannot be scored before it is revealed.
+- A card cannot be marked wrong before it is revealed; marking it right early is a deliberate shortcut for a name the learner already knows.
 - Results persist after a refresh, container restart, and are isolated by course.
 - The summary and statistics agree with the recorded answers.
 - A local backup/export can restore the course statistics after a fresh setup.
@@ -199,9 +201,9 @@ Inspect both supplied PDFs, identify their extractable card fields and images, t
 * Add ability to add new people, but it checks for duplicates. Like when a person adds the class, can I just upload a new pdf and it will just bring in the new people. 
 * Calibrate the memory-model coefficients from local timestamped review data after several courses provide enough responses; validate predictions before treating them as calibrated probabilities.
 * ~~Bug: in expanding recall mode, at the end it says "You reviewed 31 people" for example, but it actually was less people because some were shown multiple times.~~ Fixed: the summary now reports attempts and distinct people separately.
-* Continuous mode that just continues to adapt and sample. Sort of like the others but no end. If you miss one, it would trigger the learning cycle and spacing the practice. Continual ranking and ordering. Adaptive mode but no ending? Or better with specifically queing the ones you missed. 
-* Sort by those that were the hardest vs easiest to learn. 
-* Sort by familiar score (strength?)
+* ~~Continuous mode that just continues to adapt and sample.~~ Done: re-ranks after every answer, and a miss enters an expanding-retrieval cycle (2, then 3, then 7 intervening reviews) until recalled three times running.
+* ~~Sort by those that were the hardest vs easiest to learn.~~ Done: damped misses per sighting, so thin evidence does not outrank a long difficult record.
+* ~~Sort by familiar score (strength?)~~ Done: "Learning strength (low first)", which is the stored estimate before time decay.
 * repo name change if going to be hosting? Maybe just call repo familiar, but readme have the full name?
 * add google analytics 
 <!-- Google tag (gtag.js) -->
