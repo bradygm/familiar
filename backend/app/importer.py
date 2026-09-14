@@ -88,10 +88,14 @@ def _row_fallback_candidates(image: Image.Image) -> list[tuple[str, str, int]]:
     return candidates
 
 
-def _save_portrait(image: Image.Image, course_id: str, page_number: int, ordinal: int, name_y: int) -> str:
-    """Save the photo cell to local application storage beside its detected name."""
-    portrait_dir = app_data_dir() / "assets" / course_id
-    portrait_dir.mkdir(parents=True, exist_ok=True)
+def _crop_portrait(image: Image.Image, staging: Path, page_number: int, ordinal: int, name_y: int) -> Path:
+    """Cut the photo cell out beside its detected name, into a temporary file.
+
+    Crops are staged rather than written straight into application storage,
+    because at this point it is not known who is actually new. Only portraits
+    that a card will reference get kept; the rest disappear with the temporary
+    directory instead of accumulating as orphans.
+    """
     width, height = image.size
     crop = image.crop(
         (
@@ -101,8 +105,24 @@ def _save_portrait(image: Image.Image, course_id: str, page_number: int, ordinal
             min(height, name_y + int(height * 0.13)),
         )
     ).convert("RGB")
-    filename = f"page-{page_number:02d}-person-{ordinal:02d}.jpg"
-    crop.save(portrait_dir / filename, "JPEG", quality=88, optimize=True)
+    staged = staging / f"page-{page_number:02d}-person-{ordinal:02d}.jpg"
+    crop.save(staged, "JPEG", quality=88, optimize=True)
+    return staged
+
+
+def _store_portrait(staged: Path, course_id: str) -> str:
+    """Move a staged crop into application storage under a unique name.
+
+    The name is deliberately unrelated to the page and position it came from.
+    Those were once unique because every PDF created its own course; now that a
+    class can be built from several rosters, page 1 person 1 of a later export
+    would overwrite page 1 person 1 of the first, silently giving existing
+    people somebody else's face.
+    """
+    portrait_dir = app_data_dir() / "assets" / course_id
+    portrait_dir.mkdir(parents=True, exist_ok=True)
+    filename = f"person-{uuid.uuid4().hex[:12]}.jpg"
+    shutil.copyfile(staged, portrait_dir / filename)
     return f"{course_id}/{filename}"
 
 
@@ -110,8 +130,12 @@ class MissingOcrTools(RuntimeError):
     """Raised when the local OCR binaries are not installed."""
 
 
-def _ocr_pdf(path: Path, course_id: str) -> tuple[str, int, list[dict]]:
-    """Render image-based PDFs locally, then OCR them page by page."""
+def _ocr_pdf(path: Path, staging: Path) -> tuple[str, int, list[dict]]:
+    """Render image-based PDFs locally, then OCR them page by page.
+
+    Crops are written into `staging`, which belongs to the caller, so they
+    survive long enough for the caller to decide which ones to keep.
+    """
     # Scanned rosters need poppler and tesseract. Docker installs both; a native
     # run may not have them, and "No such file or directory: 'pdftoppm'" tells
     # a user nothing about what to do.
@@ -120,7 +144,7 @@ def _ocr_pdf(path: Path, course_id: str) -> tuple[str, int, list[dict]]:
             "This roster has no embedded text, so it needs local OCR, and poppler is not installed. "
             "Run Familiar with Docker (which includes it), or install poppler and tesseract on this machine."
         )
-    with tempfile.TemporaryDirectory(prefix="flashcards-ocr-") as directory:
+    with tempfile.TemporaryDirectory(prefix="flashcards-render-") as directory:
         output_prefix = Path(directory) / "page"
         subprocess.run(
             ["pdftoppm", "-r", "220", "-png", str(path), str(output_prefix)],
@@ -152,7 +176,7 @@ def _ocr_pdf(path: Path, course_id: str) -> tuple[str, int, list[dict]]:
                         {
                             "first_name": first_name,
                             "last_name": last_name,
-                            "image_path": _save_portrait(image, course_id, page_number, ordinal, name_y),
+                            "staged_portrait": _crop_portrait(image, staging, page_number, ordinal, name_y),
                         }
                     )
         text = "\n".join(page_text)
@@ -190,48 +214,60 @@ def import_pdf(path: Path, original_filename: str, conn, course_id: str | None =
         reader = PdfReader(str(path))
         embedded_text = "\n".join(page.extract_text() or "" for page in reader.pages)
         candidates = [
-            {"first_name": first_name, "last_name": last_name, "image_path": None}
+            {"first_name": first_name, "last_name": last_name, "staged_portrait": None}
             for first_name, last_name in _candidates(embedded_text)
         ]
         text = embedded_text
         ocr_pages = 0
-        if not candidates:
-            ocr_text, ocr_pages, candidates = _ocr_pdf(path, course_id)
-            text = f"{embedded_text}\n{ocr_text}"
 
-        if created:
-            conn.execute(
-                "INSERT INTO courses (id, title, source_filename, imported_at) VALUES (?, ?, ?, ?)",
-                (course_id, title or Path(original_filename).stem.replace("_", " "), original_filename, now),
-            )
+        # Crops stay in this directory until it is known who is actually new, so
+        # only portraits a card will reference are copied into storage.
+        with tempfile.TemporaryDirectory(prefix="familiar-crops-") as staging_root:
+            if not candidates:
+                ocr_text, ocr_pages, candidates = _ocr_pdf(path, Path(staging_root))
+                text = f"{embedded_text}\n{ocr_text}"
 
-        # Exact first-and-last-name matching, mirroring core/src/import.ts.
-        # A fuzzy match would silently merge two people's histories; an extra
-        # candidate only costs a click during review.
-        existing_cards = {
-            (row["first_name"].strip(), row["last_name"].strip()): row["id"]
-            for row in conn.execute("SELECT id, first_name, last_name FROM cards WHERE course_id = ?", (course_id,))
-        }
-        added = 0
-        already_present = 0
-        for candidate in candidates:
-            key = (candidate["first_name"].strip(), candidate["last_name"].strip())
-            if key in existing_cards:
-                already_present += 1
-                if candidate["image_path"]:
-                    conn.execute(
-                        "UPDATE cards SET image_path = COALESCE(image_path, ?) WHERE id = ?",
-                        (candidate["image_path"], existing_cards[key]),
-                    )
-                continue
-            card_id = f"{course_id}-card-{uuid.uuid4().hex[:8]}"
-            conn.execute(
-                "INSERT INTO cards (id, course_id, first_name, last_name, image_path, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-                (card_id, course_id, candidate["first_name"], candidate["last_name"], candidate["image_path"], now),
-            )
-            conn.execute("INSERT INTO card_progress (card_id) VALUES (?)", (card_id,))
-            existing_cards[key] = card_id
-            added += 1
+            if created:
+                conn.execute(
+                    "INSERT INTO courses (id, title, source_filename, imported_at) VALUES (?, ?, ?, ?)",
+                    (course_id, title or Path(original_filename).stem.replace("_", " "), original_filename, now),
+                )
+
+            # Exact first-and-last-name matching, mirroring core/src/import.ts.
+            # A fuzzy match would silently merge two people's histories; an extra
+            # candidate only costs a click during review.
+            existing = {
+                (row["first_name"].strip(), row["last_name"].strip()): (row["id"], row["image_path"])
+                for row in conn.execute(
+                    "SELECT id, first_name, last_name, image_path FROM cards WHERE course_id = ?", (course_id,)
+                )
+            }
+            added = 0
+            already_present = 0
+            for candidate in candidates:
+                key = (candidate["first_name"].strip(), candidate["last_name"].strip())
+                staged = candidate.get("staged_portrait")
+
+                if key in existing:
+                    already_present += 1
+                    card_id, current_portrait = existing[key]
+                    # Only fill a gap. Replacing a portrait somebody is already
+                    # learning from would change a face out from under them.
+                    if staged and not current_portrait:
+                        stored = _store_portrait(staged, course_id)
+                        conn.execute("UPDATE cards SET image_path = ? WHERE id = ?", (stored, card_id))
+                        existing[key] = (card_id, stored)
+                    continue
+
+                card_id = f"{course_id}-card-{uuid.uuid4().hex[:8]}"
+                image_path = _store_portrait(staged, course_id) if staged else None
+                conn.execute(
+                    "INSERT INTO cards (id, course_id, first_name, last_name, image_path, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+                    (card_id, course_id, candidate["first_name"], candidate["last_name"], image_path, now),
+                )
+                conn.execute("INSERT INTO card_progress (card_id) VALUES (?)", (card_id,))
+                existing[key] = (card_id, image_path)
+                added += 1
 
         warning = None
         if not candidates:

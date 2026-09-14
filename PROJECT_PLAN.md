@@ -219,4 +219,5 @@ Inspect both supplied PDFs, identify their extractable card fields and images, t
 * for web version, it needs to be self explanitory or instructions online. They won't have the readme. 
 * ~~Awaiting review: this detail shouldn't be on the header...~~ Done: the header reads "N people", and the review button appears only when there are names, labelled with the count.
 * fix the import process. Probably should just have a add new class function and then pick the exported file. It would have the instructions on it of how to export from BYU flashcards. 
-* Still have a way to add someone manually to the class. Name and photo manually. Or can choose to do pdf upload. Both options. 
+* Still have a way to add someone manually to the class. Name and photo manually. Or can choose to do pdf upload. Both options. Cleanup the "Roster and clean-up" interface in general so it is found. At top in some way? 
+* course naming. When making a new course, let them pick the name. 

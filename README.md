@@ -216,8 +216,10 @@ how hard someone was to learn is not a question their record can answer yet.
 
 The importer first reads embedded PDF text. For scanned rosters it renders pages and runs
 local OCR on the name column — a 23-page scanned export takes around 25 seconds in Docker.
-Review and approve candidates before they appear in study sessions; missed names can be
-added manually from the course page.
+Review candidates before they appear in study sessions: approve the ones that are real
+people and reject the ones the parser misread. Rejecting only discards a candidate — it can
+never touch somebody you have been studying. Missed names can be added manually from the
+course page.
 
 **Adding people who joined late.** Export a fresh roster from BYU Flashcards and upload it
 into the existing class from the **Roster and clean-up** panel. People already in the class

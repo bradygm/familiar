@@ -281,3 +281,6 @@ button { cursor: pointer; }
 /* A file input styled as a chip: the label is the control, the input is hidden. */
 label.chip { cursor: pointer; }
 label.chip:focus-within { outline: 3px solid var(--orange); outline-offset: 3px; }
+
+.candidate-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.candidate-actions .button { flex: 1 1 auto; }

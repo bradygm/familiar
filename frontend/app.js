@@ -194,8 +194,31 @@ async function courseView(courseId) {
 }
 
 function candidateView(course, candidates) {
-  setView(`<a class="back" href="${courseLink(course)}">← ${esc(course.title)}</a><section class="setup"><div class="eyebrow">Import review</div><h1>${candidates.length ? 'Approve people the importer found.' : 'No candidates waiting.'}</h1><p class="fine">Only approved entries appear in sessions. The initial parser intentionally stays cautious.</p>${candidates.length ? `<div class="roster">${candidates.map(card => `<article class="person panel">${portrait(card)}<h2>${esc(card.first_name)} ${esc(card.last_name)}</h2><button class="button secondary" data-approve="${card.id}">Approve</button></article>`).join('')}</div>` : ''}</section>`);
-  document.querySelectorAll('[data-approve]').forEach(button => button.addEventListener('click', async () => { button.disabled = true; await api(`/courses/${course.id}/candidates/${button.dataset.approve}/approve`, {method:'POST'}); candidateView(course, await api(`/courses/${course.id}/candidates`)); }));
+  setView(`<a class="back" href="${courseLink(course)}">← ${esc(course.title)}</a><section class="setup"><div class="eyebrow">Import review</div><h1>${candidates.length ? 'Approve people the importer found.' : 'No candidates waiting.'}</h1><p class="fine">Only approved entries appear in sessions. The importer stays cautious on purpose, so reject anyone it misread — rejecting only discards a candidate, never somebody you have been studying.</p>${candidates.length ? `<div class="roster">${candidates.map(card => `<article class="person panel">${portrait(card)}<h2>${esc(card.first_name)} ${esc(card.last_name)}</h2><div class="candidate-actions"><button class="button secondary" data-reject="${card.id}">Reject</button><button class="button" data-approve="${card.id}">Approve</button></div></article>`).join('')}</div>` : ''}</section>`);
+  const refresh = async () => candidateView(course, await api(`/courses/${course.id}/candidates`));
+  document.querySelectorAll('[data-approve]').forEach(button => button.addEventListener('click', async () => {
+    button.disabled = true;
+    await api(`/courses/${course.id}/candidates/${button.dataset.approve}/approve`, {method:'POST'});
+    await refresh();
+  }));
+  document.querySelectorAll('[data-reject]').forEach(button => button.addEventListener('click', async () => {
+    // One confirming click. A candidate has no study history to lose, so a
+    // dialog here would be friction rather than safety.
+    if (button.dataset.confirming !== 'yes') {
+      document.querySelectorAll('[data-reject]').forEach(other => { other.dataset.confirming = 'no'; other.textContent = 'Reject'; });
+      button.dataset.confirming = 'yes';
+      button.textContent = 'Really reject?';
+      return;
+    }
+    button.disabled = true;
+    try {
+      await api(`/courses/${course.id}/candidates/${button.dataset.reject}`, {method:'DELETE'});
+      await refresh();
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = error.message;
+    }
+  }));
 }
 
 function manualCardView(course) {
