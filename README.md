@@ -178,6 +178,23 @@ ending the session.
 
 The difference between `R` and `W` is deliberate. If you already know the person, `R` scores the card right away and you never have to reveal it — the study screen shows **Right** next to **Flip card** for exactly that reason. Marking a card wrong always requires the flip, so you see who it was you missed.
 
+## Course clean-up
+
+The **Course data** panel at the bottom of a course page holds the things you do *to* a
+course rather than in it.
+
+- **Export course** — a portable backup, described above.
+- **Remove someone who left** — deletes that person along with their photo and their
+  review history. Removing a portrait is deliberate: someone no longer in the class should
+  not leave their photograph on disk. Everyone else is untouched, and it takes two clicks.
+- **Reset all progress** — returns everyone in the course to never-studied and discards
+  its sessions and answers. The people themselves stay.
+
+Reset is the only irreversible operation in Familiar, and what it destroys — timestamped
+review events — cannot be reconstructed from anything else. It tells you exactly how much
+it is about to discard, links to an export, and will not proceed until you type the course
+title back. Both the dialog and the API enforce that.
+
 ## Sorting the roster
 
 Beyond first and last name, the course page can order people by what the learning model

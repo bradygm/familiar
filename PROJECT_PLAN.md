@@ -135,8 +135,8 @@ Defer:
 - [x] Build the study setup and all-cards session flow.
 - [x] Add SQLite persistence, statistics, and session history.
 - [x] Add a portable backup/export bundle with a verified restore path.
-- [ ] Add course-progress reset. (Wanted before the storage adapter seam: it is a Store write.)
-- [ ] Add a way to remove somebody who dropped the class. (Same reason.)
+- [x] Add course-progress reset.
+- [x] Add a way to remove somebody who dropped the class.
 - [x] Implement the adaptive-session selector with module-level checks.
 - [x] Replace the fixed confidence score with a mastery/stability recall model and add a capped expanding-retrieval session mode.
 - [ ] Add responsive/accessibility QA, empty states, error handling, and sample-data safeguards.
@@ -197,7 +197,7 @@ Inspect both supplied PDFs, identify their extractable card fields and images, t
 
 ## Future features
 * Add my personal logo?
-* A way to remove people that drop the class later
+* ~~A way to remove people that drop the class later~~ Done: Course data → Remove someone who left, which also deletes their portrait.
 * make version that hosted on my website and usable by others? Upload only, etc? Planned in docs/PUBLIC_RELEASE_PLAN.md — static GitHub Pages build for others, SQLite kept for local use. 
 * Add ability to add new people, but it checks for duplicates. Like when a person adds the class, can I just upload a new pdf and it will just bring in the new people. 
 * Calibrate the memory-model coefficients from local timestamped review data after several courses provide enough responses; validate predictions before treating them as calibrated probabilities.
@@ -217,4 +217,4 @@ Inspect both supplied PDFs, identify their extractable card fields and images, t
   gtag('config', 'G-ZKRH21WV3V');
 </script>
 * for web version, it needs to be self explanitory or instructions online. They won't have the readme. 
-* Awaiting review: this detail shouldn't be on the header of the line next to total. And the review names button should only show up when there are names to review, and it could have the number in the button name itself. Otherwise, it should be gone to simplify the view. 
+* ~~Awaiting review: this detail shouldn't be on the header...~~ Done: the header reads "N people", and the review button appears only when there are names, labelled with the count.

@@ -49,6 +49,7 @@ def client(tmp_path, monkeypatch):
                 conn.execute("INSERT INTO card_progress (card_id) VALUES (?)", (card_id,))
             conn.commit()
         test_client.db_path = app_data / "flashcards.sqlite3"
+        test_client.app_data = app_data
         yield test_client
 
 
@@ -274,3 +275,124 @@ def test_adding_a_card_makes_it_immediately_studyable(client):
     listed = {card["id"]: card for card in client.get(f"/api/courses/{COURSE}/cards").json()}
     assert listed[card_id]["facts"] == ["a fact"]
     assert start_session(client, [card_id])
+
+
+# --- removing somebody who left the course -------------------------------
+
+
+def test_removing_a_person_takes_their_progress_and_history_with_them(client):
+    card = f"{COURSE}-card-0"
+    session_id = start_session(client, [card])
+    client.post(f"/api/sessions/{session_id}/reviews", json={"card_id": card, "result": "right", "mastery": 0.5, "stability_days": 1.0})
+
+    assert client.delete(f"/api/courses/{COURSE}/cards/{card}").status_code == 200
+    with sqlite3.connect(client.db_path) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM cards WHERE id = ?", (card,)).fetchone()[0] == 0
+        assert conn.execute("SELECT COUNT(*) FROM card_progress WHERE card_id = ?", (card,)).fetchone()[0] == 0
+        assert conn.execute("SELECT COUNT(*) FROM review_events WHERE card_id = ?", (card,)).fetchone()[0] == 0
+
+
+def test_removing_a_person_leaves_everybody_else_alone(client):
+    before = client.get(f"/api/courses/{COURSE}/cards").json()
+    client.delete(f"/api/courses/{COURSE}/cards/{COURSE}-card-0")
+    after = client.get(f"/api/courses/{COURSE}/cards").json()
+    assert len(after) == len(before) - 1
+    assert {card["id"] for card in after} == {card["id"] for card in before} - {f"{COURSE}-card-0"}
+
+
+def test_removing_a_person_deletes_their_portrait(client, tmp_path):
+    """A person no longer in the class should not leave their photo on disk."""
+    card = f"{COURSE}-card-1"
+    relative = f"{COURSE}/portrait.jpg"
+    portrait = Path(client.app_data) / "assets" / relative
+    portrait.parent.mkdir(parents=True, exist_ok=True)
+    portrait.write_bytes(b"\xff\xd8\xff\xd9")
+    with sqlite3.connect(client.db_path) as conn:
+        conn.execute("UPDATE cards SET image_path = ? WHERE id = ?", (relative, card))
+        conn.commit()
+
+    body = client.delete(f"/api/courses/{COURSE}/cards/{card}").json()
+    assert body["removed_portrait"] is True
+    assert not portrait.exists()
+
+
+def test_a_portrait_shared_with_another_person_is_kept(client):
+    shared = f"{COURSE}/shared.jpg"
+    portrait = Path(client.app_data) / "assets" / shared
+    portrait.parent.mkdir(parents=True, exist_ok=True)
+    portrait.write_bytes(b"\xff\xd8\xff\xd9")
+    with sqlite3.connect(client.db_path) as conn:
+        conn.execute("UPDATE cards SET image_path = ? WHERE id IN (?, ?)", (shared, f"{COURSE}-card-2", f"{COURSE}-card-3"))
+        conn.commit()
+
+    body = client.delete(f"/api/courses/{COURSE}/cards/{COURSE}-card-2").json()
+    assert body["removed_portrait"] is False
+    assert portrait.exists()
+
+
+def test_removing_somebody_from_the_wrong_course_is_404(client):
+    assert client.delete(f"/api/courses/other-course/cards/{COURSE}-card-0").status_code == 404
+    assert client.delete(f"/api/courses/{COURSE}/cards/nobody").status_code == 404
+
+
+# --- resetting a course ----------------------------------------------------
+
+
+def reviewed_course(client):
+    cards = [f"{COURSE}-card-0", f"{COURSE}-card-1"]
+    session_id = start_session(client, cards)
+    for card in cards:
+        client.post(f"/api/sessions/{session_id}/reviews", json={"card_id": card, "result": "right", "mastery": 0.9, "stability_days": 8.0})
+    client.post(f"/api/sessions/{session_id}/complete", json={"readiness": 0.5})
+    return cards
+
+
+def test_reset_returns_everybody_to_unseen_and_discards_the_history(client):
+    reviewed_course(client)
+    body = client.post(f"/api/courses/{COURSE}/reset", json={"confirm_title": "API Test"}).json()
+    assert body == {"status": "reset", "discarded_reviews": 2, "discarded_sessions": 1}
+
+    with sqlite3.connect(client.db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        rows = [dict(row) for row in conn.execute("SELECT * FROM card_progress")]
+        assert conn.execute("SELECT COUNT(*) FROM study_sessions").fetchone()[0] == 0
+        assert conn.execute("SELECT COUNT(*) FROM review_events").fetchone()[0] == 0
+    assert len(rows) == 4
+    for row in rows:
+        assert (row["seen_count"], row["right_count"], row["wrong_count"]) == (0, 0, 0)
+        assert (row["mastery"], row["stability_days"]) == (0.5, 0.25)
+        assert row["last_reviewed_at"] is None and row["last_result"] is None
+
+
+def test_reset_keeps_the_people_themselves(client):
+    reviewed_course(client)
+    client.post(f"/api/courses/{COURSE}/reset", json={"confirm_title": "API Test"})
+    assert len(client.get(f"/api/courses/{COURSE}/cards").json()) == 4
+
+
+@pytest.mark.parametrize("wrong_title", ["", "api test", "API Tes", "Some Other Course"])
+def test_reset_refuses_without_the_exact_course_title(client, wrong_title):
+    """The one irreversible operation in the app must not fire by accident."""
+    reviewed_course(client)
+    response = client.post(f"/api/courses/{COURSE}/reset", json={"confirm_title": wrong_title})
+    assert response.status_code in (400, 422)
+    with sqlite3.connect(client.db_path) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM review_events").fetchone()[0] == 2, "a refused reset must destroy nothing"
+
+
+def test_reset_tolerates_surrounding_whitespace_in_the_confirmation(client):
+    reviewed_course(client)
+    assert client.post(f"/api/courses/{COURSE}/reset", json={"confirm_title": "  API Test  "}).status_code == 200
+
+
+def test_reset_of_an_unknown_course_is_404(client):
+    assert client.post("/api/courses/nope/reset", json={"confirm_title": "API Test"}).status_code == 404
+
+
+def test_a_course_can_be_studied_again_after_a_reset(client):
+    reviewed_course(client)
+    client.post(f"/api/courses/{COURSE}/reset", json={"confirm_title": "API Test"})
+    card = f"{COURSE}-card-0"
+    session_id = start_session(client, [card])
+    assert client.post(f"/api/sessions/{session_id}/reviews", json={"card_id": card, "result": "right", "mastery": 0.6, "stability_days": 1.5}).status_code == 200
+    assert progress_row(client, card)["seen_count"] == 1
