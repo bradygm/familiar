@@ -213,8 +213,20 @@ describe('IndexedDbStore', () => {
     await expect(store.importBundle(await bundle.arrayBuffer())).rejects.toThrow(/already here/);
   });
 
-  it('says plainly that reading a roster PDF is not available yet', async () => {
-    await expect(store.createCourseFromRoster(new File([], 'r.pdf'))).rejects.toThrow(/hosted build/);
+  it('leaves no empty course behind when a roster cannot be read', async () => {
+    // Extraction needs a browser for pdf.js and tesseract.js, so under Node it
+    // always fails — which makes this the failure path, tested for free. The
+    // course must not exist afterwards: creating it first and extracting second
+    // would leave the learner an empty class to puzzle over.
+    await expect(store.createCourseFromRoster(new File([], 'roster.pdf'))).rejects.toThrow();
+    expect(await store.listCourses()).toEqual([]);
+  });
+
+  it('does not disturb an existing course when a roster cannot be read', async () => {
+    await seedCourse(store);
+    const before = await store.listCards('course-1');
+    await expect(store.importRosterIntoCourse('course-1', new File([], 'roster.pdf'))).rejects.toThrow();
+    expect(await store.listCards('course-1')).toHaveLength(before.length);
   });
 });
 

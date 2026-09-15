@@ -5,7 +5,7 @@
   "type": "module",
   "description": "The learning model, shared by every build of Familiar. No DOM, no IO.",
   "scripts": {
-    "build": "tsc --build --force",
+    "build": "tsc --build --force && node scripts/vendor.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -15,5 +15,9 @@
     "fake-indexeddb": "^6.2.5",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^6.3.289",
+    "tesseract.js": "^7.0.0"
   }
 }

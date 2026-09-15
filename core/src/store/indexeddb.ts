@@ -23,6 +23,7 @@
  */
 
 import { cardPredictedRecall } from '../model.js';
+import { extractRoster, type ExtractionProgress } from './roster-extract.js';
 import { readZip, writeZip, type ZipEntry } from './zip.js';
 import type {
   Card,
@@ -225,12 +226,115 @@ export class IndexedDbStore implements Store {
       .map((review) => ({ result: review.result, reviewed_at: review.reviewed_at }));
   }
 
-  async createCourseFromRoster(): Promise<ImportOutcome> {
-    throw new Error('Reading a roster PDF in the browser arrives with the hosted build. Restore a backup instead.');
+  /** Reports extraction progress, since reading a scanned class takes a while. */
+  onExtractionProgress: ((progress: ExtractionProgress) => void) | null = null;
+
+  async createCourseFromRoster(file: File, title?: string): Promise<ImportOutcome> {
+    const id = `course-${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`;
+    // Extract before creating anything. A roster that cannot be read must not
+    // leave an empty course behind for the learner to puzzle over and delete.
+    return this.absorbRoster(id, file, 'created', {
+      id,
+      title: (title ?? file.name.replace(/\.pdf$/i, '').replace(/_/g, ' ')).trim(),
+      source_filename: file.name,
+      imported_at: new Date().toISOString(),
+      active: 1,
+    });
   }
 
-  async importRosterIntoCourse(): Promise<ImportOutcome> {
-    throw new Error('Reading a roster PDF in the browser arrives with the hosted build. Restore a backup instead.');
+  async importRosterIntoCourse(courseId: string, file: File): Promise<ImportOutcome> {
+    await this.getCourse(courseId);
+    return this.absorbRoster(courseId, file, 'updated');
+  }
+
+  /**
+   * Read a roster and fold it into a course.
+   *
+   * Mirrors the native importer's rules exactly, because both read the same
+   * exports: people already present keep their study history untouched and only
+   * gain a portrait if they had none, newcomers arrive unreviewed for approval,
+   * and matching is exact on first and last name.
+   */
+  private async absorbRoster(
+    courseId: string,
+    file: File,
+    status: 'created' | 'updated',
+    courseToCreate?: Record<string, unknown>,
+  ): Promise<ImportOutcome> {
+    const { people, pages } = await extractRoster(file, (progress) => this.onExtractionProgress?.(progress));
+    if (courseToCreate) {
+      const db = await this.db();
+      const creating = db.transaction('courses', 'readwrite');
+      creating.objectStore('courses').put(courseToCreate);
+      await done(creating);
+    }
+    const existingCards = await this.readAll('cards', 'course_id', courseId);
+    const known = new Map(
+      existingCards.map((card) => [JSON.stringify([String(card.first_name).trim(), String(card.last_name).trim()]), card]),
+    );
+
+    const db = await this.db();
+    const transaction = db.transaction(['cards', 'progress', 'assets'], 'readwrite');
+    let added = 0;
+    let alreadyPresent = 0;
+
+    for (const person of people) {
+      const key = JSON.stringify([person.first_name.trim(), person.last_name.trim()]);
+      const existing = known.get(key);
+
+      if (existing) {
+        alreadyPresent += 1;
+        // Only fill a gap. Replacing a portrait somebody is already learning
+        // from would change a face out from under them.
+        if (person.portrait && !existing.image_path) {
+          const path = `${courseId}/person-${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}.jpg`;
+          transaction.objectStore('assets').put({ path, blob: person.portrait });
+          transaction.objectStore('cards').put({ ...existing, image_path: path });
+          known.set(key, { ...existing, image_path: path });
+        }
+        continue;
+      }
+
+      const cardId = `${courseId}-card-${crypto.randomUUID().replace(/-/g, '').slice(0, 8)}`;
+      let imagePath: string | null = null;
+      if (person.portrait) {
+        // Names are unrelated to page position, so a later roster cannot
+        // overwrite an earlier person's portrait.
+        imagePath = `${courseId}/person-${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}.jpg`;
+        transaction.objectStore('assets').put({ path: imagePath, blob: person.portrait });
+      }
+      transaction.objectStore('cards').put({
+        id: cardId,
+        course_id: courseId,
+        first_name: person.first_name,
+        last_name: person.last_name,
+        facts: [],
+        prompt_text: '',
+        image_path: imagePath,
+        reviewed: 0,
+        created_at: new Date().toISOString(),
+      });
+      transaction.objectStore('progress').put({ card_id: cardId, ...FRESH_PROGRESS });
+      known.set(key, { id: cardId, image_path: imagePath });
+      added += 1;
+    }
+    await done(transaction);
+
+    const warning = !people.length
+      ? 'No high-confidence name lines were found. Add people manually, or check that this is a 3-students-per-page BYU Flashcards export.'
+      : !added
+        ? 'Everybody in this roster is already in the course, so nothing was added.'
+        : null;
+
+    return {
+      status,
+      course_id: courseId,
+      pages,
+      found: people.length,
+      added,
+      already_present: alreadyPresent,
+      warning,
+    };
   }
 
   async addCard(courseId: string, person: { first_name: string; last_name: string; facts: string[] }) {

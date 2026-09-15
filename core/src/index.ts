@@ -54,6 +54,13 @@ export {
 export { sortRoster, type RosterCard, type RosterSort } from './roster.js';
 
 export {
+  ROSTER_LAYOUT,
+  readNameLine,
+  readNames,
+  type ExtractedName,
+} from './roster-text.js';
+
+export {
   personKey,
   splitNewPeople,
   type ImportSplit,
@@ -64,6 +71,7 @@ export {
   HttpStore,
   IndexedDbStore,
   createStore,
+  extractRoster,
   readZip,
   writeZip,
   type Card,
