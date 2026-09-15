@@ -196,32 +196,5 @@ flashcards/
 Inspect both supplied PDFs, identify their extractable card fields and images, then prototype the importer against a small reviewed subset from each course. That will validate the local data model before the interface is built around it.
 
 ## Future features
-* Add my personal logo?
-* ~~A way to remove people that drop the class later~~ Done: Course data → Remove someone who left, which also deletes their portrait.
-* make version that hosted on my website and usable by others? Upload only, etc? Planned in docs/PUBLIC_RELEASE_PLAN.md — static GitHub Pages build for others, SQLite kept for local use. 
-* ~~Add ability to add new people, but it checks for duplicates.~~ Done: imports are uploads targeted at a class you pick, so a newer export adds only the new names, two sections can be merged, and no duplicate class is ever created. 
 * Calibrate the memory-model coefficients from local timestamped review data after several courses provide enough responses; validate predictions before treating them as calibrated probabilities.
-* ~~Bug: in expanding recall mode, at the end it says "You reviewed 31 people" for example, but it actually was less people because some were shown multiple times.~~ Fixed: the summary now reports attempts and distinct people separately.
-* ~~Continuous mode that just continues to adapt and sample.~~ Done: re-ranks after every answer, and a miss enters an expanding-retrieval cycle (2, then 3, then 7 intervening reviews) until recalled three times running.
-* ~~Sort by those that were the hardest vs easiest to learn.~~ Done: damped misses per sighting, so thin evidence does not outrank a long difficult record.
-* ~~Sort by familiar score (strength?)~~ Done: "Learning strength (low first)", which is the stored estimate before time decay.
-* ~~repo name change if going to be hosting?~~ Done: the repo is now `familiar`.
-* ~~add google analytics~~ Done: hosted build only, cookie set for new-vs-returning, advertising signals denied, URL trimmed so routes never reach Google. Skipped on localhost. Snippet below kept for reference. 
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZKRH21WV3V"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-ZKRH21WV3V');
-</script>
-* for web version, it needs to be self explanitory or instructions online. They won't have the readme. 
-* ~~Awaiting review: this detail shouldn't be on the header...~~ Done: the header reads "N people", and the review button appears only when there are names, labelled with the count.
-* fix the import process. Probably should just have a add new class function and then pick the exported file. It would have the instructions on it of how to export from BYU flashcards. 
-* Still have a way to add someone manually to the class. Name and photo manually. Or can choose to do pdf upload. Both options. Cleanup the "Roster and clean-up" interface in general so it is found. At top in some way? 
-* course naming. When making a new course, let them pick the name. 
-* Reading the roster. Scanned PDFs need local OCR, which can take a minute have a progress bar?
-* make sure instructions clear, byu specific in language and clear. flashcards app open in new tab. 
-Update domain
 * make so can edit note for student?

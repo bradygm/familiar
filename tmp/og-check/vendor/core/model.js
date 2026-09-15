@@ -1,0 +1,134 @@
+/**
+ * The learning model: how well a person is known, and how fast that fades.
+ *
+ * Every value here is a pure function of stored numbers, so this module is the
+ * single definition of what a learner's `mastery` and `stability_days` mean.
+ * Its behaviour is pinned by `tests/fixtures/study_vectors.json`, which is
+ * generated from the Python implementation this replaces — the parity suite in
+ * `core/tests/golden.test.ts` is what makes the two interchangeable rather
+ * than merely similar.
+ *
+ * Coefficients are deliberately simple product choices, not calibrated
+ * probabilities. See README for the research they are inspired by, and
+ * PROJECT_PLAN for the intent to calibrate them against real review data.
+ */
+import { daysSince } from './time.js';
+/** Predicted recall is reported inside this range, never as 0 or 1. */
+export const MIN_RECALL = 0.01;
+export const MAX_RECALL = 0.99;
+/** Stability floor, in days. Also guards the division in `predictedRecall`. */
+export const MIN_STABILITY_DAYS = 0.02;
+export const MAX_STABILITY_DAYS = 120;
+export const MIN_MASTERY = 0.05;
+export const MAX_MASTERY = 0.98;
+/** A card is "familiar" once seen at least once and at this mastery. */
+export const FAMILIAR_MASTERY = 0.75;
+/**
+ * Chance of naming this person right now.
+ *
+ * Mastery decays exponentially with time since the last review, at a rate set
+ * by the card's own stability. Clamped away from certainty at both ends.
+ */
+export function predictedRecall(mastery, stabilityDays, daysSinceReview) {
+    const decayed = mastery * Math.exp(-daysSinceReview / Math.max(stabilityDays, MIN_STABILITY_DAYS));
+    return Math.max(MIN_RECALL, Math.min(MAX_RECALL, decayed));
+}
+/** Predicted recall for a stored progress row. */
+export function cardPredictedRecall(progress, now) {
+    return predictedRecall(progress.mastery, progress.stability_days, daysSince(progress.last_reviewed_at, now));
+}
+/**
+ * Rank a card for adaptive selection. Higher means more worth showing.
+ *
+ * Pure and jitter-injected: the caller supplies the randomness that breaks
+ * ties between comparable cards, so the ranking itself can be asserted exactly.
+ */
+export function selectionScore(seenCount, recall, jitter = 0) {
+    const uncertainty = 1 / Math.sqrt(seenCount + 1);
+    return (seenCount === 0 ? 2.2 : 0) + 3.0 * (1 - recall) + 0.55 * uncertainty + jitter;
+}
+/**
+ * Average chance of naming a uniformly chosen person in a course right now.
+ *
+ * An unseen card contributes 0 rather than its prior, so the figure reads as
+ * "how much of this roster do I actually know" instead of being flattered by
+ * cards that have never been tested.
+ */
+export function courseReadiness(cards, at) {
+    if (cards.length === 0)
+        return 0;
+    let total = 0;
+    for (const card of cards) {
+        total += card.seen_count === 0 ? 0 : cardPredictedRecall(card, at);
+    }
+    return total / cards.length;
+}
+/**
+ * Update stored mastery and stability after an attempted retrieval.
+ *
+ * A successful retrieval that was *unlikely* to succeed teaches more than an
+ * easy one, so both updates scale with how surprising the outcome was. A miss
+ * cuts both values by a fixed proportion, harder than a hit raises them —
+ * forgetting is treated as stronger evidence than remembering.
+ *
+ * Returns new values; the input is not modified.
+ */
+export function updateMemoryState(progress, result, reviewedAt) {
+    const mastery = Number(progress.mastery);
+    const stability = Math.max(MIN_STABILITY_DAYS, Number(progress.stability_days));
+    const recall = predictedRecall(mastery, stability, daysSince(progress.last_reviewed_at, reviewedAt));
+    if (result === 'right') {
+        return {
+            mastery: Math.min(MAX_MASTERY, mastery + (1 - mastery) * (0.22 + 0.18 * (1 - recall))),
+            stability_days: Math.min(MAX_STABILITY_DAYS, stability * (1.45 + 0.7 * (1 - recall)) + 0.03),
+        };
+    }
+    return {
+        mastery: Math.max(MIN_MASTERY, mastery * 0.55),
+        stability_days: Math.max(MIN_STABILITY_DAYS, stability * 0.42),
+    };
+}
+/** Where a card sits in the learner's progression, for display. */
+export function learningStatus(progress) {
+    if (progress.seen_count === 0)
+        return 'new';
+    return progress.mastery >= FAMILIAR_MASTERY ? 'familiar' : 'learning';
+}
+/**
+ * Everything the course and home screens report about a roster.
+ *
+ * Kept here rather than in the UI so the browser build and the local build
+ * describe a course identically, and so "familiar" has one definition.
+ */
+export function summariseCourse(cards, at) {
+    const distribution = { new: 0, learning: 0, familiar: 0 };
+    for (const card of cards)
+        distribution[learningStatus(card)] += 1;
+    const percent = (count) => (cards.length === 0 ? 0 : Math.round((count / cards.length) * 100));
+    return {
+        readiness: Math.round(courseReadiness(cards, at) * 100),
+        familiarPercent: percent(distribution.familiar),
+        distribution,
+    };
+}
+/** Damping on the difficulty estimate, in notional extra correct sightings. */
+export const DIFFICULTY_SMOOTHING = 3;
+/**
+ * How much trouble a person has given the learner. Higher is harder.
+ *
+ * Misses per sighting, damped so that thin evidence reads as "not known to be
+ * hard" rather than as hard. A raw miss rate is far too jumpy to sort by — one
+ * miss out of two sightings would score 0.5 and outrank someone missed twelve
+ * times in forty. Damping toward zero also puts people who have never been
+ * studied at the bottom, which is the honest place for them: how hard someone
+ * was to learn is not a question their record can answer yet.
+ *
+ * The figure rises both with the miss rate and with the sheer number of
+ * misses, so a person missed ten times in twenty ranks above one missed five
+ * times in ten. That matches what the ordering is for: finding who actually
+ * cost effort.
+ */
+export function learningDifficulty(history) {
+    return history.wrong_count / (history.seen_count + DIFFICULTY_SMOOTHING);
+}
+//# sourceMappingURL=model.js.map

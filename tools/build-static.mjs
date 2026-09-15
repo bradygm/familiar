@@ -22,6 +22,13 @@ const frontend = join(root, 'frontend');
 const outIndex = process.argv.indexOf('--out');
 const out = join(root, outIndex === -1 ? 'dist' : process.argv[outIndex + 1]);
 
+// Where this will actually be served. Link-preview scrapers need absolute URLs,
+// so the published copy has to know its own address; pass --site-url when that
+// changes rather than editing the tags by hand and missing one.
+const siteIndex = process.argv.indexOf('--site-url');
+const DEFAULT_SITE = 'https://bradymoon.com/familiar/';
+const site = (siteIndex === -1 ? DEFAULT_SITE : process.argv[siteIndex + 1]).replace(/\/?$/, '/');
+
 if (!existsSync(join(frontend, 'vendor', 'core', 'index.js'))) {
   throw new Error('core/ is not built. Run: cd core && npm run build');
 }
@@ -40,6 +47,12 @@ if (!marked.test(app)) {
   throw new Error('Could not find the store selection line in app.js. Has it been renamed?');
 }
 writeFileSync(appPath, app.replace(marked, "const store = createStore('indexeddb'); // STORE"));
+
+// Point the preview tags at wherever this copy is being published.
+if (site !== DEFAULT_SITE) {
+  const indexPath = join(out, 'index.html');
+  writeFileSync(indexPath, readFileSync(indexPath, 'utf8').split(DEFAULT_SITE).join(site));
+}
 
 // GitHub Pages serves anything under a directory beginning with an underscore
 // through Jekyll, which would strip files it does not recognise.
@@ -67,3 +80,4 @@ walk(out);
 console.log(`built ${out}`);
 console.log(`${files} files, ${(bytes / 1024 / 1024).toFixed(1)} MB`);
 console.log('store: indexeddb (no HTTP client reachable from the UI)');
+console.log(`link previews point at ${site}`);
