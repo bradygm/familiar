@@ -223,8 +223,11 @@ how hard someone was to learn is not a question their record can answer yet.
 
 ## Data and import behavior
 
-The importer first reads embedded PDF text. For scanned rosters it renders pages and runs
-local OCR on the name column — a 23-page scanned export takes around 25 seconds in Docker.
+Rosters are read in the browser, by pdf.js and tesseract.js, in both builds. The PDF never
+leaves the machine you chose it on: the page extracts the names and portraits and sends
+only those to be stored. A 23-page scanned export takes about 3.6 seconds — roughly seven
+times faster than the native path it replaced, which had to write every page out as a
+temporary image first.
 Review candidates before they appear in study sessions: approve the ones that are real
 people and reject the ones the parser misread. Rejecting only discards a candidate — it can
 never touch somebody you have been studying. Missed names can be added manually from the
@@ -240,8 +243,9 @@ Matching is exact on first and last name. That is deliberate: a fuzzy matcher th
 be undone. If a name is spelled differently between exports it arrives as a new candidate,
 and rejecting it during review costs one click.
 
-Running natively, scanned rosters need `poppler` and `tesseract` installed. Docker includes
-both; without them Familiar says so rather than failing obscurely.
+Nothing server-side is needed to read a roster any more — no poppler, no tesseract, and no
+PDF library. The OCR engine and its language data are vendored into the app rather than
+loaded from a CDN, so importing works offline and no third party learns that it happened.
 
 The application stores courses, cards, progress, sessions, and review events in SQLite under the gitignored `app-data/` directory. Uploaded PDFs are not retained; each import records the filename, checksum, page count and any warning in `import_runs` for provenance.
 

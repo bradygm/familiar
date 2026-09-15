@@ -24,9 +24,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 WORKDIR /app
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends poppler-utils tesseract-ocr \
-    && rm -rf /var/lib/apt/lists/*
+# No poppler and no tesseract: rosters are read in the browser for every build,
+# which is both faster and keeps the PDF on the machine it was chosen on.
 COPY backend/requirements.txt /app/backend/requirements.txt
 RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 COPY backend /app/backend

@@ -398,175 +398,151 @@ def test_a_course_can_be_studied_again_after_a_reset(client):
     assert progress_row(client, card)["seen_count"] == 1
 
 
-# --- starting a class from an upload --------------------------------------
+# --- starting a class from a roster the browser read ----------------------
 
 
-def roster_pdf(names, path):
-    """A text-based roster PDF, so the importer's fast path reads it without OCR."""
-    from pypdf import PdfWriter
-    import io
+def roster_form(people, *, filename="ME EN 101.pdf", pages=1, title=None):
+    """Build the multipart body the browser sends after reading a roster.
 
-    try:
-        from reportlab.pdfgen import canvas  # noqa: F401
-    except ImportError:
-        pytest.skip("reportlab not installed; upload tests need a generated PDF")
-    from reportlab.pdfgen import canvas
+    Each person may carry `portrait`, an index into the uploaded crops, which is
+    how a face is matched to a name now that the server never sees the PDF.
+    """
+    described = []
+    files = []
+    for index, (first, last, has_portrait) in enumerate(people):
+        described.append(
+            {"first_name": first, "last_name": last, "portrait": len(files) if has_portrait else None}
+        )
+        if has_portrait:
+            files.append(("portraits", (f"p{index}.jpg", f"portrait of {first} {last}".encode(), "image/jpeg")))
+    data = {
+        "people": json.dumps(described),
+        "source_filename": filename,
+        "source_checksum": "a" * 64,
+        "pages": str(pages),
+    }
+    if title:
+        data["title"] = title
+    return data, files
 
-    buffer = io.BytesIO()
-    page = canvas.Canvas(buffer)
-    for index, (first, last) in enumerate(names):
-        page.drawString(100, 780 - index * 40, f"{first} {last}")
-    page.save()
-    path.write_bytes(buffer.getvalue())
-    return path
+
+def send_roster(client, people, url="/api/courses", **kwargs):
+    data, files = roster_form(people, **kwargs)
+    return client.post(url, data=data, files=files or None)
 
 
-def upload_roster(client, path, url="/api/courses", **fields):
-    with path.open("rb") as handle:
-        return client.post(url, files={"file": (path.name, handle, "application/pdf")}, data=fields)
-
-
-def test_a_class_is_created_from_an_uploaded_roster(client, tmp_path):
-    pdf = roster_pdf([("Ada", "Lovelace"), ("Alan", "Turing")], tmp_path / "ME EN 101.pdf")
-    body = upload_roster(client, pdf).json()
+def test_a_class_is_created_from_a_roster(client):
+    body = send_roster(client, [("Ada", "Lovelace", True), ("Alan", "Turing", False)]).json()
     assert body["status"] == "created"
     assert body["added"] == 2
     candidates = client.get(f"/api/courses/{body['course_id']}/candidates").json()
     assert {(c["first_name"], c["last_name"]) for c in candidates} == {("Ada", "Lovelace"), ("Alan", "Turing")}
+    # Only the person who had a portrait gets one.
+    assert sum(1 for c in candidates if c["image_path"]) == 1
 
 
-def test_new_people_arrive_unapproved_so_they_go_through_review(client, tmp_path):
-    pdf = roster_pdf([("Ada", "Lovelace")], tmp_path / "roster.pdf")
-    course_id = upload_roster(client, pdf).json()["course_id"]
+def test_new_people_arrive_unapproved_so_they_go_through_review(client):
+    course_id = send_roster(client, [("Ada", "Lovelace", False)]).json()["course_id"]
     assert client.get(f"/api/courses/{course_id}/cards").json() == []
     assert len(client.get(f"/api/courses/{course_id}/candidates").json()) == 1
 
 
-def test_the_same_roster_can_seed_two_separate_classes(client, tmp_path):
+def test_the_same_roster_can_seed_two_separate_classes(client):
     """Two sections of one course are a real case; the old UNIQUE checksum banned it."""
-    pdf = roster_pdf([("Ada", "Lovelace")], tmp_path / "shared.pdf")
-    first = upload_roster(client, pdf).json()
-    second = upload_roster(client, pdf).json()
+    first = send_roster(client, [("Ada", "Lovelace", False)]).json()
+    second = send_roster(client, [("Ada", "Lovelace", False)]).json()
     assert first["course_id"] != second["course_id"]
     assert second["added"] == 1
 
 
-def test_a_title_can_be_given_and_otherwise_comes_from_the_filename(client, tmp_path):
-    pdf = roster_pdf([("Ada", "Lovelace")], tmp_path / "ME_EN_101_W26.pdf")
-    named = upload_roster(client, pdf, title="Thermodynamics").json()
+def test_a_title_can_be_given_and_otherwise_comes_from_the_filename(client):
+    named = send_roster(client, [("Ada", "Lovelace", False)], title="Thermodynamics").json()
     assert client.get(f"/api/courses/{named['course_id']}").json()["title"] == "Thermodynamics"
-    unnamed = upload_roster(client, pdf).json()
+    unnamed = send_roster(client, [("Ada", "Lovelace", False)], filename="ME_EN_101_W26.pdf").json()
     assert client.get(f"/api/courses/{unnamed['course_id']}").json()["title"] == "ME EN 101 W26"
 
 
-@pytest.mark.parametrize("filename,content", [("notes.txt", b"hello"), ("roster.pdf", b"")])
-def test_an_unusable_upload_is_refused(client, tmp_path, filename, content):
-    path = tmp_path / filename
-    path.write_bytes(content)
-    assert upload_roster(client, path).status_code == 400
-
-
-def test_a_file_that_is_not_really_a_pdf_is_refused_without_creating_a_class(client, tmp_path):
-    path = tmp_path / "pretend.pdf"
-    path.write_bytes(b"this is not a pdf")
-    assert upload_roster(client, path).status_code == 422
-    assert client.get("/api/courses").json() == [] or all(
-        course["id"] != "pretend" for course in client.get("/api/courses").json()
+@pytest.mark.parametrize("people_json", ["not json", '{"not": "a list"}', '[{"first_name": "", "last_name": "X"}]'])
+def test_malformed_roster_data_is_refused(client, people_json):
+    response = client.post(
+        "/api/courses",
+        data={"people": people_json, "source_filename": "r.pdf", "source_checksum": "x", "pages": "1"},
     )
+    assert response.status_code == 400
+
+
+def test_the_server_never_receives_the_pdf(client):
+    """Extraction happens in the browser, so no roster file should ever land here."""
+    send_roster(client, [("Ada", "Lovelace", True)])
+    assert [path.name for path in Path(client.app_data).rglob("*.pdf")] == []
+
+
+def test_provenance_is_recorded_even_though_the_file_never_arrives(client):
+    send_roster(client, [("Ada", "Lovelace", False)], filename="ME EN 101.pdf", pages=23)
+    with sqlite3.connect(client.db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        run = dict(conn.execute("SELECT * FROM import_runs ORDER BY id DESC LIMIT 1").fetchone())
+    assert run["source_filename"] == "ME EN 101.pdf"
+    assert run["pages"] == 23
+    assert run["status"] == "complete"
 
 
 # --- adding people to a class that already exists -------------------------
 
 
-def test_a_later_roster_adds_only_the_new_people(client, tmp_path):
+def test_a_later_roster_adds_only_the_new_people(client):
     """The whole point: somebody joins late, and nobody else is disturbed."""
-    first = roster_pdf([("Ada", "Lovelace"), ("Alan", "Turing")], tmp_path / "week1.pdf")
-    course_id = upload_roster(client, first).json()["course_id"]
+    course_id = send_roster(client, [("Ada", "Lovelace", True), ("Alan", "Turing", True)]).json()["course_id"]
     for candidate in client.get(f"/api/courses/{course_id}/candidates").json():
         client.post(f"/api/courses/{course_id}/candidates/{candidate['id']}/approve")
 
-    # Study one of them, so there is history that must survive.
     studied = client.get(f"/api/courses/{course_id}/cards").json()[0]["id"]
     session = client.post(f"/api/courses/{course_id}/sessions", json={"mode": "adaptive", "card_ids": [studied]})
-    assert session.status_code == 200, session.text
     client.post(f"/api/sessions/{session.json()['id']}/reviews", json={"card_id": studied, "result": "right", "mastery": 0.9, "stability_days": 6.0})
 
-    later = roster_pdf([("Ada", "Lovelace"), ("Alan", "Turing"), ("Grace", "Hopper")], tmp_path / "week3.pdf")
-    body = upload_roster(client, later, url=f"/api/courses/{course_id}/imports").json()
+    body = send_roster(
+        client,
+        [("Ada", "Lovelace", True), ("Alan", "Turing", True), ("Grace", "Hopper", True)],
+        url=f"/api/courses/{course_id}/imports",
+    ).json()
     assert body["status"] == "updated"
     assert body["added"] == 1
     assert body["already_present"] == 2
-    assert body["course_id"] == course_id
 
     candidates = client.get(f"/api/courses/{course_id}/candidates").json()
     assert [(c["first_name"], c["last_name"]) for c in candidates] == [("Grace", "Hopper")]
     assert progress_row(client, studied)["seen_count"] == 1, "existing study history must survive a re-import"
 
 
-def test_re_importing_an_unchanged_roster_adds_nobody(client, tmp_path):
-    pdf = roster_pdf([("Ada", "Lovelace"), ("Alan", "Turing")], tmp_path / "roster.pdf")
-    course_id = upload_roster(client, pdf).json()["course_id"]
-    body = upload_roster(client, pdf, url=f"/api/courses/{course_id}/imports").json()
+def test_re_importing_an_unchanged_roster_adds_nobody(client):
+    people = [("Ada", "Lovelace", True), ("Alan", "Turing", True)]
+    course_id = send_roster(client, people).json()["course_id"]
+    body = send_roster(client, people, url=f"/api/courses/{course_id}/imports").json()
     assert body["added"] == 0
     assert body["already_present"] == 2
     assert "already in the course" in body["warning"]
 
 
-def test_importing_creates_no_second_class(client, tmp_path):
+def test_importing_creates_no_second_class(client):
     """The bug this design removes: a re-export used to become a duplicate class."""
-    first = roster_pdf([("Ada", "Lovelace")], tmp_path / "a.pdf")
-    course_id = upload_roster(client, first).json()["course_id"]
+    course_id = send_roster(client, [("Ada", "Lovelace", False)]).json()["course_id"]
     before = len(client.get("/api/courses").json())
-    later = roster_pdf([("Ada", "Lovelace"), ("Grace", "Hopper")], tmp_path / "b.pdf")
-    upload_roster(client, later, url=f"/api/courses/{course_id}/imports")
+    send_roster(client, [("Ada", "Lovelace", False), ("Grace", "Hopper", False)], url=f"/api/courses/{course_id}/imports")
     assert len(client.get("/api/courses").json()) == before
 
 
-def test_two_sections_can_be_merged_into_one_class(client, tmp_path):
-    section_one = roster_pdf([("Ada", "Lovelace")], tmp_path / "s1.pdf")
-    section_two = roster_pdf([("Grace", "Hopper")], tmp_path / "s2.pdf")
-    course_id = upload_roster(client, section_one).json()["course_id"]
-    body = upload_roster(client, section_two, url=f"/api/courses/{course_id}/imports").json()
+def test_two_sections_can_be_merged_into_one_class(client):
+    course_id = send_roster(client, [("Ada", "Lovelace", False)]).json()["course_id"]
+    body = send_roster(client, [("Grace", "Hopper", False)], url=f"/api/courses/{course_id}/imports").json()
     assert body["added"] == 1
     assert len(client.get(f"/api/courses/{course_id}/candidates").json()) == 2
 
 
-def test_importing_into_a_course_that_does_not_exist_is_refused(client, tmp_path):
-    pdf = roster_pdf([("Ada", "Lovelace")], tmp_path / "roster.pdf")
-    assert upload_roster(client, pdf, url="/api/courses/nope/imports").status_code == 400
-
-
-def test_the_uploaded_pdf_is_not_kept(client, tmp_path):
-    """The learner has the file already; keeping student rosters buys nothing."""
-    pdf = roster_pdf([("Ada", "Lovelace")], tmp_path / "roster.pdf")
-    upload_roster(client, pdf)
-    stored = [path.name for path in Path(client.app_data).rglob("*.pdf")]
-    assert stored == []
-
-
-def test_provenance_is_recorded_even_though_the_file_is_discarded(client, tmp_path):
-    pdf = roster_pdf([("Ada", "Lovelace")], tmp_path / "ME EN 101.pdf")
-    upload_roster(client, pdf)
-    with sqlite3.connect(client.db_path) as conn:
-        conn.row_factory = sqlite3.Row
-        run = dict(conn.execute("SELECT * FROM import_runs ORDER BY id DESC LIMIT 1").fetchone())
-    assert run["source_filename"] == "ME EN 101.pdf"
-    assert len(run["source_checksum"]) == 64
-    assert run["status"] == "complete"
+def test_importing_into_a_course_that_does_not_exist_is_refused(client):
+    assert send_roster(client, [("Ada", "Lovelace", False)], url="/api/courses/nope/imports").status_code == 400
 
 
 # --- portraits must not collide between imports ---------------------------
-
-
-class _FakePage:
-    """A page with no embedded text, so the importer takes its OCR path."""
-
-    def extract_text(self):
-        return ""
-
-
-def fake_pdf_reader(_path):
-    return type("FakeReader", (), {"pages": [_FakePage()]})()
 
 
 def portrait_paths(client, course_id):
@@ -579,47 +555,24 @@ def portrait_paths(client, course_id):
         ]
 
 
-def test_two_people_never_share_a_portrait_file(client, tmp_path, monkeypatch):
-    """The bug this guards: portraits were named page-NN-person-NN, which is only
-    unique within one PDF. A second roster imported into the same class
-    overwrote the first roster's files, silently giving existing people
-    somebody else's face."""
-    from backend.app import importer
-
-    # Stand in for OCR: every roster yields a portrait for each person, and the
-    # crops are named identically across imports, exactly as page/position would.
-    def fake_ocr(path, staging):
-        names = [line.split(" ", 1) for line in path.read_text().splitlines() if line.strip()]
-        candidates = []
-        for index, (first, last) in enumerate(names, start=1):
-            crop = staging / f"page-01-person-{index:02d}.jpg"
-            crop.write_bytes(f"portrait of {first} {last}".encode())
-            candidates.append({"first_name": first, "last_name": last, "staged_portrait": crop})
-        return "", 1, candidates
-
-    monkeypatch.setattr(importer, "_ocr_pdf", fake_ocr)
-    monkeypatch.setattr(importer, "PdfReader", fake_pdf_reader)
-
-    first = tmp_path / "first.pdf"
-    first.write_text("Ada Lovelace\nAlan Turing\n")
-    with first.open("rb") as handle:
-        created = client.post("/api/courses", files={"file": ("first.pdf", handle, "application/pdf")}).json()
-    course_id = created["course_id"]
+def test_two_people_never_share_a_portrait_file(client):
+    """The bug this guards: portraits were once named by page and position, which
+    is only unique within one roster, so a second import overwrote the first
+    roster's files and gave existing people somebody else's face."""
+    course_id = send_roster(client, [("Ada", "Lovelace", True), ("Alan", "Turing", True)]).json()["course_id"]
     before = portrait_paths(client, course_id)
     assert len(before) == 2
 
-    # A later roster: the same two people plus one more, crops named the same.
-    second = tmp_path / "second.pdf"
-    second.write_text("Ada Lovelace\nAlan Turing\nGrace Hopper\n")
-    with second.open("rb") as handle:
-        client.post(f"/api/courses/{course_id}/imports", files={"file": ("second.pdf", handle, "application/pdf")})
-
+    send_roster(
+        client,
+        [("Ada", "Lovelace", True), ("Alan", "Turing", True), ("Grace", "Hopper", True)],
+        url=f"/api/courses/{course_id}/imports",
+    )
     after = portrait_paths(client, course_id)
     assert len(after) == 3
     assert len(set(after)) == 3, "every person must have their own portrait file"
     assert set(before).issubset(set(after)), "existing people must keep the portrait they had"
 
-    # And the files themselves must still hold the right faces.
     assets = Path(client.app_data) / "assets"
     with sqlite3.connect(client.db_path) as conn:
         for first_name, last_name, image_path in conn.execute(
@@ -629,88 +582,19 @@ def test_two_people_never_share_a_portrait_file(client, tmp_path, monkeypatch):
             assert (assets / image_path).read_bytes() == f"portrait of {first_name} {last_name}".encode()
 
 
-def test_a_third_roster_cannot_overwrite_a_portrait_from_the_second(client, tmp_path, monkeypatch):
-    """The naming half of the fix.
-
-    Not storing portraits for people already present stops the obvious
-    collision, but a *new* person in a later roster can still land in the same
-    page-and-position slot as a new person from an earlier one. If portrait
-    names came from that slot, the later import would overwrite the earlier
-    person's face. Names are unrelated to position for exactly this reason.
-    """
-    from backend.app import importer
-
-    def fake_ocr(path, staging):
-        candidates = []
-        for index, line in enumerate(path.read_text().splitlines(), start=1):
-            if not line.strip():
-                continue
-            first, last = line.split(" ", 1)
-            # Named by slot, as a page-and-position crop inevitably is.
-            crop = staging / f"page-01-person-{index:02d}.jpg"
-            crop.write_bytes(f"portrait of {first} {last}".encode())
-            candidates.append({"first_name": first, "last_name": last, "staged_portrait": crop})
-        return "", 1, candidates
-
-    monkeypatch.setattr(importer, "_ocr_pdf", fake_ocr)
-    monkeypatch.setattr(importer, "PdfReader", fake_pdf_reader)
-
-    def send(text, url="/api/courses"):
-        roster = tmp_path / "roster.pdf"
-        roster.write_text(text)
-        with roster.open("rb") as handle:
-            return client.post(url, files={"file": ("roster.pdf", handle, "application/pdf")}).json()
-
-    course_id = send("Ada Lovelace\n")["course_id"]
-    # Grace is new, and lands in slot 2.
-    send("Ada Lovelace\nGrace Hopper\n", f"/api/courses/{course_id}/imports")
-    # Zed is new too, and lands in slot 2 as well — Grace is not on this roster.
-    send("Ada Lovelace\nZed Zhang\n", f"/api/courses/{course_id}/imports")
-
-    assets = Path(client.app_data) / "assets"
-    with sqlite3.connect(client.db_path) as conn:
-        stored = list(
-            conn.execute(
-                "SELECT first_name, last_name, image_path FROM cards WHERE course_id = ? AND image_path IS NOT NULL",
-                (course_id,),
-            )
-        )
-    assert len(stored) == 3
-    assert len({row[2] for row in stored}) == 3, "each person needs their own file"
-    for first_name, last_name, image_path in stored:
-        assert (assets / image_path).read_bytes() == f"portrait of {first_name} {last_name}".encode(), (
-            f"{first_name} {last_name} is showing somebody else's face"
-        )
+def test_an_existing_portrait_is_never_replaced(client):
+    """Changing a face out from under somebody mid-semester is its own kind of wrong."""
+    course_id = send_roster(client, [("Ada", "Lovelace", True)]).json()["course_id"]
+    original = portrait_paths(client, course_id)[0]
+    send_roster(client, [("Ada", "Lovelace", True)], url=f"/api/courses/{course_id}/imports")
+    assert portrait_paths(client, course_id) == [original]
 
 
-def test_an_import_writes_no_portrait_for_somebody_already_present(client, tmp_path, monkeypatch):
-    """Otherwise every re-import leaves a full set of orphaned files behind."""
-    from backend.app import importer
-
-    def fake_ocr(path, staging):
-        candidates = []
-        for index, line in enumerate(path.read_text().splitlines(), start=1):
-            if not line.strip():
-                continue
-            first, last = line.split(" ", 1)
-            crop = staging / f"page-01-person-{index:02d}.jpg"
-            crop.write_bytes(b"x")
-            candidates.append({"first_name": first, "last_name": last, "staged_portrait": crop})
-        return "", 1, candidates
-
-    monkeypatch.setattr(importer, "_ocr_pdf", fake_ocr)
-    monkeypatch.setattr(importer, "PdfReader", fake_pdf_reader)
-
-    roster = tmp_path / "roster.pdf"
-    roster.write_text("Ada Lovelace\n")
-    with roster.open("rb") as handle:
-        course_id = client.post("/api/courses", files={"file": ("r.pdf", handle, "application/pdf")}).json()["course_id"]
-
-    assets = Path(client.app_data) / "assets"
-    after_first = sorted(p.name for p in assets.rglob("*.jpg"))
-    with roster.open("rb") as handle:
-        client.post(f"/api/courses/{course_id}/imports", files={"file": ("r.pdf", handle, "application/pdf")})
-    assert sorted(p.name for p in assets.rglob("*.jpg")) == after_first
+def test_a_portrait_fills_a_gap_for_somebody_who_had_none(client):
+    course_id = send_roster(client, [("Ada", "Lovelace", False)]).json()["course_id"]
+    assert portrait_paths(client, course_id) == []
+    send_roster(client, [("Ada", "Lovelace", True)], url=f"/api/courses/{course_id}/imports")
+    assert len(portrait_paths(client, course_id)) == 1
 
 
 # --- rejecting a candidate -------------------------------------------------

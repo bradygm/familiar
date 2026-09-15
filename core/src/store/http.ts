@@ -8,6 +8,7 @@
  * rather than an intention to match.
  */
 
+import { extractRoster, type ExtractionProgress } from './roster-extract.js';
 import type {
   Card,
   Course,
@@ -48,6 +49,12 @@ async function sendFile(path: string, file: File, extra: Record<string, string |
   return response.json();
 }
 
+/** Provenance for the import log, since the server no longer sees the file. */
+async function checksum(file: File): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
 /** Portraits are served as static files, so the URL is just a path. */
 function withPortrait(card: any): Card {
   return { ...card, portrait_url: card.image_path ? `/assets/${encodeURI(card.image_path)}` : null };
@@ -81,12 +88,54 @@ export class HttpStore implements Store {
     return body.events;
   }
 
+  /** Reports extraction progress, which happens here rather than on the server. */
+  onExtractionProgress: ((progress: ExtractionProgress) => void) | null = null;
+
   async createCourseFromRoster(file: File, title?: string): Promise<ImportOutcome> {
-    return sendFile('/courses', file, { title });
+    return this.sendRoster('/courses', file, title);
   }
 
   async importRosterIntoCourse(courseId: string, file: File): Promise<ImportOutcome> {
-    return sendFile(`/courses/${courseId}/imports`, file);
+    return this.sendRoster(`/courses/${courseId}/imports`, file);
+  }
+
+  /**
+   * Read the roster here, then send what came out of it.
+   *
+   * The PDF never travels. Reading it in the page is faster than the native
+   * path was, and it keeps a file of student photographs on the machine it was
+   * chosen on even though a server is involved.
+   */
+  private async sendRoster(path: string, file: File, title?: string): Promise<ImportOutcome> {
+    const { people, pages } = await extractRoster(file, (progress) => this.onExtractionProgress?.(progress));
+
+    const body = new FormData();
+    const described = people.map((person, index) => ({
+      first_name: person.first_name,
+      last_name: person.last_name,
+      portrait: person.portrait ? index : null,
+    }));
+    for (const person of people) {
+      if (person.portrait) body.append('portraits', person.portrait, 'portrait.jpg');
+    }
+    // Indices must point into the portraits actually appended, not into people.
+    let portraitIndex = 0;
+    for (const [index, person] of people.entries()) {
+      described[index]!.portrait = person.portrait ? portraitIndex++ : null;
+    }
+
+    body.append('people', JSON.stringify(described));
+    body.append('source_filename', file.name);
+    body.append('source_checksum', await checksum(file));
+    body.append('pages', String(pages));
+    if (title) body.append('title', title);
+
+    const response = await fetch(`/api${path}`, { method: 'POST', body });
+    if (!response.ok) {
+      const detail = await response.json().catch(() => ({}));
+      throw new Error(detail.detail || 'Something went wrong.');
+    }
+    return response.json();
   }
 
   async addCard(courseId: string, person: { first_name: string; last_name: string; facts: string[] }) {

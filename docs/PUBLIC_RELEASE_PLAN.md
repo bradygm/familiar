@@ -75,7 +75,7 @@ build two:
 | Storage adapter | `IndexedDbStore` | `HttpStore` → FastAPI → SQLite |
 | System of record | Visitor's browser | `app-data/flashcards.sqlite3` on your disk |
 | Durability | Persist + PWA install + backup nagging | A real file: Time Machine, `sqlite3` CLI, `cp` |
-| Import | `pdf.js` + `tesseract.js` in a worker | Native poppler + tesseract, as today |
+| Import | `pdf.js` + `tesseract.js` in the page | the same, and no server-side OCR at all |
 | Learning model | Shared TypeScript core | Shared TypeScript core |
 
 The important part: **the HTTP adapter is code you already have.** `api()` at

@@ -1,5 +1,4 @@
 import json
-import tempfile
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -10,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .database import app_data_dir, connection, initialize_database
-from .importer import MissingOcrTools, import_pdf
+from .importer import store_people
 from .portable import build_bundle, restore_bundle
 
 
@@ -128,62 +127,111 @@ def startup() -> None:
 def health():
     return {"status": "ok"}
 
-
-# Generous on purpose. A real 69-person BYU export of scanned pages is ~62 MB,
-# so a cap chosen from intuition rather than from a real file would have
-# rejected an ordinary class. This is a guard against a mistaken upload filling
-# the disk, not an opinion about how big a roster should be.
+# Portraits, not a PDF: extraction happens in the browser, so what arrives here
+# is already the finished crops.
 MAX_UPLOAD_BYTES = 250 * 1024 * 1024
 
 
-async def _run_import(upload: UploadFile, course_id: str | None, title: str | None) -> dict:
-    """Extract a roster into a course, without keeping the PDF.
+def _store_portraits(course_id: str, contents: list[bytes]) -> list[str]:
+    """Write portrait crops under names unrelated to where they came from.
 
-    The file is processed in a temporary location and discarded. The learner
-    already has it on their own machine, so retaining a roster of student
-    photographs buys nothing and is the kind of thing this app should not do.
-    Provenance — filename, checksum, counts, warnings — is recorded in
-    import_runs.
+    A name derived from page and position is only unique within one roster, so a
+    later import would overwrite an earlier person's face. These cannot collide.
     """
-    if not (upload.filename or "").lower().endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Choose a PDF roster exported from BYU Flashcards.")
+    directory = ASSETS / course_id
+    directory.mkdir(parents=True, exist_ok=True)
+    paths = []
+    for blob in contents:
+        filename = f"person-{uuid.uuid4().hex[:12]}.jpg"
+        (directory / filename).write_bytes(blob)
+        paths.append(f"{course_id}/{filename}")
+    return paths
 
-    contents = await upload.read()
-    if not contents:
-        raise HTTPException(status_code=400, detail="That file is empty.")
-    if len(contents) > MAX_UPLOAD_BYTES:
-        raise HTTPException(status_code=413, detail="That file is larger than 60 MB.")
 
-    with tempfile.TemporaryDirectory(prefix="familiar-upload-") as directory:
-        staged = Path(directory) / "roster.pdf"
-        staged.write_bytes(contents)
-        with connection() as conn:
-            try:
-                return import_pdf(staged, upload.filename, conn, course_id, title)
-            except ValueError as exc:
-                raise HTTPException(status_code=400, detail=str(exc)) from exc
-            except MissingOcrTools as exc:
-                raise HTTPException(status_code=503, detail=str(exc)) from exc
-            except HTTPException:
-                raise
-            except Exception as exc:
-                raise HTTPException(status_code=422, detail=f"Could not read that PDF: {exc}") from exc
+async def _receive_roster(
+    course_id: str,
+    people_json: str,
+    source_filename: str,
+    source_checksum: str,
+    pages: int,
+    portraits: list[UploadFile],
+    title: str | None,
+    create_course: bool,
+) -> dict:
+    """Record people the client extracted, with the portraits it cut out.
+
+    The PDF itself never arrives: it is read in the browser, which is faster than
+    the native path was and keeps a file of student photographs on the machine it
+    was chosen on.
+    """
+    try:
+        people = json.loads(people_json)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=400, detail="Malformed roster data.") from exc
+    if not isinstance(people, list):
+        raise HTTPException(status_code=400, detail="Malformed roster data.")
+    for person in people:
+        if not isinstance(person, dict) or not str(person.get("first_name", "")).strip() or not str(person.get("last_name", "")).strip():
+            raise HTTPException(status_code=400, detail="Every person needs a first and last name.")
+
+    contents = []
+    total = 0
+    for upload in portraits:
+        blob = await upload.read()
+        total += len(blob)
+        if total > MAX_UPLOAD_BYTES:
+            raise HTTPException(status_code=413, detail="Those portraits are larger than this build accepts.")
+        contents.append(blob)
+
+    stored = _store_portraits(course_id, contents)
+    for person in people:
+        index = person.pop("portrait", None)
+        person["image_path"] = stored[index] if isinstance(index, int) and 0 <= index < len(stored) else None
+
+    with connection() as conn:
+        try:
+            return store_people(
+                conn,
+                course_id,
+                people,
+                source_filename=source_filename,
+                source_checksum=source_checksum,
+                pages=pages,
+                title=title,
+                create_course=create_course,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.post("/api/courses")
-async def create_course(file: UploadFile = File(...), title: str | None = Form(default=None)):
-    """Start a new class from an uploaded roster."""
-    return await _run_import(file, None, (title or "").strip() or None)
+async def create_course(
+    people: str = Form(...),
+    source_filename: str = Form(...),
+    source_checksum: str = Form(""),
+    pages: int = Form(0),
+    title: str | None = Form(default=None),
+    portraits: list[UploadFile] = File(default=[]),
+):
+    """Start a class from a roster the browser has already read."""
+    course_id = f"course-{uuid.uuid4().hex[:12]}"
+    return await _receive_roster(
+        course_id, people, source_filename, source_checksum, pages, portraits, (title or "").strip() or None, True
+    )
 
 
 @app.post("/api/courses/{course_id}/imports")
-async def import_into_course(course_id: str, file: UploadFile = File(...)):
-    """Add people to an existing class from another roster export.
+async def import_into_course(
+    course_id: str,
+    people: str = Form(...),
+    source_filename: str = Form(...),
+    source_checksum: str = Form(""),
+    pages: int = Form(0),
+    portraits: list[UploadFile] = File(default=[]),
+):
+    """Add people to an existing class from another roster."""
+    return await _receive_roster(course_id, people, source_filename, source_checksum, pages, portraits, None, False)
 
-    The caller chose this course, so nothing is inferred from the file. That is
-    what makes merging two sections, or re-importing an updated roster, safe.
-    """
-    return await _run_import(file, course_id, None)
 
 
 @app.get("/api/courses")
