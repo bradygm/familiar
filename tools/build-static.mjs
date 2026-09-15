@@ -45,6 +45,11 @@ writeFileSync(appPath, app.replace(marked, "const store = createStore('indexeddb
 // through Jekyll, which would strip files it does not recognise.
 writeFileSync(join(out, '.nojekyll'), '');
 
+// The custom domain has to travel inside the artifact. This workflow publishes
+// dist/ rather than a branch, so a CNAME at the repository root would never be
+// served, and the domain would fall back to the user site's /familiar/ path.
+writeFileSync(join(out, 'CNAME'), 'familiar.bradymoon.com\n');
+
 let files = 0;
 let bytes = 0;
 const walk = (directory) => {

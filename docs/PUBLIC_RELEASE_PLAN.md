@@ -274,11 +274,36 @@ depends on it.
 
 ## Risks worth designing around now
 
-**Safari evicts IndexedDB after 7 days of no visits** (public build only — your SQLite
-file is unaffected). For a study app used weekly, that is real data loss. Mitigate with
-all three: call `navigator.storage.persist()`, prompt to install the PWA, and nag for a
-backup export. This is the single most likely way a *visitor* loses a semester of
-progress, and the reason the durability section above exists.
+**Safari deletes site data on a timer, and this is the single largest risk to the hosted
+build.** Researched rather than assumed, because the details change and most summaries of
+them are stale:
+
+- The rule is still in force in 2026. WebKit's tracking prevention erases *all*
+  script-writable storage — IndexedDB included — after seven days of browser use without
+  user interaction with the site.
+- It counts **days of Safari use**, not calendar days, and what resets it is a click or
+  tap, not a page load.
+- It applies to **every browser on iOS and iPadOS**, since they are all required to use
+  WebKit. Somebody running Chrome on an iPhone is affected and will not know it.
+- **`persist()` does not reliably exempt you.** WebKit bug 209563 has been open since 2020
+  — last touched July 2025 — and developers report data deleted despite a granted request.
+  MDN's note about persistent origins being skipped appears only under storage *pressure*,
+  never under the proactive rule. Do not treat persistence as protection here.
+- The one documented exemption is **installing**: Add to Home Screen on iOS, Add to Dock
+  on macOS 14+.
+
+The arithmetic is what makes it serious: somebody studying weekly has a seven-day budget
+and a seven-day cadence, so there is no margin at all. One exam week, one illness, one
+winter break, and a semester of review history is gone with no warning and no recovery.
+
+Chrome, Edge and Firefox on desktop and Android have **no time-based eviction whatsoever**
+— only least-recently-used eviction under genuine disk pressure, which a weekly visitor
+will never be near. There, the realistic risk is the user clearing site data, not the
+browser acting on its own.
+
+So the app warns WebKit users explicitly, points them at installing, and shortens the
+backup reminder to five days there — a fortnightly reminder can otherwise arrive after the
+data it was meant to protect has already gone.
 
 **Your OCR is BYU-Flashcards-specific.** `importer.py` hardcodes three name cells per page
 at page-height fractions `0.216 / 0.435 / 0.655` and names in the right 55% of the page.

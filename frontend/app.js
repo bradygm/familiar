@@ -93,6 +93,47 @@ async function requestDurableStorage() {
   } catch { /* Storage policy is the browser's to decide; nothing to do if it refuses. */ }
 }
 
+/**
+ * Whether this browser deletes site data on a timer.
+ *
+ * WebKit's tracking prevention erases all script-writable storage — IndexedDB
+ * included — after seven days of browser use without user interaction with the
+ * site. That covers Safari on macOS and iOS, and every browser on iOS, because
+ * they are all required to use WebKit: somebody running Chrome on an iPhone is
+ * affected and will have no idea.
+ *
+ * It matters enormously here. Somebody studying once a week has a seven-day
+ * budget and a seven-day cadence, which is no margin at all: one skipped week,
+ * one exam period, one winter break, and a semester of review history is gone
+ * with no warning and no recovery.
+ *
+ * Installing the app is the one documented exemption. Requesting persistent
+ * storage is *not* reliably one — WebKit has carried an open bug about exactly
+ * that since 2020, and developers have reported data deleted despite a granted
+ * request, so this deliberately does not treat persistence as protection here.
+ */
+function storageExpiresOnATimer() {
+  const agent = navigator.userAgent;
+  const iOS = /iPad|iPhone|iPod/.test(agent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const desktopSafari = /Safari/.test(agent) && !/Chrome|Chromium|Edg|OPR|Android/.test(agent);
+  return iOS || desktopSafari;
+}
+
+/** An installed app keeps its own storage, and is exempt from that timer. */
+function runningInstalled() {
+  return window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
+}
+
+/**
+ * How long to leave somebody alone between backup reminders.
+ *
+ * Shorter where storage expires on a timer, because a fortnightly reminder can
+ * arrive after the data it was meant to protect has already been deleted.
+ */
+function reminderIntervalDays() {
+  return storageExpiresOnATimer() && !runningInstalled() ? 5 : 14;
+}
+
 /** Remember when a backup was last taken, so the reminder can be honest. */
 const BACKUP_KEY = 'familiar:last-export';
 function recordBackup() {
@@ -119,11 +160,28 @@ function backupReminder(courses) {
   const reviews = courses.reduce((total, course) => total + (course.session_count || 0), 0);
   if (!reviews) return '';
   const since = daysSinceBackup();
-  if (since !== null && since < 14) return '';
+  if (since !== null && since < reminderIntervalDays()) return '';
   const wording = since === null
     ? 'You have study history that has never been backed up.'
     : `It has been ${Math.floor(since)} days since your last backup.`;
   return `<div class="notice backup-reminder" role="status">${wording} Browser storage can be cleared without warning, and review history cannot be recreated. <button class="link-button" id="reminder-export">Export a backup now</button></div>`;
+}
+
+/**
+ * The warning that matters most on this browser, and only where it applies.
+ *
+ * Not dismissible, because the risk does not go away until the app is
+ * installed — and somebody who dismisses it and then loses a semester of work
+ * has been failed by the dismissal, not helped by it. It disappears on its own
+ * once the app is installed, which is the actual fix.
+ */
+function evictionWarning(courses) {
+  if (!store.kind || store.kind !== 'indexeddb') return '';
+  if (!courses.length || !storageExpiresOnATimer() || runningInstalled()) return '';
+  const install = /iPad|iPhone|iPod/.test(navigator.userAgent) || navigator.maxTouchPoints > 1
+    ? 'Share → <strong>Add to Home Screen</strong>'
+    : 'File → <strong>Add to Dock</strong>';
+  return `<div class="notice warning" role="status"><strong>This browser deletes site data on a timer.</strong> Safari — and every browser on iPhone and iPad, which all run on Safari's engine — erases a site's stored data after about a week without visiting it. That would take your study history with it, without warning. Installing the app exempts it: ${install}. Either way, <button class="link-button" id="warning-export">keep a backup</button>.</div>`;
 }
 
 function setView(html) { app.innerHTML = html; }
@@ -168,6 +226,7 @@ async function home() {
   setView(`
     <section class="hero"><div class="eyebrow">For instructors</div><h1>Know every student<br>before the first day.</h1><p>Import your course roster, confirm the people it finds, and build familiarity in short, adaptive sessions built on retrieval practice.</p></section>
     ${courses.length ? '' : orientation()}
+    ${evictionWarning(courses)}
     ${backupReminder(courses)}
     <section class="section-head"><div><div class="eyebrow">Courses</div><h2>Your courses</h2></div><p>${courses.length ? `${courses.length} imported` : 'Nothing imported yet'}</p></section>
     ${courses.length ? `<div class="course-grid">${courses.map(course => { const summary = summariseCourse(course.progress || [], Date.now()); return `<a class="course" href="${courseLink(course)}"><div class="course-top"><span class="course-kicker">Course roster</span><span class="course-state">${studiedLabel(course.last_studied_at)}</span></div><h2>${esc(course.title)}</h2><dl class="course-metrics"><div><dt>People</dt><dd>${course.card_count}</dd></div><div><dt>Familiar</dt><dd>${summary.familiarPercent}%</dd></div><div><dt>Sessions</dt><dd>${course.session_count}</dd></div></dl><p class="course-cta">${course.last_studied_at ? 'Continue studying' : 'Start learning'} <span aria-hidden="true">→</span></p></a>`; }).join('')}</div>` : `<div class="empty"><h2>Your first course starts with a PDF.</h2><p>Source files remain on this machine. Imported information is saved in the local app database.</p></div>`}
@@ -193,6 +252,7 @@ async function home() {
   const exportEverything = async () => { await store.downloadExport(); recordBackup(); };
   document.querySelector('#export-all').addEventListener('click', exportEverything);
   document.querySelector('#reminder-export')?.addEventListener('click', async () => { await exportEverything(); home(); });
+  document.querySelector('#warning-export')?.addEventListener('click', exportEverything);
   // A roster-only export is not a backup of anything, so it does not reset the reminder.
   document.querySelector('#export-rosters').addEventListener('click', () => store.downloadExport(undefined, {includeProgress: false}));
   const restoreInput = document.querySelector('#restore-file');

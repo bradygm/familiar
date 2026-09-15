@@ -6,6 +6,13 @@ Familiar was built to bring science-backed retrieval practice and expanding reca
 
 > **Privacy note:** roster PDFs and study history are local. Familiar does not use browser storage or a remote database; cards, sessions, and progress live in the local SQLite database at `app-data/flashcards.sqlite3`. An uploaded roster PDF is read and then discarded — only the names and portraits it yields are saved. `app-data/` is ignored by Git. Do not commit or publish real roster PDFs, portraits, or the local database.
 >
+> **If you use the hosted version in Safari, or on an iPhone or iPad, install it.** Safari
+> erases a site's stored data after about a week without visiting it, and every browser on
+> iOS runs on Safari's engine, so this applies there too. Add to Home Screen (iOS) or Add
+> to Dock (macOS) exempts the app; requesting persistent storage does not reliably do so.
+> Chrome, Edge and Firefox on desktop and Android have no such timer. Either way, export a
+> backup — it is the only copy that survives a browser clearing its storage.
+>
 > The hosted version at its public URL loads Google Analytics. The page only records
 > visit counts for internal use, so I can tell whether anyone is using it. It sets a
 > first-party cookie to distinguish a repeat visit from a new one. Advertising and

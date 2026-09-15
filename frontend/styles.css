@@ -311,3 +311,6 @@ label.chip:focus-within { outline: 3px solid var(--orange); outline-offset: 3px;
 
 .new-class-name { display: block; margin: 0 0 14px; font-weight: 700; color: var(--ink); }
 .new-class-name .search { display: block; width: min(420px, 100%); margin-top: 6px; font-weight: 400; }
+
+.notice.warning { background: var(--danger-soft); color: #7d2c1f; }
+.notice.warning .link-button { color: #7d2c1f; text-decoration: underline; }

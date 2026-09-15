@@ -66,6 +66,7 @@ jobs:
           ! grep -q "createStore('http')" dist/app.js
           test -f dist/vendor/tesseract/eng.traineddata
           test -f dist/.nojekyll
+          grep -qx familiar.bradymoon.com dist/CNAME
 
       # `enablement` turns Pages on for the repository the first time this runs,
       # rather than failing with "Get Pages site failed" until somebody sets it
