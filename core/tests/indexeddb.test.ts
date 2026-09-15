@@ -207,6 +207,38 @@ describe('IndexedDbStore', () => {
     expect(await store.listCards('course-1')).toHaveLength(2);
   });
 
+  it('deletes a class with its people, portraits and history', async () => {
+    await seedCourse(store);
+    const session = await store.startSession('course-1', 'adaptive', ['course-1-a']);
+    await store.recordReview(session.id, { card_id: 'course-1-a', result: 'right', mastery: 0.9, stability_days: 5, reviewed_at: '2026-03-01T12:00:00+00:00' });
+
+    await store.deleteCourse('course-1', 'Test Course');
+    expect(await store.listCourses()).toEqual([]);
+    await expect(store.getCourse('course-1')).rejects.toThrow(/not found/);
+    // Nothing should be left behind for a future course id to collide with.
+    const bundle = await store.exportBundle();
+    const entries = await readZip(await bundle.arrayBuffer());
+    expect([...entries.keys()].filter((name) => name.startsWith('assets/'))).toEqual([]);
+  });
+
+  it('refuses to delete a class without its exact name, and removes nothing', async () => {
+    await seedCourse(store);
+    await expect(store.deleteCourse('course-1', 'test course')).rejects.toThrow(/exactly/);
+    expect(await store.listCourses()).toHaveLength(1);
+    expect(await store.listCards('course-1')).toHaveLength(2);
+  });
+
+  it('leaves another class untouched when one is deleted', async () => {
+    await seedCourse(store, 'course-1', 'First Class');
+    await seedCourse(store, 'course-2', 'Second Class');
+    await store.deleteCourse('course-1', 'First Class');
+    const remaining = await store.listCourses();
+    expect(remaining.map((course) => course.id)).toEqual(['course-2']);
+    expect(await store.listCards('course-2')).toHaveLength(2);
+    // The survivor's portrait must still resolve.
+    expect((await store.listCards('course-2')).find((card) => card.image_path)?.portrait_url).toMatch(/^blob:/);
+  });
+
   it('refuses to merge a bundle whose courses are already here', async () => {
     await seedCourse(store);
     const bundle = await store.exportBundle();

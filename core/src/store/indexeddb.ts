@@ -434,6 +434,44 @@ export class IndexedDbStore implements Store {
     await done(transaction);
   }
 
+  async deleteCourse(courseId: string, confirmTitle: string): Promise<void> {
+    const course = await this.getCourse(courseId);
+    if (confirmTitle.trim() !== course.title) {
+      throw new Error('Type the class name exactly to confirm deleting it.');
+    }
+    const cards = await this.readAll('cards', 'course_id', courseId);
+    const sessions = await this.readAll('sessions', 'course_id', courseId);
+    const sessionIds = new Set(sessions.map((session) => session.id));
+    const reviews = (await this.readAll('reviews')).filter((review) => sessionIds.has(review.session_id));
+    const cardIds = new Set(cards.map((card) => card.id));
+    // Portraits shared with a card in another class are left alone; nothing
+    // here should reach outside the course being removed.
+    const keep = new Set(
+      (await this.readAll('cards'))
+        .filter((card) => !cardIds.has(card.id) && card.image_path)
+        .map((card) => card.image_path),
+    );
+
+    const db = await this.db();
+    const transaction = db.transaction(['courses', 'cards', 'progress', 'sessions', 'reviews', 'assets'], 'readwrite');
+    transaction.objectStore('courses').delete(courseId);
+    for (const card of cards) {
+      transaction.objectStore('cards').delete(card.id);
+      transaction.objectStore('progress').delete(card.id);
+      if (card.image_path && !keep.has(card.image_path)) {
+        transaction.objectStore('assets').delete(card.image_path);
+        const url = this.portraits.get(card.image_path);
+        if (url) {
+          URL.revokeObjectURL(url);
+          this.portraits.delete(card.image_path);
+        }
+      }
+    }
+    for (const session of sessions) transaction.objectStore('sessions').delete(session.id);
+    for (const review of reviews) transaction.objectStore('reviews').delete(review.id);
+    await done(transaction);
+  }
+
   async startSession(courseId: string, mode: StudyMode, cardIds: string[]): Promise<{ id: string }> {
     const available = new Set(
       (await this.readAll('cards', 'course_id', courseId)).filter((card) => card.reviewed).map((card) => card.id),

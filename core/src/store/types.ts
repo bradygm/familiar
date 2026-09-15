@@ -129,6 +129,14 @@ export interface Store {
   /** Discards the course's study history. Guarded by repeating the title back. */
   resetCourseProgress(courseId: string, confirmTitle: string): Promise<void>;
 
+  /**
+   * Remove a class entirely: its people, portraits and every recorded answer.
+   *
+   * Guarded the same way as a reset, and for the same reason — it destroys
+   * timestamped review history, which nothing can reconstruct.
+   */
+  deleteCourse(courseId: string, confirmTitle: string): Promise<void>;
+
   // Studying
   startSession(courseId: string, mode: StudyMode, cardIds: string[]): Promise<{ id: string }>;
   recordReview(sessionId: string, review: ReviewRecord): Promise<void>;

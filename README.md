@@ -204,11 +204,14 @@ The difference between `R` and `W` is deliberate. If you already know the person
   not leave their photograph on disk. Everyone else is untouched, and it takes two clicks.
 - **Reset all progress** — returns everyone in the course to never-studied and discards
   its sessions and answers. The people themselves stay.
+- **Delete this class** — removes the class outright, with its people, their photos and
+  every recorded answer. Use reset instead if you want to keep the roster and only forget
+  how well you know it.
 
-Reset is the only irreversible operation in Familiar, and what it destroys — timestamped
-review events — cannot be reconstructed from anything else. It tells you exactly how much
-it is about to discard, links to an export, and will not proceed until you type the course
-title back. Both the dialog and the API enforce that.
+Resetting and deleting are the irreversible operations in Familiar, and what they destroy —
+timestamped review events — cannot be reconstructed from anything else. Both tell you
+exactly how much is about to go, link to an export, and will not proceed until you type the
+class name back. The dialog and the API each enforce that independently.
 
 ## Sorting the roster
 

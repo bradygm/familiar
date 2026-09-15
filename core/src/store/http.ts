@@ -224,6 +224,13 @@ export class HttpStore implements Store {
     });
   }
 
+  async deleteCourse(courseId: string, confirmTitle: string): Promise<void> {
+    await request(`/courses/${courseId}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ confirm_title: confirmTitle }),
+    });
+  }
+
   async startSession(courseId: string, mode: StudyMode, cardIds: string[]): Promise<{ id: string }> {
     return request(`/courses/${courseId}/sessions`, {
       method: 'POST',

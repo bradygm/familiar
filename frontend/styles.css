@@ -314,3 +314,6 @@ label.chip:focus-within { outline: 3px solid var(--orange); outline-offset: 3px;
 
 .notice.warning { background: var(--danger-soft); color: #7d2c1f; }
 .notice.warning .link-button { color: #7d2c1f; text-decoration: underline; }
+
+.chip.danger-chip { border-color: #e6b6ab; color: var(--danger); }
+.chip.danger-chip:hover { background: var(--danger-soft); }

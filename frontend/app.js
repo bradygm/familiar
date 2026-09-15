@@ -589,11 +589,13 @@ function manageCourseDialog(course, cards, stats) {
       <button class="chip" id="m-export">Export a backup</button>
       <button class="chip" id="m-remove">Remove someone who left</button>
       <button class="chip" id="m-reset">Reset all progress</button>
+      <button class="chip danger-chip" id="m-delete">Delete this class</button>
     </div>`,
     (backdrop) => {
       backdrop.querySelector('#m-export').addEventListener('click', async () => { await store.downloadExport(course.id); recordBackup(); });
       backdrop.querySelector('#m-remove').addEventListener('click', () => removePersonDialog(course, cards));
       backdrop.querySelector('#m-reset').addEventListener('click', () => resetProgressDialog(course, stats));
+      backdrop.querySelector('#m-delete').addEventListener('click', () => deleteCourseDialog(course, cards, stats));
     },
   );
 }
@@ -629,6 +631,41 @@ function removePersonDialog(course, cards) {
         } catch (error) {
           button.disabled = false;
           button.textContent = error.message;
+        }
+      });
+    },
+  );
+}
+
+/**
+ * Remove a class outright.
+ *
+ * Guarded exactly as resetting is, because it destroys the same irreplaceable
+ * thing and more of it. The difference is worth stating on screen: a reset
+ * keeps the people and forgets how well you know them, while this keeps
+ * nothing.
+ */
+function deleteCourseDialog(course, cards, stats) {
+  const reviews = stats.reviews || 0;
+  showDialog(
+    `${dialogHead('Delete this class')}<div class="danger-note"><strong>This cannot be undone.</strong> It removes ${cards.length} ${cards.length === 1 ? 'person' : 'people'}, their photos, and ${reviews} recorded ${reviews === 1 ? 'answer' : 'answers'} across ${stats.session_count || 0} ${stats.session_count === 1 ? 'session' : 'sessions'}. Resetting progress instead would keep the people and only forget how well you know them.</div><p class="fine">Review history cannot be reconstructed from anything else. <button class="link-button" id="delete-export">Export a backup first</button>.</p><label for="delete-confirm">Type <strong>${esc(course.title)}</strong> to confirm</label><input class="search" id="delete-confirm" autofocus autocomplete="off" aria-label="Type the class name to confirm"><div id="delete-notice"></div><div class="modal-actions"><button class="button secondary" data-close>Cancel</button><button class="button danger" id="delete-confirm-button" disabled>Delete class</button></div>`,
+    (backdrop) => {
+      backdrop.querySelector('#delete-export').addEventListener('click', async () => { await store.downloadExport(course.id); recordBackup(); });
+      const input = backdrop.querySelector('#delete-confirm');
+      const confirm = backdrop.querySelector('#delete-confirm-button');
+      input.addEventListener('input', () => { confirm.disabled = input.value.trim() !== course.title; });
+      confirm.addEventListener('click', async () => {
+        confirm.disabled = true;
+        confirm.textContent = 'Deleting…';
+        try {
+          await store.deleteCourse(course.id, input.value);
+          closeDialog();
+          location.hash = '#/';
+          home();
+        } catch (error) {
+          backdrop.querySelector('#delete-notice').innerHTML = notice(error.message);
+          confirm.disabled = false;
+          confirm.textContent = 'Delete class';
         }
       });
     },

@@ -630,6 +630,67 @@ def remove_card(course_id: str, card_id: str):
         return {"status": "removed", "removed_portrait": removed_asset}
 
 
+@app.delete("/api/courses/{course_id}")
+def delete_course(course_id: str, request: ResetCourseRequest):
+    """Remove a class entirely, with its people, portraits and history.
+
+    Guarded exactly as resetting is, and for the same reason: this destroys
+    timestamped review events, which cannot be reconstructed from anything else.
+    The caller has to repeat the class name back, so a stray request cannot do
+    it.
+    """
+    with connection() as conn:
+        course = conn.execute("SELECT * FROM courses WHERE id = ?", (course_id,)).fetchone()
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found")
+        if request.confirm_title.strip() != course["title"]:
+            raise HTTPException(status_code=400, detail="Type the class name exactly to confirm deleting it.")
+
+        counts = conn.execute(
+            """
+            SELECT (SELECT COUNT(*) FROM cards WHERE course_id = ?) AS people,
+                   (SELECT COUNT(*) FROM study_sessions WHERE course_id = ?) AS sessions,
+                   (SELECT COUNT(*) FROM review_events
+                      WHERE session_id IN (SELECT id FROM study_sessions WHERE course_id = ?)) AS reviews
+            """,
+            (course_id, course_id, course_id),
+        ).fetchone()
+
+        # Portraits this course's people own outright. One shared with a card in
+        # another class is left where it is.
+        doomed = [
+            row["image_path"]
+            for row in conn.execute(
+                """
+                SELECT DISTINCT image_path FROM cards
+                WHERE course_id = ? AND image_path IS NOT NULL
+                  AND image_path NOT IN (SELECT image_path FROM cards WHERE course_id != ? AND image_path IS NOT NULL)
+                """,
+                (course_id, course_id),
+            )
+        ]
+        # cards, card_progress, study_sessions and review_events all cascade.
+        conn.execute("DELETE FROM courses WHERE id = ?", (course_id,))
+
+        removed = 0
+        for path in doomed:
+            asset = (ASSETS / path).resolve()
+            if asset.is_file() and asset.is_relative_to(ASSETS.resolve()):
+                asset.unlink()
+                removed += 1
+        directory = (ASSETS / course_id).resolve()
+        if directory.is_dir() and directory.is_relative_to(ASSETS.resolve()) and not any(directory.iterdir()):
+            directory.rmdir()
+
+        return {
+            "status": "deleted",
+            "people": counts["people"],
+            "sessions": counts["sessions"],
+            "reviews": counts["reviews"],
+            "removed_portraits": removed,
+        }
+
+
 @app.post("/api/courses/{course_id}/reset")
 def reset_course_progress(course_id: str, request: ResetCourseRequest):
     """Return every person in a course to unseen, discarding the study history.

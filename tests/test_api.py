@@ -711,3 +711,57 @@ def test_an_unusable_backup_is_refused(client, tmp_path, name, content):
     with path.open("rb") as handle:
         response = client.post("/api/import/bundle", files={"file": (name, handle, "application/zip")})
     assert response.status_code in (400, 422)
+
+
+# --- deleting a class -------------------------------------------------------
+
+
+def test_deleting_a_class_removes_it_and_everything_in_it(client):
+    cards = [f"{COURSE}-card-0", f"{COURSE}-card-1"]
+    session_id = start_session(client, cards)
+    for card in cards:
+        client.post(f"/api/sessions/{session_id}/reviews", json={"card_id": card, "result": "right", "mastery": 0.8, "stability_days": 3.0})
+
+    body = client.request("DELETE", f"/api/courses/{COURSE}", json={"confirm_title": "API Test"}).json()
+    assert body["status"] == "deleted"
+    assert body["people"] == 4
+    assert body["reviews"] == 2
+
+    assert client.get("/api/courses").json() == []
+    with sqlite3.connect(client.db_path) as conn:
+        for table in ("courses", "cards", "card_progress", "study_sessions", "review_events"):
+            assert conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] == 0, table
+
+
+def test_deleting_a_class_takes_its_portraits_with_it(client):
+    relative = f"{COURSE}/portrait.jpg"
+    portrait = Path(client.app_data) / "assets" / relative
+    portrait.parent.mkdir(parents=True, exist_ok=True)
+    portrait.write_bytes(b"\xff\xd8\xff\xd9")
+    with sqlite3.connect(client.db_path) as conn:
+        conn.execute("UPDATE cards SET image_path = ? WHERE id = ?", (relative, f"{COURSE}-card-0"))
+        conn.commit()
+
+    body = client.request("DELETE", f"/api/courses/{COURSE}", json={"confirm_title": "API Test"}).json()
+    assert body["removed_portraits"] == 1
+    assert not portrait.exists()
+
+
+@pytest.mark.parametrize("wrong", ["", "api test", "API Tes", "Another Class"])
+def test_deleting_refuses_without_the_exact_class_name(client, wrong):
+    response = client.request("DELETE", f"/api/courses/{COURSE}", json={"confirm_title": wrong})
+    assert response.status_code in (400, 422)
+    assert len(client.get("/api/courses").json()) == 1, "a refused delete must remove nothing"
+    assert len(client.get(f"/api/courses/{COURSE}/cards").json()) == 4
+
+
+def test_deleting_an_unknown_class_is_404(client):
+    assert client.request("DELETE", "/api/courses/nope", json={"confirm_title": "API Test"}).status_code == 404
+
+
+def test_deleting_one_class_leaves_another_alone(client):
+    other = send_roster(client, [("Ada", "Lovelace", True)], title="Other Class").json()["course_id"]
+    client.request("DELETE", f"/api/courses/{COURSE}", json={"confirm_title": "API Test"})
+    remaining = client.get("/api/courses").json()
+    assert [course["id"] for course in remaining] == [other]
+    assert len(client.get(f"/api/courses/{other}/candidates").json()) == 1
