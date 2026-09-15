@@ -127,10 +127,18 @@ function runningInstalled() {
 /**
  * How long to leave somebody alone between backup reminders.
  *
- * Shorter where storage expires on a timer, because a fortnightly reminder can
- * arrive after the data it was meant to protect has already been deleted.
+ * Pitched against how the data can actually be lost, rather than one interval
+ * for everybody:
+ *
+ *   5 days  — browser storage that expires on a timer. A fortnightly reminder
+ *             can otherwise arrive after the data it was protecting has gone.
+ *   14 days — browser storage elsewhere. No timer, but a site-data clear takes
+ *             it, and nothing warns first.
+ *   30 days — a database file on this machine. It does not vanish on its own;
+ *             it is still a single copy, but the risk is slow rather than sudden.
  */
 function reminderIntervalDays() {
+  if (store.kind !== 'indexeddb') return 30;
   return storageExpiresOnATimer() && !runningInstalled() ? 5 : 14;
 }
 
@@ -164,7 +172,13 @@ function backupReminder(courses) {
   const wording = since === null
     ? 'You have study history that has never been backed up.'
     : `It has been ${Math.floor(since)} days since your last backup.`;
-  return `<div class="notice backup-reminder" role="status">${wording} Browser storage can be cleared without warning, and review history cannot be recreated. <button class="link-button" id="reminder-export">Export a backup now</button></div>`;
+  // Say what would actually take it. Warning somebody about browser storage
+  // when their data is a file on their own disk is both wrong and, once they
+  // notice, a reason to trust none of the other warnings either.
+  const why = store.kind === 'indexeddb'
+    ? 'It is kept in this browser, and clearing site data removes it without warning.'
+    : 'It lives only in <code>app-data/flashcards.sqlite3</code> on this machine, which Git does not cover — if that file goes, so does it.';
+  return `<div class="notice backup-reminder" role="status">${wording} ${why} Review history cannot be recreated. <button class="link-button" id="reminder-export">Export a backup now</button></div>`;
 }
 
 /**
