@@ -14,13 +14,16 @@
  */
 
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const frontend = join(root, 'frontend');
 const outIndex = process.argv.indexOf('--out');
-const out = join(root, outIndex === -1 ? 'dist' : process.argv[outIndex + 1]);
+// resolve, not join: join('/repo', '/tmp/x') yields '/repo/tmp/x', so an
+// absolute --out silently wrote inside the repository and was committed by the
+// next `git add -A`. resolve honours it.
+const out = resolve(root, outIndex === -1 ? 'dist' : process.argv[outIndex + 1]);
 
 // Where this will actually be served. Link-preview scrapers need absolute URLs,
 // so the published copy has to know its own address; pass --site-url when that
@@ -33,6 +36,18 @@ if (!existsSync(join(frontend, 'vendor', 'core', 'index.js'))) {
   throw new Error('core/ is not built. Run: cd core && npm run build');
 }
 
+// This deletes the target before writing, so refuse anywhere that is plainly
+// not a build directory. A mistyped --out should fail, not empty a folder.
+if (existsSync(out)) {
+  const entries = readdirSync(out);
+  const looksLikeABuild = entries.length === 0 || entries.includes('index.html') || entries.includes('.nojekyll');
+  if (!looksLikeABuild) {
+    throw new Error(`Refusing to erase ${out}: it does not look like a previous build. Choose an empty directory.`);
+  }
+  if (out === root || existsSync(join(out, '.git'))) {
+    throw new Error(`Refusing to erase ${out}: that is a repository.`);
+  }
+}
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
 cpSync(frontend, out, { recursive: true });

@@ -11,3 +11,4 @@ core/node_modules/
 tests/fixtures/real-bundle.zip
 dist/
 core/.tsbuildinfo
+tmp/
