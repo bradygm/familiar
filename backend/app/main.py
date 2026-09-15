@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -18,14 +18,13 @@ FRONTEND = ROOT / "frontend"
 ASSETS = app_data_dir() / "assets"
 ASSETS.mkdir(parents=True, exist_ok=True)
 app = FastAPI(title="Local Flashcards")
-app.mount("/static", StaticFiles(directory=FRONTEND), name="static")
 app.mount("/assets", StaticFiles(directory=ASSETS), name="assets")
 
 
 @app.middleware("http")
 async def disable_frontend_cache(request: Request, call_next):
     response = await call_next(request)
-    if request.url.path == "/" or request.url.path.startswith("/static/"):
+    if not request.url.path.startswith(("/api/", "/assets/")):
         response.headers["Cache-Control"] = "no-store"
     return response
 
@@ -649,6 +648,8 @@ def reset_course_progress(course_id: str, request: ResetCourseRequest):
         return {"status": "reset", "discarded_reviews": discarded["reviews"], "discarded_sessions": discarded["sessions"]}
 
 
-@app.get("/")
-def index():
-    return FileResponse(FRONTEND / "index.html")
+# Mounted last, because a mount at the root would otherwise shadow every API
+# route above it. Serving the frontend from "/" rather than "/static" is what
+# lets the very same directory be published as a static site: every path inside
+# it is relative, so nothing assumes a server is in front of it.
+app.mount("/", StaticFiles(directory=FRONTEND, html=True), name="frontend")

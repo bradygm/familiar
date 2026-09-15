@@ -48,13 +48,18 @@ type Progress = (progress: ExtractionProgress) => void;
  * never leaves the device should not be announcing to a third party that
  * somebody is importing one.
  */
+// Resolved against this module's own URL rather than the site root, so the same
+// files work however the app is served: at "/" from the local server, under
+// "/familiar/" on project Pages, or at the root of a custom domain.
+const vendored = (path: string) => new URL(`../../${path}`, import.meta.url).href;
+
 const VENDOR = {
-  pdfWorker: '/static/vendor/pdfjs/pdf.worker.min.mjs',
-  pdfLibrary: '/static/vendor/pdfjs/pdf.min.mjs',
-  tesseractWorker: '/static/vendor/tesseract/worker.min.js',
-  tesseractCore: '/static/vendor/tesseract/tesseract-core-simd.wasm.js',
-  tesseractLibrary: '/static/vendor/tesseract/tesseract.esm.min.js',
-  languageData: '/static/vendor/tesseract',
+  pdfWorker: vendored('pdfjs/pdf.worker.min.mjs'),
+  pdfLibrary: vendored('pdfjs/pdf.min.mjs'),
+  tesseractWorker: vendored('tesseract/worker.min.js'),
+  tesseractCore: vendored('tesseract/tesseract-core-simd.wasm.js'),
+  tesseractLibrary: vendored('tesseract/tesseract.esm.min.js'),
+  languageData: vendored('tesseract'),
 };
 
 async function loadPdfLibrary(): Promise<any> {

@@ -228,7 +228,17 @@ crop fractions and `--psm` modes in `importer.py` port directly. Run it in a Web
 with a progress bar. `importer.py` stays exactly where it is for your build, using the
 native binaries that are faster and already working. This is additive, not a migration.
 
-### Phase 5 — Ship the public build
+### Phase 5 — Ship the public build — **in progress**
+
+Done: the hosted bundle builds and runs serverless (verified importing a roster under a
+subpath with zero API calls), the Pages workflow, the self-explaining landing section, the
+demo class, persistent-storage requests and the backup reminder.
+
+Outstanding: the service worker is written but **unverified** — registration fails in the
+development browser with "an unknown error occurred when fetching the script", which
+appears to be an environment restriction rather than a defect, so it needs checking on the
+real deployment before being trusted. Accessibility and error-handling QA is also still to
+do, along with the deferred UI notes.
 GitHub Pages via Actions, PWA + service worker, `navigator.storage.persist()`, backup
 prompting, a demo course with synthetic faces, and accessibility and error-handling QA.
 Custom domain if you want it on your own site — Pages supports one with HTTPS. Your Docker

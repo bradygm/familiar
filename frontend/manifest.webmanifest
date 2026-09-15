@@ -1,0 +1,13 @@
+{
+  "name": "Familiar — learn every name",
+  "short_name": "Familiar",
+  "description": "Learn the names and faces of everyone in a class. Your roster stays on your device.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#f4f8fc",
+  "theme_color": "#002e5d",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

@@ -4,16 +4,18 @@ import {
   cardPredictedRecall,
   courseReadiness,
   createStore,
+  demoBundle,
   learningStatus as recallStatus,
   sortRoster,
   summariseCourse,
   updateMemoryState,
 } from './vendor/core/index.js';
 
-// Which store this is, is a build-time decision. Everything below is written
-// against the interface, so the same UI serves the local build and the hosted
-// one without knowing which it is in.
-const store = createStore('http');
+// Which store this is, is a build-time decision: tools/build-static.mjs rewrites
+// this line when publishing the hosted build. Everything below is written
+// against the interface, so the same UI serves both without knowing which it is
+// in — and neither published bundle is asked to guess at runtime.
+const store = createStore('http'); // STORE
 
 const app = document.querySelector('#app');
 let currentCourse = null;
@@ -74,19 +76,123 @@ async function preloadPortrait(card) {
   else await new Promise(resolve => { image.onload = image.onerror = resolve; });
 }
 
+/**
+ * Ask the browser to keep this data.
+ *
+ * Without persistent storage a browser may evict IndexedDB under disk pressure,
+ * and Safari discards it after seven days without a visit — which for a tool
+ * used once a week is a semester of review history gone. Asking is free and
+ * usually granted silently once the app has been used or installed; it is
+ * requested after the first class exists, when there is finally something worth
+ * keeping and the browser has a reason to say yes.
+ */
+async function requestDurableStorage() {
+  try {
+    if (!navigator.storage?.persist) return;
+    if (await navigator.storage.persisted?.()) return;
+    await navigator.storage.persist();
+  } catch { /* Storage policy is the browser's to decide; nothing to do if it refuses. */ }
+}
+
+/** Remember when a backup was last taken, so the reminder can be honest. */
+const BACKUP_KEY = 'familiar:last-export';
+function recordBackup() {
+  try { localStorage.setItem(BACKUP_KEY, new Date().toISOString()); } catch { /* private window */ }
+}
+function daysSinceBackup() {
+  try {
+    const last = localStorage.getItem(BACKUP_KEY);
+    if (!last) return null;
+    return (Date.now() - new Date(last).getTime()) / 86_400_000;
+  } catch { return null; }
+}
+
+/**
+ * A reminder to export, shown only when there is something to lose.
+ *
+ * This is not nagging for its own sake. Browser storage is a good cache and a
+ * poor system of record: a site-data clear removes it, and what it would take
+ * with it — timestamped review history — cannot be reconstructed from anything
+ * else. A roster can be imported again in seconds; the record of how well
+ * somebody knows each face cannot.
+ */
+function backupReminder(courses) {
+  const reviews = courses.reduce((total, course) => total + (course.session_count || 0), 0);
+  if (!reviews) return '';
+  const since = daysSinceBackup();
+  if (since !== null && since < 14) return '';
+  const wording = since === null
+    ? 'You have study history that has never been backed up.'
+    : `It has been ${Math.floor(since)} days since your last backup.`;
+  return `<div class="notice backup-reminder" role="status">${wording} Browser storage can be cleared without warning, and review history cannot be recreated. <button class="link-button" id="reminder-export">Export a backup now</button></div>`;
+}
+
 function setView(html) { app.innerHTML = html; }
 function notice(message) { return `<p class="notice">${esc(message)}</p>`; }
+
+/**
+ * What a first-time visitor needs before anything else.
+ *
+ * Somebody arriving at the hosted page has no README and no other way to find
+ * out what this is, whether their roster will work, or where their data goes.
+ * That last question decides whether an instructor is willing to load a file of
+ * student photographs at all, so it is answered on the first screen rather than
+ * in a policy page nobody opens. Shown only until the first class exists.
+ */
+function orientation() {
+  return `<section class="orientation panel">
+    <div class="orientation-grid">
+      <div>
+        <div class="eyebrow">What this is</div>
+        <p>A study tool for learning the names and faces of everyone in a class. You import the roster your university already gives you, and it turns it into short practice sessions that concentrate on the people you keep missing.</p>
+      </div>
+      <div>
+        <div class="eyebrow">What it reads</div>
+        <p>The roster PDF exported by <a href="https://flashcards.byu.edu" rel="noreferrer">BYU Flashcards</a>, at <strong>3 students per page</strong>. Other layouts are not supported yet — the importer will tell you if it cannot find anyone rather than inventing people.</p>
+      </div>
+      <div>
+        <div class="eyebrow">Where your data goes</div>
+        <p><strong>Nowhere.</strong> The roster is read inside this page and never uploaded. Names, photos and your study history stay in this browser, on this device. Nobody else can see them — including whoever made this.</p>
+      </div>
+    </div>
+    <div class="orientation-actions">
+      <button class="button" id="load-demo">Try it with a demo class</button>
+      <span class="fine">Twelve invented people with drawn avatars — no real students, nothing to upload.</span>
+    </div>
+    <div id="demo-message"></div>
+  </section>`;
+}
 
 async function home() {
   setView(document.querySelector('#loading').innerHTML);
   const courses = await store.listCourses();
   setView(`
-    <section class="hero"><div class="eyebrow">For BYU instructors</div><h1>Know every student<br>before the first day.</h1><p>Import a BYU Flashcards roster, confirm the people it finds, and build familiarity in short, adaptive sessions.</p></section>
+    <section class="hero"><div class="eyebrow">For instructors</div><h1>Know every student<br>before the first day.</h1><p>Import your course roster, confirm the people it finds, and build familiarity in short, adaptive sessions built on retrieval practice.</p></section>
+    ${courses.length ? '' : orientation()}
+    ${backupReminder(courses)}
     <section class="section-head"><div><div class="eyebrow">Courses</div><h1>Your courses</h1></div><p>${courses.length ? `${courses.length} imported` : 'Nothing imported yet'}</p></section>
     ${courses.length ? `<div class="course-grid">${courses.map(course => { const summary = summariseCourse(course.progress || [], Date.now()); return `<a class="course" href="${courseLink(course)}"><div class="course-top"><span class="course-kicker">Course roster</span><span class="course-state">${studiedLabel(course.last_studied_at)}</span></div><h2>${esc(course.title)}</h2><dl class="course-metrics"><div><dt>People</dt><dd>${course.card_count}</dd></div><div><dt>Familiar</dt><dd>${summary.familiarPercent}%</dd></div><div><dt>Sessions</dt><dd>${course.session_count}</dd></div></dl><p class="course-cta">${course.last_studied_at ? 'Continue studying' : 'Start learning'} <span aria-hidden="true">→</span></p></a>`; }).join('')}</div>` : `<div class="empty"><h2>Your first course starts with a PDF.</h2><p>Source files remain on this machine. Imported information is saved in the local app database.</p></div>`}
     <section class="importer" style="margin-top:28px"><div class="eyebrow">New class</div><h2>Start a class from a roster</h2><p class="fine">Choose a roster PDF exported from BYU Flashcards (3 students per page). The file is read on this machine and not kept — only the names and portraits are saved. You approve everyone it finds before they appear in study sessions.</p><div class="import-list"><label class="chip" for="new-class-file">Choose a roster PDF…<input id="new-class-file" type="file" accept="application/pdf,.pdf" hidden></label></div><div id="import-message"></div></section>
     <section class="importer" style="margin-top:28px"><div class="eyebrow">Local backup</div><h2>Download a portable backup</h2><p class="fine">A single zip holding every course, portrait, and review event. It is the restore path if this database is ever lost, and the only supported way to move your history somewhere else. <code>app-data/</code> is not covered by Git.</p><div class="import-list"><button class="chip" id="export-all">Export everything</button><button class="chip" id="export-rosters">Export rosters only (no progress)</button><label class="chip" for="restore-file">Restore a backup…<input id="restore-file" type="file" accept=".zip,application/zip" hidden></label></div><div id="restore-message"></div></section>`);
-  document.querySelector('#export-all').addEventListener('click', () => store.downloadExport());
+  document.querySelector('#load-demo')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    const message = document.querySelector('#demo-message');
+    button.disabled = true;
+    button.textContent = 'Building the demo…';
+    try {
+      await store.importBundle(await demoBundle());
+      await requestDurableStorage();
+      home();
+    } catch (error) {
+      message.innerHTML = notice(error.message);
+      button.disabled = false;
+      button.textContent = 'Try it with a demo class';
+    }
+  });
+  const exportEverything = async () => { await store.downloadExport(); recordBackup(); };
+  document.querySelector('#export-all').addEventListener('click', exportEverything);
+  document.querySelector('#reminder-export')?.addEventListener('click', async () => { await exportEverything(); home(); });
+  // A roster-only export is not a backup of anything, so it does not reset the reminder.
   document.querySelector('#export-rosters').addEventListener('click', () => store.downloadExport(undefined, {includeProgress: false}));
   const restoreInput = document.querySelector('#restore-file');
   restoreInput.addEventListener('change', async () => {
@@ -96,6 +202,7 @@ async function home() {
     message.innerHTML = notice('Reading the backup…');
     try {
       const counts = await store.importBundle(file);
+      await requestDurableStorage();
       message.innerHTML = notice(`Restored ${counts.courses} ${counts.courses === 1 ? 'course' : 'courses'}: ${counts.cards} people, ${counts.sessions} sessions, ${counts.reviews} recorded answers.`);
       setTimeout(home, 1400);
     } catch (error) {
@@ -611,3 +718,34 @@ async function route() {
   }
 }
 route();
+
+// Offline support, and only for the hosted build: the local build is already
+// served from this machine, and a cache in front of it would just mean editing
+// a file and being served the previous one.
+if ('serviceWorker' in navigator && !['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) {
+  navigator.serviceWorker.register(new URL('sw.js', import.meta.url)).then(registration => {
+    registration.addEventListener('updatefound', () => {
+      const installing = registration.installing;
+      installing?.addEventListener('statechange', () => {
+        // Only prompt when there was already a version here; the first install
+        // is not an update and saying so would be confusing.
+        if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+          const bar = document.createElement('div');
+          bar.className = 'notice update-ready';
+          bar.setAttribute('role', 'status');
+          bar.innerHTML = 'A new version of Familiar is ready. <button class="link-button" id="apply-update">Reload to use it</button>';
+          document.querySelector('.shell')?.prepend(bar);
+          document.querySelector('#apply-update')?.addEventListener('click', () => {
+            installing.postMessage('activate-update');
+            location.reload();
+          });
+        }
+      });
+    });
+  }).catch((error) => {
+    // Offline support is a bonus and the app works without it, but swallowing
+    // this entirely would hide a real failure behind a feature that silently
+    // never worked.
+    console.warn('Offline support is unavailable:', error);
+  });
+}

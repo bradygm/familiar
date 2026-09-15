@@ -51,6 +51,8 @@ export {
   type ContinuousStats,
 } from './continuous.js';
 
+export { DEMO_COURSE_ID, demoBundle } from './demo.js';
+
 export { sortRoster, type RosterCard, type RosterSort } from './roster.js';
 
 export {

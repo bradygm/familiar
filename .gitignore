@@ -9,3 +9,4 @@ app-data/backups/
 frontend/vendor/
 core/node_modules/
 tests/fixtures/real-bundle.zip
+dist/

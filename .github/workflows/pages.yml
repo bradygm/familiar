@@ -1,0 +1,86 @@
+# Publish the hosted build to GitHub Pages.
+#
+# Only main deploys. Everything else builds and runs the tests without
+# publishing, so a branch cannot put a half-finished page in front of visitors.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a running deploy finish rather than cancelling it midway.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: core/package-lock.json
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Supplies eng.traineddata, so the published page carries the same
+      # training data the app is developed against rather than fetching a
+      # different release from a CDN at runtime.
+      - name: Install OCR language data
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr-eng
+
+      - name: Build the shared core
+        run: npm ci && npm run build
+        working-directory: core
+
+      - name: Test the shared core
+        run: npm test
+        working-directory: core
+
+      - name: Test the backend
+        run: |
+          python -m pip install --quiet -r backend/requirements-dev.txt
+          python -m pytest -q
+
+      - name: Build the hosted bundle
+        run: node tools/build-static.mjs
+
+      # A published bundle that still talks to an API would fail silently in
+      # front of visitors, so fail here instead.
+      - name: Check the bundle is serverless
+        run: |
+          grep -q "createStore('indexeddb')" dist/app.js
+          ! grep -q "createStore('http')" dist/app.js
+          test -f dist/vendor/tesseract/eng.traineddata
+          test -f dist/.nojekyll
+
+      - uses: actions/configure-pages@v5
+        if: github.ref == 'refs/heads/main'
+      - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          path: dist
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

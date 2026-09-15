@@ -284,3 +284,16 @@ label.chip:focus-within { outline: 3px solid var(--orange); outline-offset: 3px;
 
 .candidate-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 .candidate-actions .button { flex: 1 1 auto; }
+
+.orientation { margin: 0 0 30px; padding: 26px 28px; }
+.orientation-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
+.orientation-grid p { margin: 6px 0 0; color: var(--ink); }
+.orientation-grid a { color: var(--blue); }
+.orientation-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); }
+
+@media (max-width: 860px) {
+  .orientation-grid { grid-template-columns: 1fr; gap: 20px; }
+}
+
+.backup-reminder, .update-ready { display: block; margin-bottom: 20px; }
+.backup-reminder .link-button, .update-ready .link-button { color: #7a421d; text-decoration: underline; }
