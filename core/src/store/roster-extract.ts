@@ -147,7 +147,14 @@ export async function extractRoster(file: File, onProgress: Progress = () => {})
       const canvas = document.createElement('canvas');
       canvas.width = Math.ceil(viewport.width);
       canvas.height = Math.ceil(viewport.height);
-      await page.render({ canvasContext: canvas.getContext('2d')!, viewport, canvas }).promise;
+      // pdf.js continues rendering from requestAnimationFrame by default, which
+      // never fires while the tab is hidden — so a background import would stall
+      // forever the moment somebody switched tabs. Driving continuation from a
+      // timer instead keeps extraction going regardless, and is what this wants
+      // anyway: it is a batch job, not something being displayed frame by frame.
+      const task = page.render({ canvas, viewport });
+      task.onContinue = (continueRendering: () => void) => setTimeout(continueRendering, 0);
+      await task.promise;
 
       onProgress({ page: pageNumber, pages, found: people.length, stage: 'reading' });
       const detected = await readPage(reader, canvas);
@@ -161,8 +168,10 @@ export async function extractRoster(file: File, onProgress: Progress = () => {})
       page.cleanup();
     }
   } finally {
-    await reader.terminate();
-    await document_.destroy();
+    // Release both engines even if extraction failed, and tolerate either
+    // pdf.js teardown name: a cleanup call must never mask the real error.
+    await reader.terminate().catch(() => {});
+    await (document_.destroy?.() ?? document_.cleanup?.() ?? Promise.resolve());
   }
 
   onProgress({ page: pages, pages, found: people.length, stage: 'done' });

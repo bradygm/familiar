@@ -211,7 +211,18 @@ build time, so the public bundle contains no HTTP client and your build contains
 IndexedDB code. Validate the new adapter by loading your Phase 0 export into it; your
 own daily use never leaves SQLite.
 
-### Phase 4 — Import in the browser (public build only) — **next**
+### Phase 4 — Import in the browser — **done**
+
+Measured on a real 58.9 MB, 23-page scanned export: **3.6 seconds in the browser against
+25 seconds natively in Docker**, finding all 69 people with a portrait each. The two
+extractors agree exactly on that file. This reverses the assumption recorded below that
+browser OCR would be the slow path — it is roughly seven times faster, because the native
+importer shells out to `pdftoppm` to rasterise every page to a temporary PNG first, while
+pdf.js rasterises straight to a canvas already in memory.
+
+That removes the tradeoff this phase was expected to weigh. The TypeScript extractor can
+replace the Python one everywhere: one extractor, no drift, and an image with no poppler
+or tesseract in it.
 `pdf.js` replaces `pdftoppm`; `tesseract.js` replaces `pytesseract` — same engine, so the
 crop fractions and `--psm` modes in `importer.py` port directly. Run it in a Web Worker
 with a progress bar. `importer.py` stays exactly where it is for your build, using the

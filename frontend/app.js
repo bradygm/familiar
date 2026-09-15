@@ -21,6 +21,24 @@ let study = null;
 let scoring = false;
 let helpOpen = false;
 
+/**
+ * Show extraction progress, when the store does its reading in the page.
+ *
+ * The local build uploads and the server answers when it is done, so there is
+ * nothing to report; the hosted build reads the PDF here and a silent wait would
+ * read as a hang. Returns a function that puts the store back as it was.
+ */
+function reportExtraction(element) {
+  if (!('onExtractionProgress' in store)) return () => {};
+  store.onExtractionProgress = ({page, pages, found, stage}) => {
+    if (stage === 'loading') { element.innerHTML = notice('Opening the roster…'); return; }
+    if (stage === 'done') { element.innerHTML = notice(`Read ${pages} ${pages === 1 ? 'page' : 'pages'}, found ${found}. Saving…`); return; }
+    const verb = stage === 'rendering' ? 'Rendering' : 'Reading';
+    element.innerHTML = notice(`${verb} page ${page} of ${pages} · ${found} ${found === 1 ? 'person' : 'people'} so far`);
+  };
+  return () => { store.onExtractionProgress = null; };
+}
+
 function importSummary(result) {
   if (result.warning) return result.warning;
   const people = result.added === 1 ? 'person' : 'people';
@@ -96,7 +114,10 @@ async function home() {
     label.textContent = `Reading ${file.name}…`;
     message.innerHTML = notice('Reading the roster. Scanned PDFs need local OCR, which can take a minute.');
     try {
-      const result = await store.createCourseFromRoster(file);
+      const stopReporting = reportExtraction(message);
+      try {
+        var result = await store.createCourseFromRoster(file);
+      } finally { stopReporting(); }
       message.innerHTML = notice(importSummary(result));
       location.hash = `#/course/${result.course_id}/review`;
     } catch (error) {
@@ -184,7 +205,10 @@ async function courseView(courseId) {
     label.textContent = `Reading ${file.name}…`;
     message.innerHTML = notice('Reading the roster. Scanned PDFs need local OCR, which can take a minute.');
     try {
-      const result = await store.importRosterIntoCourse(course.id, file);
+      const stopReporting = reportExtraction(message);
+      try {
+        var result = await store.importRosterIntoCourse(course.id, file);
+      } finally { stopReporting(); }
       message.innerHTML = notice(importSummary(result));
       // Straight to review when there is something to approve; people already
       // in the class are left untouched and need no attention.
