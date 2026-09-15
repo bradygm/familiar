@@ -3,7 +3,11 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ES2022"],
+    // DOM is here for src/store/, which is the only part of core that touches
+    // the browser. The model's independence from it is enforced where it
+    // actually matters: the test suite runs under Node, so a stray `document`
+    // or `fetch` in the model fails immediately rather than at a user's screen.
+    "lib": ["ES2022", "DOM"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,

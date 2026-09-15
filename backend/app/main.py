@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 
 from .database import app_data_dir, connection, initialize_database
 from .importer import MissingOcrTools, import_pdf
-from .portable import build_bundle
+from .portable import build_bundle, restore_bundle
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -482,6 +482,29 @@ def _export_response(bundle: bytes, stem: str) -> Response:
         media_type="application/zip",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@app.post("/api/import/bundle")
+async def import_bundle(file: UploadFile = File(...)):
+    """Restore a backup into this database.
+
+    Refuses rather than merges, exactly as the restore CLI does: reconciling two
+    divergent histories silently is how review events get lost. Restoring into a
+    database that already holds these courses is therefore an error, not a
+    merge.
+    """
+    if not (upload_name := file.filename or "").lower().endswith(".zip"):
+        raise HTTPException(status_code=400, detail="Choose a Familiar backup (.zip).")
+    contents = await file.read()
+    if len(contents) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="That backup is larger than this build accepts.")
+    with connection() as conn:
+        try:
+            return restore_bundle(contents, conn, ASSETS)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail=f"Could not read {upload_name}: {exc}") from exc
 
 
 @app.get("/api/export")

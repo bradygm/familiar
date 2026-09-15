@@ -1,10 +1,13 @@
 /**
- * Familiar's learning model, shared by every build.
+ * Familiar's shared client library.
  *
- * Nothing in here touches the DOM, the network, or a database. The browser
- * build and the local SQLite build both compute from this module, so a
- * learner's stored mastery means exactly one thing regardless of where it
- * happens to be stored.
+ * The learning model — recall, mastery, selection, the import rule — is pure:
+ * no DOM, no network, no database. The browser build and the local SQLite build
+ * both compute from it, so a learner's stored mastery means exactly one thing
+ * regardless of where it happens to be stored.
+ *
+ * `store/` is the deliberate exception, and the only one: it is where storage
+ * lives, so that every other module can stay unaware of which build it is in.
  */
 
 export {
@@ -56,3 +59,23 @@ export {
   type ImportSplit,
   type NamedPerson,
 } from './import.js';
+
+export {
+  HttpStore,
+  IndexedDbStore,
+  createStore,
+  readZip,
+  writeZip,
+  type Card,
+  type CardProgressRow,
+  type Course,
+  type CourseStats,
+  type ImportOutcome,
+  type ReviewOutcome,
+  type RestoreCounts,
+  type ReviewRecord,
+  type SessionSummary,
+  type Store,
+  type StoreKind,
+  type StudyMode,
+} from './store/index.js';

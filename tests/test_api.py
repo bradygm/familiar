@@ -743,3 +743,61 @@ def test_rejecting_does_not_touch_approved_people(client):
 
 def test_rejecting_an_unknown_candidate_is_404(client):
     assert client.delete(f"/api/courses/{COURSE}/candidates/nobody").status_code == 404
+
+
+# --- restoring a backup through the app ------------------------------------
+
+
+def test_a_backup_can_be_restored_through_the_api(client, tmp_path):
+    """Restoring is how a fresh install gets its data back; the CLI should not be
+    the only route to it."""
+    from backend.app.portable import build_bundle
+
+    with sqlite3.connect(client.db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        bundle = build_bundle(conn, Path(client.app_data) / "assets")
+    archive = tmp_path / "backup.zip"
+    archive.write_bytes(bundle)
+
+    # Into a database that already has the course, restoring must refuse.
+    with archive.open("rb") as handle:
+        clash = client.post("/api/import/bundle", files={"file": ("backup.zip", handle, "application/zip")})
+    assert clash.status_code == 400
+    assert "already exist" in clash.json()["detail"]
+
+    # Into an empty one, it restores everything.
+    with sqlite3.connect(client.db_path) as conn:
+        # The app's own connections enable this; a raw one does not, and without
+        # it deleting a course leaves its cards behind.
+        conn.execute("PRAGMA foreign_keys = ON")
+        conn.execute("DELETE FROM courses")
+        conn.commit()
+    with archive.open("rb") as handle:
+        restored = client.post("/api/import/bundle", files={"file": ("backup.zip", handle, "application/zip")})
+    assert restored.status_code == 200, restored.text
+    assert restored.json()["courses"] == 1
+    assert restored.json()["cards"] == 4
+    assert len(client.get(f"/api/courses/{COURSE}/cards").json()) == 4
+
+
+def test_restoring_a_refused_backup_changes_nothing(client, tmp_path):
+    from backend.app.portable import build_bundle
+
+    with sqlite3.connect(client.db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        bundle = build_bundle(conn, Path(client.app_data) / "assets")
+    archive = tmp_path / "backup.zip"
+    archive.write_bytes(bundle)
+    before = client.get(f"/api/courses/{COURSE}/cards").json()
+    with archive.open("rb") as handle:
+        client.post("/api/import/bundle", files={"file": ("backup.zip", handle, "application/zip")})
+    assert client.get(f"/api/courses/{COURSE}/cards").json() == before
+
+
+@pytest.mark.parametrize("name,content", [("notes.txt", b"hello"), ("backup.zip", b"not really a zip")])
+def test_an_unusable_backup_is_refused(client, tmp_path, name, content):
+    path = tmp_path / name
+    path.write_bytes(content)
+    with path.open("rb") as handle:
+        response = client.post("/api/import/bundle", files={"file": (name, handle, "application/zip")})
+    assert response.status_code in (400, 422)

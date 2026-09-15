@@ -45,12 +45,21 @@ zip of every course, portrait, and review event. See
 ## Project layout
 
 ```text
-core/       the learning model in TypeScript: recall, mastery, selection. No DOM, no IO.
+core/       the shared client library in TypeScript
+core/src/     the learning model: recall, mastery, selection, import matching. Pure.
+core/src/store/  the storage seam — the only part of core that touches the browser
 backend/    FastAPI, SQLite, the PDF importer. Stores what the core computes; no model logic.
 frontend/   the browser UI, which imports the compiled core
 tests/      Python tests, including the golden vectors both implementations share
 tools/      backup restore CLI
 ```
+
+The UI contains no transport code of its own: every read and write goes through the
+`Store` interface in `core/src/store/`, chosen at build time. `HttpStore` talks to FastAPI
+and keeps your SQLite file; `IndexedDbStore` keeps everything in the browser for the hosted
+build. They are verified interchangeable — loading a backup of the real local database into
+the browser store and comparing the two side by side gives identical values for every
+person and every statistic, differing only in whether a portrait is a path or a blob URL.
 
 `core/` is shared by every build of Familiar. It is compiled to
 `frontend/vendor/core/`, which is generated rather than committed — `docker compose up

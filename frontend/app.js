@@ -3,34 +3,23 @@ import {
   adaptiveCards,
   cardPredictedRecall,
   courseReadiness,
+  createStore,
   learningStatus as recallStatus,
   sortRoster,
   summariseCourse,
   updateMemoryState,
 } from './vendor/core/index.js';
 
+// Which store this is, is a build-time decision. Everything below is written
+// against the interface, so the same UI serves the local build and the hosted
+// one without knowing which it is in.
+const store = createStore('http');
+
 const app = document.querySelector('#app');
 let currentCourse = null;
 let study = null;
 let scoring = false;
 let helpOpen = false;
-
-async function api(path, options = {}) {
-  const response = await fetch(`/api${path}`, { headers: { 'Content-Type': 'application/json' }, ...options });
-  if (!response.ok) throw new Error((await response.json()).detail || 'Something went wrong.');
-  return response.json();
-}
-
-// Uploads must not set Content-Type: the browser has to add the multipart
-// boundary itself.
-async function upload(path, file, extra = {}) {
-  const body = new FormData();
-  body.append('file', file);
-  for (const [key, value] of Object.entries(extra)) if (value) body.append(key, value);
-  const response = await fetch(`/api${path}`, {method: 'POST', body});
-  if (!response.ok) throw new Error((await response.json()).detail || 'Something went wrong.');
-  return response.json();
-}
 
 function importSummary(result) {
   if (result.warning) return result.warning;
@@ -41,8 +30,8 @@ function importSummary(result) {
 const esc = (value) => String(value).replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
 const initials = (card) => `${card.first_name[0] || ''}${card.last_name[0] || ''}`.toUpperCase();
 const courseLink = (course) => `#/course/${course.id}`;
-const portraitUrl = (card) => `/assets/${encodeURI(card.image_path)}`;
-const portrait = (card) => card.image_path ? `<img class="avatar portrait" src="${portraitUrl(card)}" alt="Portrait of ${esc(card.first_name)} ${esc(card.last_name)}">` : `<div class="avatar">${initials(card)}</div>`;
+// The store resolves this: a path under the server, or a blob URL in the browser.
+const portrait = (card) => card.portrait_url ? `<img class="avatar portrait" src="${card.portrait_url}" alt="Portrait of ${esc(card.first_name)} ${esc(card.last_name)}">` : `<div class="avatar">${initials(card)}</div>`;
 const studiedLabel = (timestamp) => timestamp ? `Last studied ${new Intl.DateTimeFormat(undefined, {month:'short', day:'numeric', year:'numeric'}).format(new Date(timestamp))}` : 'Ready to learn';
 const shortDate = (timestamp) => timestamp ? new Intl.DateTimeFormat(undefined, {month:'short', day:'numeric'}).format(new Date(timestamp)) : 'Not yet';
 // The learning model lives in core/ and is shared by every build, so these are
@@ -60,9 +49,9 @@ function recallMeter(card) {
 }
 
 async function preloadPortrait(card) {
-  if (!card?.image_path) return;
+  if (!card?.portrait_url) return;
   const image = new Image();
-  image.src = portraitUrl(card);
+  image.src = card.portrait_url;
   if (image.decode) await image.decode().catch(() => {});
   else await new Promise(resolve => { image.onload = image.onerror = resolve; });
 }
@@ -72,13 +61,32 @@ function notice(message) { return `<p class="notice">${esc(message)}</p>`; }
 
 async function home() {
   setView(document.querySelector('#loading').innerHTML);
-  const courses = await api('/courses');
+  const courses = await store.listCourses();
   setView(`
     <section class="hero"><div class="eyebrow">For BYU instructors</div><h1>Know every student<br>before the first day.</h1><p>Import a BYU Flashcards roster, confirm the people it finds, and build familiarity in short, adaptive sessions.</p></section>
     <section class="section-head"><div><div class="eyebrow">Courses</div><h1>Your courses</h1></div><p>${courses.length ? `${courses.length} imported` : 'Nothing imported yet'}</p></section>
     ${courses.length ? `<div class="course-grid">${courses.map(course => { const summary = summariseCourse(course.progress || [], Date.now()); return `<a class="course" href="${courseLink(course)}"><div class="course-top"><span class="course-kicker">Course roster</span><span class="course-state">${studiedLabel(course.last_studied_at)}</span></div><h2>${esc(course.title)}</h2><dl class="course-metrics"><div><dt>People</dt><dd>${course.card_count}</dd></div><div><dt>Familiar</dt><dd>${summary.familiarPercent}%</dd></div><div><dt>Sessions</dt><dd>${course.session_count}</dd></div></dl><p class="course-cta">${course.last_studied_at ? 'Continue studying' : 'Start learning'} <span aria-hidden="true">→</span></p></a>`; }).join('')}</div>` : `<div class="empty"><h2>Your first course starts with a PDF.</h2><p>Source files remain on this machine. Imported information is saved in the local app database.</p></div>`}
     <section class="importer" style="margin-top:28px"><div class="eyebrow">New class</div><h2>Start a class from a roster</h2><p class="fine">Choose a roster PDF exported from BYU Flashcards (3 students per page). The file is read on this machine and not kept — only the names and portraits are saved. You approve everyone it finds before they appear in study sessions.</p><div class="import-list"><label class="chip" for="new-class-file">Choose a roster PDF…<input id="new-class-file" type="file" accept="application/pdf,.pdf" hidden></label></div><div id="import-message"></div></section>
-    <section class="importer" style="margin-top:28px"><div class="eyebrow">Local backup</div><h2>Download a portable backup</h2><p class="fine">A single zip holding every course, portrait, and review event. It is the restore path if this database is ever lost, and the only supported way to move your history somewhere else. <code>app-data/</code> is not covered by Git.</p><div class="import-list"><a class="chip" href="/api/export" download>Export everything</a><a class="chip" href="/api/export?include_progress=false" download>Export rosters only (no progress)</a></div></section>`);
+    <section class="importer" style="margin-top:28px"><div class="eyebrow">Local backup</div><h2>Download a portable backup</h2><p class="fine">A single zip holding every course, portrait, and review event. It is the restore path if this database is ever lost, and the only supported way to move your history somewhere else. <code>app-data/</code> is not covered by Git.</p><div class="import-list"><button class="chip" id="export-all">Export everything</button><button class="chip" id="export-rosters">Export rosters only (no progress)</button><label class="chip" for="restore-file">Restore a backup…<input id="restore-file" type="file" accept=".zip,application/zip" hidden></label></div><div id="restore-message"></div></section>`);
+  document.querySelector('#export-all').addEventListener('click', () => store.downloadExport());
+  document.querySelector('#export-rosters').addEventListener('click', () => store.downloadExport(undefined, {includeProgress: false}));
+  const restoreInput = document.querySelector('#restore-file');
+  restoreInput.addEventListener('change', async () => {
+    const file = restoreInput.files?.[0];
+    if (!file) return;
+    const message = document.querySelector('#restore-message');
+    message.innerHTML = notice('Reading the backup…');
+    try {
+      const counts = await store.importBundle(file);
+      message.innerHTML = notice(`Restored ${counts.courses} ${counts.courses === 1 ? 'course' : 'courses'}: ${counts.cards} people, ${counts.sessions} sessions, ${counts.reviews} recorded answers.`);
+      setTimeout(home, 1400);
+    } catch (error) {
+      message.innerHTML = notice(error.message);
+    } finally {
+      restoreInput.value = '';
+    }
+  });
+
   const newClassInput = document.querySelector('#new-class-file');
   newClassInput.addEventListener('change', async () => {
     const file = newClassInput.files?.[0];
@@ -88,7 +96,7 @@ async function home() {
     label.textContent = `Reading ${file.name}…`;
     message.innerHTML = notice('Reading the roster. Scanned PDFs need local OCR, which can take a minute.');
     try {
-      const result = await upload('/courses', file);
+      const result = await store.createCourseFromRoster(file);
       message.innerHTML = notice(importSummary(result));
       location.hash = `#/course/${result.course_id}/review`;
     } catch (error) {
@@ -123,10 +131,10 @@ function readinessTrend(sessions) {
 }
 
 async function courseView(courseId) {
-  const [course, cards, candidates, stats] = await Promise.all([api(`/courses/${courseId}`), api(`/courses/${courseId}/cards?sort=first`), api(`/courses/${courseId}/candidates`), api(`/courses/${courseId}/stats`)]);
+  const [course, cards, candidates, stats] = await Promise.all([store.getCourse(courseId), store.listCards(courseId), store.listCandidates(courseId), store.getCourseStats(courseId)]);
   currentCourse = course;
   const summary = summariseCourse(stats.progress || [], Date.now());
-  setView(`<a class="back" href="#/">← All courses</a><section class="section-head" style="margin-top:25px"><div><div class="eyebrow">${esc(course.source_filename)}</div><h1>${esc(course.title)}</h1><p>${cards.length} ${cards.length === 1 ? 'person' : 'people'}</p></div><div class="actions">${candidates.length ? `<button class="button secondary" id="review-candidates">Review ${candidates.length} new ${candidates.length === 1 ? 'name' : 'names'}</button>` : ''}<button class="button secondary" id="add-card">Add person</button><button class="button" id="start-study">Start session</button></div></section><section class="stats" aria-label="Course statistics"><article class="stat panel"><strong>${summary.familiarPercent}%</strong><span>familiar</span></article><article class="stat panel"><strong>${summary.readiness}%</strong><span>avg. predicted recall</span></article><article class="stat panel"><strong>${stats.session_count}</strong><span>sessions</span></article><article class="stat panel"><strong>${stats.wrong_count} / ${stats.reviews}</strong><span>misses / answers</span></article></section>${learningPulse(stats)}<div class="toolbar"><input class="search" id="search" placeholder="Search people" aria-label="Search people"><select class="select" id="sort" aria-label="Sort roster"><option value="first">First name</option><option value="last">Last name</option><option value="recall">Predicted recall (low first)</option><option value="strength">Learning strength (low first)</option><option value="difficulty">Hardest to learn</option></select></div><div id="roster"></div><section class="course-data panel"><div class="eyebrow">Course data</div><h2>Roster and clean-up</h2><p class="fine">Upload another export to add people who joined late — anyone already here keeps their history, and only new names need approving. Study history lives only in this app's local database, so export before anything destructive.</p><div class="import-list"><label class="chip" for="add-roster-file">Add people from a roster…<input id="add-roster-file" type="file" accept="application/pdf,.pdf" hidden></label><a class="chip" href="/api/courses/${encodeURIComponent(course.id)}/export" download>Export course</a><button class="chip" id="remove-person">Remove someone who left</button><button class="chip" id="reset-progress">Reset all progress</button></div><div id="course-import-message"></div></section>`);
+  setView(`<a class="back" href="#/">← All courses</a><section class="section-head" style="margin-top:25px"><div><div class="eyebrow">${esc(course.source_filename)}</div><h1>${esc(course.title)}</h1><p>${cards.length} ${cards.length === 1 ? 'person' : 'people'}</p></div><div class="actions">${candidates.length ? `<button class="button secondary" id="review-candidates">Review ${candidates.length} new ${candidates.length === 1 ? 'name' : 'names'}</button>` : ''}<button class="button secondary" id="add-card">Add person</button><button class="button" id="start-study">Start session</button></div></section><section class="stats" aria-label="Course statistics"><article class="stat panel"><strong>${summary.familiarPercent}%</strong><span>familiar</span></article><article class="stat panel"><strong>${summary.readiness}%</strong><span>avg. predicted recall</span></article><article class="stat panel"><strong>${stats.session_count}</strong><span>sessions</span></article><article class="stat panel"><strong>${stats.wrong_count} / ${stats.reviews}</strong><span>misses / answers</span></article></section>${learningPulse(stats)}<div class="toolbar"><input class="search" id="search" placeholder="Search people" aria-label="Search people"><select class="select" id="sort" aria-label="Sort roster"><option value="first">First name</option><option value="last">Last name</option><option value="recall">Predicted recall (low first)</option><option value="strength">Learning strength (low first)</option><option value="difficulty">Hardest to learn</option></select></div><div id="roster"></div><section class="course-data panel"><div class="eyebrow">Course data</div><h2>Roster and clean-up</h2><p class="fine">Upload another export to add people who joined late — anyone already here keeps their history, and only new names need approving. Study history lives only in this app's local database, so export before anything destructive.</p><div class="import-list"><label class="chip" for="add-roster-file">Add people from a roster…<input id="add-roster-file" type="file" accept="application/pdf,.pdf" hidden></label><button class="chip" id="export-course">Export course</button><button class="chip" id="remove-person">Remove someone who left</button><button class="chip" id="reset-progress">Reset all progress</button></div><div id="course-import-message"></div></section>`);
   const roster = document.querySelector('#roster');
   const flippedCards = new Set();
   const histories = new Map();
@@ -149,7 +157,7 @@ async function courseView(courseId) {
           renderRoster();
           return;
         }
-        if (!histories.has(cardId)) histories.set(cardId, (await api(`/courses/${courseId}/cards/${cardId}/history`)).events);
+        if (!histories.has(cardId)) histories.set(cardId, await store.getCardHistory(courseId, cardId));
         flippedCards.add(cardId);
         renderRoster();
       };
@@ -166,6 +174,7 @@ async function courseView(courseId) {
     renderRoster(cards.filter(card => `${card.first_name} ${card.last_name}`.toLowerCase().includes(document.querySelector('#search').value.toLowerCase())));
   });
   document.querySelector('#start-study').addEventListener('click', () => setupView(course, cards));
+  document.querySelector('#export-course').addEventListener('click', () => store.downloadExport(course.id));
   const rosterInput = document.querySelector('#add-roster-file');
   rosterInput.addEventListener('change', async () => {
     const file = rosterInput.files?.[0];
@@ -175,7 +184,7 @@ async function courseView(courseId) {
     label.textContent = `Reading ${file.name}…`;
     message.innerHTML = notice('Reading the roster. Scanned PDFs need local OCR, which can take a minute.');
     try {
-      const result = await upload(`/courses/${course.id}/imports`, file);
+      const result = await store.importRosterIntoCourse(course.id, file);
       message.innerHTML = notice(importSummary(result));
       // Straight to review when there is something to approve; people already
       // in the class are left untouched and need no attention.
@@ -195,10 +204,10 @@ async function courseView(courseId) {
 
 function candidateView(course, candidates) {
   setView(`<a class="back" href="${courseLink(course)}">← ${esc(course.title)}</a><section class="setup"><div class="eyebrow">Import review</div><h1>${candidates.length ? 'Approve people the importer found.' : 'No candidates waiting.'}</h1><p class="fine">Only approved entries appear in sessions. The importer stays cautious on purpose, so reject anyone it misread — rejecting only discards a candidate, never somebody you have been studying.</p>${candidates.length ? `<div class="roster">${candidates.map(card => `<article class="person panel">${portrait(card)}<h2>${esc(card.first_name)} ${esc(card.last_name)}</h2><div class="candidate-actions"><button class="button secondary" data-reject="${card.id}">Reject</button><button class="button" data-approve="${card.id}">Approve</button></div></article>`).join('')}</div>` : ''}</section>`);
-  const refresh = async () => candidateView(course, await api(`/courses/${course.id}/candidates`));
+  const refresh = async () => candidateView(course, await store.listCandidates(course.id));
   document.querySelectorAll('[data-approve]').forEach(button => button.addEventListener('click', async () => {
     button.disabled = true;
-    await api(`/courses/${course.id}/candidates/${button.dataset.approve}/approve`, {method:'POST'});
+    await store.approveCandidate(course.id, button.dataset.approve);
     await refresh();
   }));
   document.querySelectorAll('[data-reject]').forEach(button => button.addEventListener('click', async () => {
@@ -212,7 +221,7 @@ function candidateView(course, candidates) {
     }
     button.disabled = true;
     try {
-      await api(`/courses/${course.id}/candidates/${button.dataset.reject}`, {method:'DELETE'});
+      await store.rejectCandidate(course.id, button.dataset.reject);
       await refresh();
     } catch (error) {
       button.disabled = false;
@@ -223,7 +232,7 @@ function candidateView(course, candidates) {
 
 function manualCardView(course) {
   setView(`<a class="back" href="${courseLink(course)}">← ${esc(course.title)}</a><section class="setup"><div class="eyebrow">Manual card</div><h1>Add a person.</h1><p class="fine">Use this for names the cautious PDF importer did not find, or to improve a course gradually.</p><form id="card-form" class="form"><div class="two"><input name="first" required placeholder="First name" aria-label="First name"><input name="last" required placeholder="Last name" aria-label="Last name"></div><textarea name="facts" rows="4" placeholder="Optional facts — one per line" aria-label="Optional facts"></textarea><div class="actions"><button class="button" type="submit">Save person</button></div><div id="form-notice"></div></form></section>`);
-  document.querySelector('#card-form').addEventListener('submit', async event => { event.preventDefault(); const form = new FormData(event.currentTarget); const facts = form.get('facts').split('\n').map(item => item.trim()).filter(Boolean); try { await api(`/courses/${course.id}/cards`, {method:'POST', body:JSON.stringify({first_name:form.get('first'),last_name:form.get('last'),facts})}); courseView(course.id); } catch(error) { document.querySelector('#form-notice').innerHTML = notice(error.message); } });
+  document.querySelector('#card-form').addEventListener('submit', async event => { event.preventDefault(); const form = new FormData(event.currentTarget); const facts = form.get('facts').split('\n').map(item => item.trim()).filter(Boolean); try { await store.addCard(course.id, {first_name: form.get('first'), last_name: form.get('last'), facts}); courseView(course.id); } catch(error) { document.querySelector('#form-notice').innerHTML = notice(error.message); } });
 }
 
 function setupView(course, courseCards) {
@@ -239,7 +248,7 @@ function setupView(course, courseCards) {
     try {
       const limit = +document.querySelector('#length').value;
       const chosen = selectSessionCards(courseCards, mode, limit);
-      const result = await api(`/courses/${course.id}/sessions`, {method:'POST', body:JSON.stringify({mode, card_ids: chosen.cards.map(card => card.id)})});
+      const result = await store.startSession(course.id, mode, chosen.cards.map(card => card.id));
       initializeStudy({...result, ...chosen});
       await preloadPortrait(currentCard());
       studyView();
@@ -350,7 +359,7 @@ function removePersonDialog(course, cards) {
         button.disabled = true;
         button.textContent = 'Removing…';
         try {
-          await api(`/courses/${course.id}/cards/${card.id}`, {method: 'DELETE'});
+          await store.removeCard(course.id, card.id);
           closeDialog();
           courseView(course.id);
         } catch (error) {
@@ -366,8 +375,9 @@ function resetProgressDialog(course, stats) {
   const sessions = stats.session_count || 0;
   const reviews = stats.reviews || 0;
   showDialog(
-    `${dialogHead('Reset all progress')}<div class="danger-note"><strong>This cannot be undone.</strong> It discards ${reviews} recorded ${reviews === 1 ? 'answer' : 'answers'} across ${sessions} ${sessions === 1 ? 'session' : 'sessions'}, and returns everyone in this course to never-studied. The people themselves stay.</div><p class="fine">Timestamped review history cannot be reconstructed from anything else. <a href="/api/courses/${encodeURIComponent(course.id)}/export" download>Export a backup first</a>.</p><label for="reset-confirm">Type <strong>${esc(course.title)}</strong> to confirm</label><input class="search" id="reset-confirm" autofocus autocomplete="off" aria-label="Type the course title to confirm"><div id="reset-notice"></div><div class="modal-actions"><button class="button secondary" data-close>Cancel</button><button class="button danger" id="reset-confirm-button" disabled>Reset progress</button></div>`,
+    `${dialogHead('Reset all progress')}<div class="danger-note"><strong>This cannot be undone.</strong> It discards ${reviews} recorded ${reviews === 1 ? 'answer' : 'answers'} across ${sessions} ${sessions === 1 ? 'session' : 'sessions'}, and returns everyone in this course to never-studied. The people themselves stay.</div><p class="fine">Timestamped review history cannot be reconstructed from anything else. <button class="link-button" id="reset-export">Export a backup first</button>.</p><label for="reset-confirm">Type <strong>${esc(course.title)}</strong> to confirm</label><input class="search" id="reset-confirm" autofocus autocomplete="off" aria-label="Type the course title to confirm"><div id="reset-notice"></div><div class="modal-actions"><button class="button secondary" data-close>Cancel</button><button class="button danger" id="reset-confirm-button" disabled>Reset progress</button></div>`,
     (backdrop) => {
+      backdrop.querySelector('#reset-export').addEventListener('click', () => store.downloadExport(course.id));
       const input = backdrop.querySelector('#reset-confirm');
       const confirm = backdrop.querySelector('#reset-confirm-button');
       input.addEventListener('input', () => { confirm.disabled = input.value.trim() !== course.title; });
@@ -375,7 +385,7 @@ function resetProgressDialog(course, stats) {
         confirm.disabled = true;
         confirm.textContent = 'Resetting…';
         try {
-          await api(`/courses/${course.id}/reset`, {method: 'POST', body: JSON.stringify({confirm_title: input.value})});
+          await store.resetCourseProgress(course.id, input.value);
           closeDialog();
           courseView(course.id);
         } catch (error) {
@@ -477,7 +487,7 @@ async function score(result) {
     const memory = study.mode === 'continuous'
       ? study.session.record(result, reviewedAt).memory
       : updateMemoryState(card, result, reviewedAt);
-    await api(`/sessions/${study.id}/reviews`, {method:'POST',body:JSON.stringify({card_id:card.id, result, mastery:memory.mastery, stability_days:memory.stability_days, reviewed_at:reviewedAt})});
+    await store.recordReview(study.id, {card_id: card.id, result, mastery: memory.mastery, stability_days: memory.stability_days, reviewed_at: reviewedAt});
     if (study.mode === 'continuous') {
       study.session.next();
     } else {
@@ -515,9 +525,9 @@ async function completeStudy() {
   // Re-read the roster so readiness is computed from what was actually stored,
   // rather than from whatever this session happened to touch.
   const readiness = currentCourse
-    ? courseReadiness(await api(`/courses/${currentCourse.id}/cards?sort=first`), Date.now())
+    ? courseReadiness(await store.listCards(currentCourse.id), Date.now())
     : null;
-  const result = await api(`/sessions/${finishedStudy.id}/complete`, {method:'POST', body:JSON.stringify({readiness})});
+  const result = await store.completeSession(finishedStudy.id, readiness);
   const accuracy = result.reviewed_count ? Math.round(result.right_count / result.reviewed_count * 100) : 0;
   const restart = finishedStudy.mode === 'all' || finishedStudy.mode === 'continuous' ? '' : `<button class="button secondary" id="restart-same">Study these ${finishedStudy.cards.length} people again</button>`;
   // Expanding recall shows a person several times and interleaves other cards,
@@ -534,7 +544,7 @@ async function completeStudy() {
     button.disabled = true;
     button.textContent = 'Starting…';
     try {
-      const result = await api(`/courses/${currentCourse.id}/sessions`, {method:'POST', body:JSON.stringify({mode:finishedStudy.mode, card_ids:finishedStudy.cards.map(card => card.id)})});
+      const result = await store.startSession(currentCourse.id, finishedStudy.mode, finishedStudy.cards.map(card => card.id));
       initializeStudy({...result, cards:[...finishedStudy.cards], filler_cards:[...(finishedStudy.fillers || [])]});
       await preloadPortrait(currentCard());
       studyView();
@@ -569,8 +579,8 @@ async function route() {
   const [, courseId, child] = match;
   if (!child) return courseView(courseId);
   try {
-    const course = await api(`/courses/${courseId}`);
-    if (child === 'review') return candidateView(course, await api(`/courses/${courseId}/candidates`));
+    const course = await store.getCourse(courseId);
+    if (child === 'review') return candidateView(course, await store.listCandidates(courseId));
     return manualCardView(course);
   } catch (error) {
     setView(`<section class="empty"><h2>That course is unavailable.</h2><p>${esc(error.message)}</p><a class="button" href="#/">Back to courses</a></section>`);
