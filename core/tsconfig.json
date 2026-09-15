@@ -17,7 +17,9 @@
     "sourceMap": true,
     "removeComments": false,
     "rootDir": "src",
-    "outDir": "../frontend/vendor/core"
+    "outDir": "../frontend/vendor/core",
+    // Keep the incremental-build file out of the published bundle.
+    "tsBuildInfoFile": "./.tsbuildinfo"
   },
   "include": ["src"]
 }

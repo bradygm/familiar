@@ -95,6 +95,16 @@ export interface ImportOutcome {
 }
 
 export interface Store {
+  /**
+   * Which implementation this is.
+   *
+   * The UI is written against the interface and does not branch on behaviour,
+   * but it does have to tell the learner where their data is kept — and "a
+   * database file on this machine" and "this browser's storage" are different
+   * enough that saying the wrong one is worse than saying nothing.
+   */
+  readonly kind: 'http' | 'indexeddb';
+
   // Reading
   listCourses(): Promise<Course[]>;
   getCourse(courseId: string): Promise<Course>;

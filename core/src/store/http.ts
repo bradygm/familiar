@@ -96,6 +96,8 @@ function withPortrait(card: any): Card {
 }
 
 export class HttpStore implements Store {
+  readonly kind = 'http' as const;
+
   async listCourses(): Promise<Course[]> {
     return request('/courses');
   }

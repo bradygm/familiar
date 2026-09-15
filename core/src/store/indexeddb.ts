@@ -93,6 +93,8 @@ const byName = (left: any, right: any) =>
   String(left.first_name).localeCompare(right.first_name) || String(left.last_name).localeCompare(right.last_name);
 
 export class IndexedDbStore implements Store {
+  readonly kind = 'indexeddb' as const;
+
   private database: IDBDatabase | null = null;
   /** Blob URLs are cached per portrait, so one card does not leak a URL per render. */
   private readonly portraits = new Map<string, string>();
