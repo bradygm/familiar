@@ -120,23 +120,50 @@ def main() -> None:
     draw.text((left, 528), "bradymoon.com/familiar", font=font(22), fill=MUTED)
 
     # A roster fragment on the right, at a size that still reads in a preview.
-    panel = (760, 96, 1136, 534)
-    rounded(draw, panel, radius=26, fill=(255, 255, 255), outline=LINE, width=2)
-    draw.text((792, 128), "YOUR CLASS", font=font(16, bold=True), fill=MUTED)
+    panel_left, panel_top, panel_right, panel_bottom = 760, 96, 1136, 534
+    rounded(draw, (panel_left, panel_top, panel_right, panel_bottom), radius=26, fill=(255, 255, 255), outline=LINE, width=2)
 
-    size = 104
-    gap = 20
+    # Derived from the panel rather than chosen by eye: hardcoding a tile size
+    # and a gap that happened not to fit left the third column hanging 8px past
+    # the panel's edge. Computing it means the tiles cannot outgrow their box.
+    padding, gap, columns, rows = 32, 20, 3, 2
+    content = (panel_right - padding) - (panel_left + padding)
+    size = (content - gap * (columns - 1)) // columns
+    used = size * columns + gap * (columns - 1)
+    start_x = panel_left + padding + (content - used) // 2
+
+    label_y = panel_top + 32
+    draw.text((start_x, label_y), "YOUR CLASS", font=font(16, bold=True), fill=MUTED)
+
+    bar_height, bar_gap, caption_gap = 9, 13, 26
+    block = size + bar_gap + bar_height
+    start_y = label_y + 34
+    caption_height = 24
+
+    # Spread the rows to fill the panel rather than leaving a gap at the foot of
+    # it. Derived for the same reason the widths are: a number picked by eye is
+    # a number that stops being right the moment anything around it moves.
+    available = (panel_bottom - padding) - start_y
+    row_gap = max(20, (available - rows * block - caption_gap - caption_height) // (rows - 1))
+
     for index, (colour, initials) in enumerate(zip(AVATAR_COLOURS, INITIALS)):
-        column, row = index % 3, index // 3
-        x = 792 + column * (size + gap)
-        y = 162 + row * (size + 62)
+        column, row = index % columns, index // columns
+        x = start_x + column * (size + gap)
+        y = start_y + row * (block + row_gap)
         avatar(image, x, y, size, colour, initials)
-        bar_y = y + size + 13
-        rounded(draw, (x, bar_y, x + size, bar_y + 9), radius=5, fill=(233, 239, 246))
+        bar_y = y + size + bar_gap
+        rounded(draw, (x, bar_y, x + size, bar_y + bar_height), radius=5, fill=(233, 239, 246))
         filled = [0.86, 0.42, 0.68, 0.94, 0.30, 0.75][index]
-        rounded(draw, (x, bar_y, x + int(size * filled), bar_y + 9), radius=5, fill=BLUE)
+        rounded(draw, (x, bar_y, x + int(size * filled), bar_y + bar_height), radius=5, fill=BLUE)
 
-    draw.text((792, 492), "Predicted recall, person by person", font=font(18), fill=MUTED)
+    caption_y = start_y + (rows - 1) * (block + row_gap) + block + caption_gap
+    draw.text((start_x, caption_y), "Predicted recall, person by person", font=font(18), fill=MUTED)
+
+    # Nothing may cross the panel it belongs to.
+    right_edge = start_x + used
+    caption_bottom = caption_y + 24
+    assert right_edge <= panel_right - padding // 2, f"tiles reach {right_edge}, panel ends at {panel_right}"
+    assert caption_bottom <= panel_bottom, f"caption reaches {caption_bottom}, panel ends at {panel_bottom}"
 
     TARGET.parent.mkdir(parents=True, exist_ok=True)
     image.save(TARGET, "PNG", optimize=True)
