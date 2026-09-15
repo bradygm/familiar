@@ -224,3 +224,4 @@ Inspect both supplied PDFs, identify their extractable card fields and images, t
 * Reading the roster. Scanned PDFs need local OCR, which can take a minute have a progress bar?
 * make sure instructions clear, byu specific in language and clear. flashcards app open in new tab. 
 Update domain
+* make so can edit note for student?

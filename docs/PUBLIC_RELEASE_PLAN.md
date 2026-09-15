@@ -266,7 +266,8 @@ Generic CSV + photos import, a stronger review/correct step for arbitrary layout
 See the generality note below.
 
 This phase is severable, and worth being honest about: the audience is BYU faculty, who all
-get the same roster layout from the same tool. Everything needed to serve them is done by
+get the same roster layout from the same tool — and the page now says so plainly rather
+than describing itself in general terms it cannot live up to. Everything needed to serve them is done by
 the end of Phase 5. Phase 6 only matters if the audience widens to instructors at other
 institutions, and it is a large amount of work — a generic importer means supporting layouts
 nobody has seen. Cutting it is a legitimate outcome, not a failure; nothing in Phases 0-5

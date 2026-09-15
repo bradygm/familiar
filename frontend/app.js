@@ -201,11 +201,11 @@ function orientation() {
     <div class="orientation-grid">
       <div>
         <div class="eyebrow">What this is</div>
-        <p>A study tool for learning the names and faces of everyone in a class. You import the roster your university already gives you, and it turns it into short practice sessions that concentrate on the people you keep missing.</p>
+        <p>A study tool for BYU instructors, for learning the names and faces of everyone in a class. You import the roster BYU already gives you, and it turns it into short practice sessions that concentrate on the people you keep missing.</p>
       </div>
       <div>
         <div class="eyebrow">What it reads</div>
-        <p>The roster PDF exported by <a href="https://flashcards.byu.edu" rel="noreferrer">BYU Flashcards</a>, at <strong>3 students per page</strong>. Other layouts are not supported yet — the importer will tell you if it cannot find anyone rather than inventing people.</p>
+        <p>The roster PDF exported by <a href="https://flashcards.byu.edu" target="_blank" rel="noreferrer">BYU Flashcards</a>, at <strong>3 students per page</strong>. Other layouts are not supported yet — the importer will tell you if it cannot find anyone rather than inventing people.</p>
       </div>
       <div>
         <div class="eyebrow">Where your data goes</div>
@@ -224,13 +224,13 @@ async function home() {
   setView(document.querySelector('#loading').innerHTML);
   const courses = await store.listCourses();
   setView(`
-    <section class="hero"><div class="eyebrow">For instructors</div><h1>Know every student<br>before the first day.</h1><p>Import your course roster, confirm the people it finds, and build familiarity in short, adaptive sessions built on retrieval practice.</p></section>
+    <section class="hero"><div class="eyebrow">For BYU instructors</div><h1>Know every student<br>before the first day.</h1><p>Import your BYU course roster, confirm the people it finds, and build familiarity in short, adaptive sessions built on retrieval practice.</p></section>
     ${courses.length ? '' : orientation()}
     ${evictionWarning(courses)}
     ${backupReminder(courses)}
     <section class="section-head"><div><div class="eyebrow">Courses</div><h2>Your courses</h2></div><p>${courses.length ? `${courses.length} imported` : 'Nothing imported yet'}</p></section>
     ${courses.length ? `<div class="course-grid">${courses.map(course => { const summary = summariseCourse(course.progress || [], Date.now()); return `<a class="course" href="${courseLink(course)}"><div class="course-top"><span class="course-kicker">Course roster</span><span class="course-state">${studiedLabel(course.last_studied_at)}</span></div><h2>${esc(course.title)}</h2><dl class="course-metrics"><div><dt>People</dt><dd>${course.card_count}</dd></div><div><dt>Familiar</dt><dd>${summary.familiarPercent}%</dd></div><div><dt>Sessions</dt><dd>${course.session_count}</dd></div></dl><p class="course-cta">${course.last_studied_at ? 'Continue studying' : 'Start learning'} <span aria-hidden="true">→</span></p></a>`; }).join('')}</div>` : `<div class="empty"><h2>Your first course starts with a PDF.</h2><p>Source files remain on this machine. Imported information is saved in the local app database.</p></div>`}
-    <section class="importer" style="margin-top:28px"><div class="eyebrow">New class</div><h2>Start a class from a roster</h2><p class="fine">The file is read on this machine and never uploaded — only the names and portraits are saved, and you approve everyone it finds before they appear in study sessions.</p><ol class="fine steps"><li>Open the course in <a href="https://flashcards.byu.edu" rel="noreferrer">BYU Flashcards</a>.</li><li>Choose <strong>Export</strong>, then <strong>3 students per page</strong>.</li><li>Download the PDF and pick it below.</li></ol><label class="new-class-name" for="new-class-title">Name this class <span class="fine">(optional — taken from the file name if you leave it blank)</span><input class="search" id="new-class-title" placeholder="e.g. ME EN 275, Winter" autocomplete="off"></label><div class="import-list"><label class="chip" for="new-class-file">Choose a roster PDF…<input id="new-class-file" type="file" accept="application/pdf,.pdf" hidden></label></div><div id="import-message"></div></section>
+    <section class="importer" style="margin-top:28px"><div class="eyebrow">New class</div><h2>Start a class from a roster</h2><p class="fine">The file is read on this machine and never uploaded — only the names and portraits are saved, and you approve everyone it finds before they appear in study sessions.</p><ol class="fine steps"><li>Open the course in <a href="https://flashcards.byu.edu" target="_blank" rel="noreferrer">BYU Flashcards</a>.</li><li>Choose <strong>Export</strong>, then <strong>3 students per page</strong>.</li><li>Download the PDF and pick it below.</li></ol><label class="new-class-name" for="new-class-title">Name this class <span class="fine">(optional — taken from the file name if you leave it blank)</span><input class="search" id="new-class-title" placeholder="e.g. ME EN 275, Winter" autocomplete="off"></label><div class="import-list"><label class="chip" for="new-class-file">Choose a roster PDF…<input id="new-class-file" type="file" accept="application/pdf,.pdf" hidden></label></div><div id="import-message"></div></section>
     <section class="importer" style="margin-top:28px"><div class="eyebrow">Local backup</div><h2>Download a portable backup</h2><p class="fine">A single zip holding every course, portrait, and review event. It is the restore path if your data is ever lost, and the only supported way to move your history to another device. ${store.kind === 'indexeddb'
       ? 'Everything is kept in this browser, on this device. Clearing site data removes it, and browsers can evict storage on their own after a period of not visiting — so a backup is the only thing that survives that.'
       : 'Your data lives in the local database under <code>app-data/</code>, which Git does not cover.'}</p><div class="import-list"><button class="chip" id="export-all">Export everything</button><button class="chip" id="export-rosters">Export rosters only (no progress)</button><label class="chip" for="restore-file">Restore a backup…<input id="restore-file" type="file" accept=".zip,application/zip" hidden></label></div><div id="restore-message"></div></section>`);
@@ -521,7 +521,7 @@ function addPeopleDialog(course, cards) {
     <div class="add-route">
       <h3>From a roster</h3>
       <p class="fine">Best for a whole class, or for people who joined late — anyone already here keeps their study history, and only new names need approving.</p>
-      <ol class="fine steps"><li>Open the course in <a href="https://flashcards.byu.edu" rel="noreferrer">BYU Flashcards</a>.</li><li>Choose <strong>Export</strong>, then <strong>3 students per page</strong>.</li><li>Download the PDF and pick it below.</li></ol>
+      <ol class="fine steps"><li>Open the course in <a href="https://flashcards.byu.edu" target="_blank" rel="noreferrer">BYU Flashcards</a>.</li><li>Choose <strong>Export</strong>, then <strong>3 students per page</strong>.</li><li>Download the PDF and pick it below.</li></ol>
       <label class="chip" for="dialog-roster-file">Choose a roster PDF…<input id="dialog-roster-file" type="file" accept="application/pdf,.pdf" hidden></label>
       <div id="dialog-import-message"></div>
     </div>

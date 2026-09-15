@@ -1,7 +1,7 @@
 {
   "name": "Familiar — learn every name",
   "short_name": "Familiar",
-  "description": "Learn the names and faces of everyone in a class. Your roster stays on your device.",
+  "description": "Learn the names and faces of everyone in your BYU class. Your roster stays on your device.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
