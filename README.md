@@ -189,8 +189,7 @@ The difference between `R` and `W` is deliberate. If you already know the person
 
 ## Course clean-up
 
-The **Course data** panel at the bottom of a course page holds the things you do *to* a
-course rather than in it.
+**Manage** on a course page holds the things you do *to* a class rather than in it.
 
 - **Export course** — a portable backup, described above.
 - **Remove someone who left** — deletes that person along with their photo and their
@@ -233,8 +232,8 @@ people and reject the ones the parser misread. Rejecting only discards a candida
 never touch somebody you have been studying. Missed names can be added manually from the
 course page.
 
-**Adding people who joined late.** Export a fresh roster from BYU Flashcards and upload it
-into the existing class from the **Roster and clean-up** panel. People already in the class
+**Adding people who joined late.** Export a fresh roster from BYU Flashcards and choose it
+under **Add people → From a roster**, which also carries the export instructions. People already in the class
 are left exactly as they are, keeping every bit of their study history; only names that are
 new to the class appear for approval.
 

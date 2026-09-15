@@ -29,12 +29,6 @@ async def disable_frontend_cache(request: Request, call_next):
     return response
 
 
-class CreateCardRequest(BaseModel):
-    first_name: str = Field(min_length=1, max_length=80)
-    last_name: str = Field(min_length=1, max_length=80)
-    facts: list[str] = []
-
-
 class StartSessionRequest(BaseModel):
     mode: str
     # The client selects the cards, using the shared core. The server records
@@ -379,14 +373,44 @@ def card_history(course_id: str, card_id: str):
 
 
 @app.post("/api/courses/{course_id}/cards")
-def create_card(course_id: str, request: CreateCardRequest):
+async def create_card(
+    course_id: str,
+    first_name: str = Form(...),
+    last_name: str = Form(...),
+    facts: str = Form("[]"),
+    portrait: UploadFile | None = File(default=None),
+):
+    """Add somebody the importer missed, optionally with a photo.
+
+    Sent as multipart rather than JSON so a photo can travel as bytes. Everyone
+    added this way is approved immediately: the learner typed the name, so there
+    is nothing left to review.
+    """
+    if not first_name.strip() or not last_name.strip():
+        raise HTTPException(status_code=400, detail="A first and last name are both needed.")
+    try:
+        parsed_facts = json.loads(facts)
+        if not isinstance(parsed_facts, list):
+            raise ValueError
+    except (json.JSONDecodeError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail="Malformed facts.") from exc
+
     with connection() as conn:
         if not conn.execute("SELECT 1 FROM courses WHERE id = ?", (course_id,)).fetchone():
             raise HTTPException(status_code=404, detail="Course not found")
+
+        image_path = None
+        if portrait is not None and portrait.filename:
+            blob = await portrait.read()
+            if len(blob) > MAX_UPLOAD_BYTES:
+                raise HTTPException(status_code=413, detail="That photo is too large.")
+            if blob:
+                image_path = _store_portraits(course_id, [blob])[0]
+
         card_id = f"{course_id}-card-{uuid.uuid4().hex[:8]}"
         conn.execute(
-            "INSERT INTO cards (id, course_id, first_name, last_name, facts, reviewed, created_at) VALUES (?, ?, ?, ?, ?, 1, ?)",
-            (card_id, course_id, request.first_name.strip(), request.last_name.strip(), json.dumps(request.facts), now()),
+            "INSERT INTO cards (id, course_id, first_name, last_name, facts, image_path, reviewed, created_at) VALUES (?, ?, ?, ?, ?, ?, 1, ?)",
+            (card_id, course_id, first_name.strip(), last_name.strip(), json.dumps(parsed_facts), image_path, now()),
         )
         conn.execute("INSERT INTO card_progress (card_id) VALUES (?)", (card_id,))
         return {"id": card_id}

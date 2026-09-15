@@ -180,8 +180,29 @@ export class HttpStore implements Store {
     return response.json();
   }
 
-  async addCard(courseId: string, person: { first_name: string; last_name: string; facts: string[] }) {
-    return request(`/courses/${courseId}/cards`, { method: 'POST', body: JSON.stringify(person) });
+  async addCard(
+    courseId: string,
+    person: { first_name: string; last_name: string; facts: string[] },
+    portrait?: Blob | null,
+  ) {
+    // Sent as multipart whenever there is a photo, so the image travels as
+    // bytes rather than being base64'd into a JSON body.
+    const body = new FormData();
+    body.append('first_name', person.first_name);
+    body.append('last_name', person.last_name);
+    body.append('facts', JSON.stringify(person.facts));
+    if (portrait) body.append('portrait', portrait, 'portrait.jpg');
+    let response: Response;
+    try {
+      response = await fetch(`/api/courses/${courseId}/cards`, withTimeout({ method: 'POST', body }));
+    } catch (error) {
+      throw describe(error);
+    }
+    if (!response.ok) {
+      const detail = await response.json().catch(() => ({}));
+      throw new Error(detail.detail || 'Something went wrong.');
+    }
+    return response.json();
   }
 
   async approveCandidate(courseId: string, cardId: string): Promise<void> {

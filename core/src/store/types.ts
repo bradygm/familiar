@@ -116,7 +116,12 @@ export interface Store {
   // Building a roster
   createCourseFromRoster(file: File, title?: string): Promise<ImportOutcome>;
   importRosterIntoCourse(courseId: string, file: File): Promise<ImportOutcome>;
-  addCard(courseId: string, person: { first_name: string; last_name: string; facts: string[] }): Promise<{ id: string }>;
+  /** `portrait` is optional: somebody added by hand may not have a photo to hand. */
+  addCard(
+    courseId: string,
+    person: { first_name: string; last_name: string; facts: string[] },
+    portrait?: Blob | null,
+  ): Promise<{ id: string }>;
   approveCandidate(courseId: string, cardId: string): Promise<void>;
   rejectCandidate(courseId: string, cardId: string): Promise<void>;
   removeCard(courseId: string, cardId: string): Promise<void>;

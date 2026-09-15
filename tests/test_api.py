@@ -269,12 +269,38 @@ def test_exporting_an_unknown_course_is_404(client):
 
 
 def test_adding_a_card_makes_it_immediately_studyable(client):
-    created = client.post(f"/api/courses/{COURSE}/cards", json={"first_name": "New", "last_name": "Person", "facts": ["a fact"]})
-    assert created.status_code == 200
+    created = client.post(
+        f"/api/courses/{COURSE}/cards",
+        data={"first_name": "New", "last_name": "Person", "facts": json.dumps(["a fact"])},
+    )
+    assert created.status_code == 200, created.text
     card_id = created.json()["id"]
     listed = {card["id"]: card for card in client.get(f"/api/courses/{COURSE}/cards").json()}
     assert listed[card_id]["facts"] == ["a fact"]
+    assert listed[card_id]["image_path"] is None
     assert start_session(client, [card_id])
+
+
+def test_somebody_added_by_hand_can_have_a_photo(client):
+    """The importer misses people, and a card with no face is a poor flashcard."""
+    created = client.post(
+        f"/api/courses/{COURSE}/cards",
+        data={"first_name": "Photo", "last_name": "Person", "facts": "[]"},
+        files={"portrait": ("face.jpg", b"a portrait", "image/jpeg")},
+    )
+    assert created.status_code == 200, created.text
+    card_id = created.json()["id"]
+    listed = {card["id"]: card for card in client.get(f"/api/courses/{COURSE}/cards").json()}
+    stored = listed[card_id]["image_path"]
+    assert stored and stored.startswith(f"{COURSE}/person-")
+    assert (Path(client.app_data) / "assets" / stored).read_bytes() == b"a portrait"
+
+
+def test_adding_somebody_without_a_name_is_refused(client):
+    before = len(client.get(f"/api/courses/{COURSE}/cards").json())
+    response = client.post(f"/api/courses/{COURSE}/cards", data={"first_name": "  ", "last_name": "Person"})
+    assert response.status_code in (400, 422)
+    assert len(client.get(f"/api/courses/{COURSE}/cards").json()) == before
 
 
 # --- removing somebody who left the course -------------------------------

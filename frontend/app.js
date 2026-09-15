@@ -21,7 +21,6 @@ const app = document.querySelector('#app');
 let currentCourse = null;
 let study = null;
 let scoring = false;
-let helpOpen = false;
 
 /**
  * Show extraction progress, when the store does its reading in the page.
@@ -172,7 +171,7 @@ async function home() {
     ${backupReminder(courses)}
     <section class="section-head"><div><div class="eyebrow">Courses</div><h2>Your courses</h2></div><p>${courses.length ? `${courses.length} imported` : 'Nothing imported yet'}</p></section>
     ${courses.length ? `<div class="course-grid">${courses.map(course => { const summary = summariseCourse(course.progress || [], Date.now()); return `<a class="course" href="${courseLink(course)}"><div class="course-top"><span class="course-kicker">Course roster</span><span class="course-state">${studiedLabel(course.last_studied_at)}</span></div><h2>${esc(course.title)}</h2><dl class="course-metrics"><div><dt>People</dt><dd>${course.card_count}</dd></div><div><dt>Familiar</dt><dd>${summary.familiarPercent}%</dd></div><div><dt>Sessions</dt><dd>${course.session_count}</dd></div></dl><p class="course-cta">${course.last_studied_at ? 'Continue studying' : 'Start learning'} <span aria-hidden="true">→</span></p></a>`; }).join('')}</div>` : `<div class="empty"><h2>Your first course starts with a PDF.</h2><p>Source files remain on this machine. Imported information is saved in the local app database.</p></div>`}
-    <section class="importer" style="margin-top:28px"><div class="eyebrow">New class</div><h2>Start a class from a roster</h2><p class="fine">Choose a roster PDF exported from BYU Flashcards (3 students per page). The file is read on this machine and not kept — only the names and portraits are saved. You approve everyone it finds before they appear in study sessions.</p><div class="import-list"><label class="chip" for="new-class-file">Choose a roster PDF…<input id="new-class-file" type="file" accept="application/pdf,.pdf" hidden></label></div><div id="import-message"></div></section>
+    <section class="importer" style="margin-top:28px"><div class="eyebrow">New class</div><h2>Start a class from a roster</h2><p class="fine">The file is read on this machine and never uploaded — only the names and portraits are saved, and you approve everyone it finds before they appear in study sessions.</p><ol class="fine steps"><li>Open the course in <a href="https://flashcards.byu.edu" rel="noreferrer">BYU Flashcards</a>.</li><li>Choose <strong>Export</strong>, then <strong>3 students per page</strong>.</li><li>Download the PDF and pick it below.</li></ol><label class="new-class-name" for="new-class-title">Name this class <span class="fine">(optional — taken from the file name if you leave it blank)</span><input class="search" id="new-class-title" placeholder="e.g. ME EN 275, Winter" autocomplete="off"></label><div class="import-list"><label class="chip" for="new-class-file">Choose a roster PDF…<input id="new-class-file" type="file" accept="application/pdf,.pdf" hidden></label></div><div id="import-message"></div></section>
     <section class="importer" style="margin-top:28px"><div class="eyebrow">Local backup</div><h2>Download a portable backup</h2><p class="fine">A single zip holding every course, portrait, and review event. It is the restore path if your data is ever lost, and the only supported way to move your history to another device. ${store.kind === 'indexeddb'
       ? 'Everything is kept in this browser, on this device. Clearing site data removes it, and browsers can evict storage on their own after a period of not visiting — so a backup is the only thing that survives that.'
       : 'Your data lives in the local database under <code>app-data/</code>, which Git does not cover.'}</p><div class="import-list"><button class="chip" id="export-all">Export everything</button><button class="chip" id="export-rosters">Export rosters only (no progress)</button><label class="chip" for="restore-file">Restore a backup…<input id="restore-file" type="file" accept=".zip,application/zip" hidden></label></div><div id="restore-message"></div></section>`);
@@ -225,7 +224,7 @@ async function home() {
     try {
       const stopReporting = reportExtraction(message);
       try {
-        var result = await store.createCourseFromRoster(file);
+        var result = await store.createCourseFromRoster(file, document.querySelector('#new-class-title')?.value.trim() || undefined);
       } finally { stopReporting(); }
       message.innerHTML = notice(importSummary(result));
       location.hash = `#/course/${result.course_id}/review`;
@@ -264,7 +263,7 @@ async function courseView(courseId) {
   const [course, cards, candidates, stats] = await Promise.all([store.getCourse(courseId), store.listCards(courseId), store.listCandidates(courseId), store.getCourseStats(courseId)]);
   currentCourse = course;
   const summary = summariseCourse(stats.progress || [], Date.now());
-  setView(`<a class="back" href="#/">← All courses</a><section class="section-head" style="margin-top:25px"><div><div class="eyebrow">${esc(course.source_filename)}</div><h1>${esc(course.title)}</h1><p>${cards.length} ${cards.length === 1 ? 'person' : 'people'}</p></div><div class="actions">${candidates.length ? `<button class="button secondary" id="review-candidates">Review ${candidates.length} new ${candidates.length === 1 ? 'name' : 'names'}</button>` : ''}<button class="button secondary" id="add-card">Add person</button><button class="button" id="start-study">Start session</button></div></section><section class="stats" aria-label="Course statistics"><article class="stat panel"><strong>${summary.familiarPercent}%</strong><span>familiar</span></article><article class="stat panel"><strong>${summary.readiness}%</strong><span>avg. predicted recall</span></article><article class="stat panel"><strong>${stats.session_count}</strong><span>sessions</span></article><article class="stat panel"><strong>${stats.wrong_count} / ${stats.reviews}</strong><span>misses / answers</span></article></section>${learningPulse(stats)}<div class="toolbar"><input class="search" id="search" placeholder="Search people" aria-label="Search people"><select class="select" id="sort" aria-label="Sort roster"><option value="first">First name</option><option value="last">Last name</option><option value="recall">Predicted recall (low first)</option><option value="strength">Learning strength (low first)</option><option value="difficulty">Hardest to learn</option></select></div><div id="roster"></div><section class="course-data panel"><div class="eyebrow">Course data</div><h2>Roster and clean-up</h2><p class="fine">Upload another export to add people who joined late — anyone already here keeps their history, and only new names need approving. Study history lives only in this app's local database, so export before anything destructive.</p><div class="import-list"><label class="chip" for="add-roster-file">Add people from a roster…<input id="add-roster-file" type="file" accept="application/pdf,.pdf" hidden></label><button class="chip" id="export-course">Export course</button><button class="chip" id="remove-person">Remove someone who left</button><button class="chip" id="reset-progress">Reset all progress</button></div><div id="course-import-message"></div></section>`);
+  setView(`<a class="back" href="#/">← All courses</a><section class="section-head" style="margin-top:25px"><div><div class="eyebrow">${esc(course.source_filename)}</div><h1>${esc(course.title)}</h1><p>${cards.length} ${cards.length === 1 ? 'person' : 'people'}</p></div><div class="actions">${candidates.length ? `<button class="button secondary" id="review-candidates">Review ${candidates.length} new ${candidates.length === 1 ? 'name' : 'names'}</button>` : ''}<button class="button secondary" id="add-people">Add people</button><button class="button ghost" id="manage-course" aria-haspopup="dialog" title="Backup, remove someone, reset progress">Manage</button><button class="button" id="start-study">Start session</button></div></section><section class="stats" aria-label="Course statistics"><article class="stat panel"><strong>${summary.familiarPercent}%</strong><span>familiar</span></article><article class="stat panel"><strong>${summary.readiness}%</strong><span>avg. predicted recall</span></article><article class="stat panel"><strong>${stats.session_count}</strong><span>sessions</span></article><article class="stat panel"><strong>${stats.wrong_count} / ${stats.reviews}</strong><span>misses / answers</span></article></section>${learningPulse(stats)}<div class="toolbar"><input class="search" id="search" placeholder="Search people" aria-label="Search people"><select class="select" id="sort" aria-label="Sort roster"><option value="first">First name</option><option value="last">Last name</option><option value="recall">Predicted recall (low first)</option><option value="strength">Learning strength (low first)</option><option value="difficulty">Hardest to learn</option></select></div><div id="roster"></div>`);
   const roster = document.querySelector('#roster');
   const flippedCards = new Set();
   const histories = new Map();
@@ -310,35 +309,9 @@ async function courseView(courseId) {
     renderRoster(cards.filter(card => `${card.first_name} ${card.last_name}`.toLowerCase().includes(document.querySelector('#search').value.toLowerCase())));
   });
   document.querySelector('#start-study').addEventListener('click', () => setupView(course, cards));
-  document.querySelector('#export-course').addEventListener('click', () => store.downloadExport(course.id));
-  const rosterInput = document.querySelector('#add-roster-file');
-  rosterInput.addEventListener('change', async () => {
-    const file = rosterInput.files?.[0];
-    if (!file) return;
-    const message = document.querySelector('#course-import-message');
-    const label = document.querySelector('[for="add-roster-file"]');
-    label.textContent = `Reading ${file.name}…`;
-    message.innerHTML = notice('Reading the roster. Scanned PDFs need local OCR, which can take a minute.');
-    try {
-      const stopReporting = reportExtraction(message);
-      try {
-        var result = await store.importRosterIntoCourse(course.id, file);
-      } finally { stopReporting(); }
-      message.innerHTML = notice(importSummary(result));
-      // Straight to review when there is something to approve; people already
-      // in the class are left untouched and need no attention.
-      if (result.added) location.hash = `#/course/${course.id}/review`;
-      else { label.textContent = 'Add people from a roster…'; rosterInput.value = ''; }
-    } catch (error) {
-      message.innerHTML = notice(error.message);
-      label.textContent = 'Add people from a roster…';
-      rosterInput.value = '';
-    }
-  });
-  document.querySelector('#remove-person').addEventListener('click', () => removePersonDialog(course, cards));
-  document.querySelector('#reset-progress').addEventListener('click', () => resetProgressDialog(course, stats));
+  document.querySelector('#add-people').addEventListener('click', () => addPeopleDialog(course, cards));
+  document.querySelector('#manage-course').addEventListener('click', () => manageCourseDialog(course, cards, stats));
   document.querySelector('#review-candidates')?.addEventListener('click', () => { location.hash = `#/course/${course.id}/review`; });
-  document.querySelector('#add-card').addEventListener('click', () => { location.hash = `#/course/${course.id}/add`; });
 }
 
 function candidateView(course, candidates) {
@@ -376,10 +349,10 @@ function manualCardView(course) {
 
 function setupView(course, courseCards) {
   const count = courseCards.length;
-  let mode = 'adaptive';
+  let mode = 'all';
   let adaptiveLength = Math.min(15, count);
   let morrisLength = Math.min(7, count);
-  setView(`<a class="back" href="${courseLink(course)}" id="setup-back">← ${esc(course.title)}</a><section class="setup"><div class="eyebrow">Study setup</div><h1>What feels useful today?</h1><p class="fine">Every card is available whenever you are. Adaptive review simply makes a varied, helpful choice.</p><div class="mode-grid"><button class="mode selected" data-mode="adaptive"><h2>Adaptive review</h2><p>Prioritizes people with the lowest predicted recall.</p></button><button class="mode" data-mode="morris"><h2>Expanding recall</h2><p>Repeats a focused base set inside one capped session with widening gaps.</p></button><button class="mode" data-mode="all"><h2>All cards</h2><p>See every approved person once, in a fresh random order.</p></button><button class="mode" data-mode="continuous"><h2>Continuous</h2><p>Keeps going and keeps re-ranking. Miss someone and they come back at widening gaps. Ends when you do.</p></button></div><label class="range" id="base-size">Adaptive session length: <strong id="length-label">${adaptiveLength}</strong><input id="length" type="range" min="5" max="${Math.max(5, Math.min(50, count))}" value="${adaptiveLength}"></label><div class="actions"><button class="button" id="begin">Begin studying</button></div><div id="setup-notice"></div></section>`);
+  setView(`<a class="back" href="${courseLink(course)}" id="setup-back">← ${esc(course.title)}</a><section class="setup"><div class="eyebrow">Study setup</div><h1>What feels useful today?</h1><p class="fine">Every card is available whenever you are. Adaptive review simply makes a varied, helpful choice.</p><div class="mode-grid"><button class="mode selected" data-mode="all"><h2>All cards</h2><p>Every approved person once, in a fresh random order.</p></button><button class="mode" data-mode="continuous"><h2>Continuous</h2><p>Keeps going and keeps re-ranking. Miss someone and they return at widening gaps. Ends when you do.</p></button><button class="mode" data-mode="adaptive"><h2>Adaptive review</h2><p>A set length, weighted towards the people you are least likely to recall.</p></button><button class="mode" data-mode="morris"><h2>Expanding recall</h2><p>Repeats a focused base set inside one capped session with widening gaps.</p></button></div><label class="range hidden" id="base-size">Adaptive session length: <strong id="length-label">${adaptiveLength}</strong><input id="length" type="range" min="5" max="${Math.max(5, Math.min(50, count))}" value="${adaptiveLength}"></label><div class="actions"><button class="button" id="begin">Begin studying</button></div><div id="setup-notice"></div></section>`);
   document.querySelector('#setup-back').addEventListener('click', event => { event.preventDefault(); courseView(course.id); });
   document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => { mode = button.dataset.mode; document.querySelectorAll('[data-mode]').forEach(item => item.classList.toggle('selected', item === button)); document.querySelector('.range').classList.toggle('hidden', mode === 'all' || mode === 'continuous'); document.querySelector('#base-size').firstChild.textContent = mode === 'morris' ? 'Base people: ' : 'Adaptive session length: '; const input = document.querySelector('#length'); input.max = mode === 'morris' ? Math.max(5, Math.min(15, count)) : Math.max(5, Math.min(50, count)); input.value = mode === 'morris' ? Math.min(morrisLength, +input.max) : Math.min(adaptiveLength, +input.max); document.querySelector('#length-label').textContent = input.value; }));
   document.querySelector('#length').addEventListener('input', event => { const length = +event.target.value; if (mode === 'morris') morrisLength = length; else adaptiveLength = length; document.querySelector('#length-label').textContent = length; });
@@ -473,6 +446,98 @@ function studyView() {
   document.querySelector('#wrong')?.addEventListener('click', () => score('wrong'));
 }
 
+/**
+ * Both ways of adding people, in one place.
+ *
+ * Importing a roster used to live at the bottom of the page under "Course
+ * data", which is not where anyone looks for it — adding people is adding
+ * people, whether they arrive by the dozen from a PDF or one at a time by hand.
+ * The export instructions are here too, because the moment somebody wants to
+ * add people is the moment they need to know how to get the file.
+ */
+function addPeopleDialog(course, cards) {
+  showDialog(
+    `${dialogHead('Add people')}
+    <div class="add-route">
+      <h3>From a roster</h3>
+      <p class="fine">Best for a whole class, or for people who joined late — anyone already here keeps their study history, and only new names need approving.</p>
+      <ol class="fine steps"><li>Open the course in <a href="https://flashcards.byu.edu" rel="noreferrer">BYU Flashcards</a>.</li><li>Choose <strong>Export</strong>, then <strong>3 students per page</strong>.</li><li>Download the PDF and pick it below.</li></ol>
+      <label class="chip" for="dialog-roster-file">Choose a roster PDF…<input id="dialog-roster-file" type="file" accept="application/pdf,.pdf" hidden></label>
+      <div id="dialog-import-message"></div>
+    </div>
+    <div class="add-route">
+      <h3>One at a time</h3>
+      <p class="fine">For somebody the importer missed. They are added straight away — you typed the name, so there is nothing to review.</p>
+      <form id="dialog-card-form" class="stacked">
+        <label for="d-first">First name</label><input class="search" id="d-first" name="first" required autocomplete="off">
+        <label for="d-last">Last name</label><input class="search" id="d-last" name="last" required autocomplete="off">
+        <label for="d-photo">Photo <span class="fine">(optional)</span></label><input class="search" id="d-photo" type="file" accept="image/*">
+        <label for="d-facts">Notes, one per line <span class="fine">(optional — shown when you flip the card)</span></label><textarea class="search" id="d-facts" name="facts" rows="2"></textarea>
+        <div class="modal-actions"><button class="button" type="submit">Add person</button></div>
+      </form>
+      <div id="dialog-form-notice"></div>
+    </div>`,
+    (backdrop) => {
+      const rosterInput = backdrop.querySelector('#dialog-roster-file');
+      rosterInput.addEventListener('change', async () => {
+        const file = rosterInput.files?.[0];
+        if (!file) return;
+        const message = backdrop.querySelector('#dialog-import-message');
+        const stopReporting = reportExtraction(message);
+        backdrop.querySelector('[for="dialog-roster-file"]').textContent = `Reading ${file.name}…`;
+        message.innerHTML = notice('Reading the roster. A scanned class can take a moment.');
+        try {
+          const result = await store.importRosterIntoCourse(course.id, file);
+          closeDialog();
+          if (result.added) location.hash = `#/course/${course.id}/review`;
+          else courseView(course.id);
+        } catch (error) {
+          message.innerHTML = notice(error.message);
+          backdrop.querySelector('[for="dialog-roster-file"]').textContent = 'Choose a roster PDF…';
+          rosterInput.value = '';
+        } finally {
+          stopReporting();
+        }
+      });
+
+      backdrop.querySelector('#dialog-card-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const notice_ = backdrop.querySelector('#dialog-form-notice');
+        const facts = backdrop.querySelector('#d-facts').value.split('\n').map(line => line.trim()).filter(Boolean);
+        try {
+          await store.addCard(
+            course.id,
+            {first_name: backdrop.querySelector('#d-first').value, last_name: backdrop.querySelector('#d-last').value, facts},
+            backdrop.querySelector('#d-photo').files?.[0] ?? null,
+          );
+          closeDialog();
+          courseView(course.id);
+        } catch (error) {
+          notice_.innerHTML = notice(error.message);
+        }
+      });
+    },
+  );
+}
+
+/** Backup and clean-up, out of the way but not buried at the foot of the page. */
+function manageCourseDialog(course, cards, stats) {
+  showDialog(
+    `${dialogHead('Manage this class')}
+    <p class="fine">${cards.length} ${cards.length === 1 ? 'person' : 'people'} · ${stats.reviews || 0} recorded ${stats.reviews === 1 ? 'answer' : 'answers'} across ${stats.session_count || 0} ${stats.session_count === 1 ? 'session' : 'sessions'}.</p>
+    <div class="import-list" style="margin-top:16px">
+      <button class="chip" id="m-export">Export a backup</button>
+      <button class="chip" id="m-remove">Remove someone who left</button>
+      <button class="chip" id="m-reset">Reset all progress</button>
+    </div>`,
+    (backdrop) => {
+      backdrop.querySelector('#m-export').addEventListener('click', async () => { await store.downloadExport(course.id); recordBackup(); });
+      backdrop.querySelector('#m-remove').addEventListener('click', () => removePersonDialog(course, cards));
+      backdrop.querySelector('#m-reset').addEventListener('click', () => resetProgressDialog(course, stats));
+    },
+  );
+}
+
 function removePersonDialog(course, cards) {
   const row = (card) => `<div class="remove-row" data-remove="${card.id}">${portrait(card)}<span>${esc(card.first_name)} ${esc(card.last_name)}<br><small>${card.seen_count ? `${card.right_count}/${card.seen_count} correct` : 'Never studied'}</small></span><button class="button secondary" data-remove-button="${card.id}">Remove</button></div>`;
   showDialog(
@@ -555,14 +620,14 @@ function shortcutHelp() {
 // shortcut list, the remove-a-person list and the reset confirmation all use it.
 let openDialog = null;
 
-function showDialog(html, wire) {
+function showDialog(html, wire, kind = 'dialog') {
   closeDialog();
   const returnFocusTo = document.activeElement;
   document.body.insertAdjacentHTML('beforeend', `<div class="modal-backdrop" id="modal-backdrop"><div class="modal-panel panel" role="dialog" aria-modal="true" aria-labelledby="modal-title">${html}</div></div>`);
   const backdrop = document.querySelector('#modal-backdrop');
   backdrop.addEventListener('click', event => { if (event.target === backdrop) closeDialog(); });
   backdrop.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', closeDialog));
-  openDialog = {backdrop, returnFocusTo};
+  openDialog = {backdrop, returnFocusTo, kind};
   wire?.(backdrop);
   (backdrop.querySelector('[autofocus]') || backdrop.querySelector('[data-close]'))?.focus();
 }
@@ -579,16 +644,9 @@ function dialogHead(title) {
   return `<div class="modal-head"><h2 id="modal-title">${esc(title)}</h2><button class="button secondary" data-close aria-label="Close">Close <span class="key">Esc</span></button></div>`;
 }
 
-function closeHelp() {
-  if (!helpOpen) return;
-  helpOpen = false;
-  closeDialog();
-}
-
 function openHelp() {
-  if (helpOpen || !study) return;
-  helpOpen = true;
-  showDialog(shortcutHelp());
+  if (openDialog || !study) return;
+  showDialog(shortcutHelp(), null, 'help');
 }
 
 function continuousProgress(stats) {
@@ -659,7 +717,7 @@ async function score(result) {
 
 async function completeStudy() {
   if (!study) return;
-  closeHelp();
+  closeDialog();
   const finishedStudy = study;
   // Re-read the roster so readiness is computed from what was actually stored,
   // rather than from whatever this session happened to touch.
@@ -695,15 +753,19 @@ async function completeStudy() {
 }
 
 document.addEventListener('keydown', event => {
-  // A dialog outside a study session still answers Escape.
-  if (openDialog && !helpOpen && event.key === 'Escape') { closeDialog(); return; }
-  if (!study || ['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName)) return;
-  // While the shortcut list is open it owns the keyboard: Escape closes it
-  // rather than ending the session, and scoring keys are inert.
-  if (helpOpen) {
-    if (event.key === 'Escape' || event.key === '?') { event.preventDefault(); closeHelp(); }
+  // An open dialog owns the keyboard, whatever it is: Escape closes it rather
+  // than ending the session, '?' shuts the shortcut list, and scoring keys are
+  // inert so a stray R cannot mark a card while somebody is reading a dialog.
+  // Keyed off the dialog itself rather than a separate flag — when those two
+  // could disagree, closing by any route except Escape left every shortcut dead.
+  if (openDialog) {
+    if (event.key === 'Escape' || (event.key === '?' && openDialog.kind === 'help')) {
+      event.preventDefault();
+      closeDialog();
+    }
     return;
   }
+  if (!study || ['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName)) return;
   if (event.key === '?') { event.preventDefault(); openHelp(); return; }
   if (scoring) return;
   if ((event.key === ' ' || event.key === 'Enter') && !study.revealed) { event.preventDefault(); study.revealed = true; studyView(); }

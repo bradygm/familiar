@@ -222,3 +222,5 @@ Inspect both supplied PDFs, identify their extractable card fields and images, t
 * Still have a way to add someone manually to the class. Name and photo manually. Or can choose to do pdf upload. Both options. Cleanup the "Roster and clean-up" interface in general so it is found. At top in some way? 
 * course naming. When making a new course, let them pick the name. 
 * Reading the roster. Scanned PDFs need local OCR, which can take a minute have a progress bar?
+* make sure instructions clear, byu specific in language and clear. flashcards app open in new tab. 
+Update domain

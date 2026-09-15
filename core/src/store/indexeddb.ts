@@ -339,10 +339,19 @@ export class IndexedDbStore implements Store {
     };
   }
 
-  async addCard(courseId: string, person: { first_name: string; last_name: string; facts: string[] }) {
+  async addCard(
+    courseId: string,
+    person: { first_name: string; last_name: string; facts: string[] },
+    portrait?: Blob | null,
+  ) {
     const id = `${courseId}-card-${crypto.randomUUID().replace(/-/g, '').slice(0, 8)}`;
+    let imagePath: string | null = null;
     const db = await this.db();
-    const transaction = db.transaction(['cards', 'progress'], 'readwrite');
+    const transaction = db.transaction(['cards', 'progress', 'assets'], 'readwrite');
+    if (portrait) {
+      imagePath = `${courseId}/person-${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}.jpg`;
+      transaction.objectStore('assets').put({ path: imagePath, blob: portrait });
+    }
     transaction.objectStore('cards').put({
       id,
       course_id: courseId,
@@ -350,7 +359,7 @@ export class IndexedDbStore implements Store {
       last_name: person.last_name.trim(),
       facts: person.facts,
       prompt_text: '',
-      image_path: null,
+      image_path: imagePath,
       reviewed: 1,
       created_at: new Date().toISOString(),
     });
