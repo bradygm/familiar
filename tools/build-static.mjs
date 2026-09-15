@@ -26,11 +26,14 @@ const outIndex = process.argv.indexOf('--out');
 const out = resolve(root, outIndex === -1 ? 'dist' : process.argv[outIndex + 1]);
 
 // Where this will actually be served. Link-preview scrapers need absolute URLs,
-// so the published copy has to know its own address; pass --site-url when that
-// changes rather than editing the tags by hand and missing one.
+// so the published copy has to know its own address. It is read from site.json
+// rather than written here, because the same address is also printed on the
+// preview card and set as the custom domain — three copies is how the card came
+// to advertise a path that had since become a subdomain.
 const siteIndex = process.argv.indexOf('--site-url');
-const DEFAULT_SITE = 'https://bradymoon.com/familiar/';
+const DEFAULT_SITE = JSON.parse(readFileSync(join(root, 'site.json'), 'utf8')).url;
 const site = (siteIndex === -1 ? DEFAULT_SITE : process.argv[siteIndex + 1]).replace(/\/?$/, '/');
+const host = new URL(site).host;
 
 if (!existsSync(join(frontend, 'vendor', 'core', 'index.js'))) {
   throw new Error('core/ is not built. Run: cd core && npm run build');
@@ -63,11 +66,13 @@ if (!marked.test(app)) {
 }
 writeFileSync(appPath, app.replace(marked, "const store = createStore('indexeddb'); // STORE"));
 
-// Point the preview tags at wherever this copy is being published.
-if (site !== DEFAULT_SITE) {
-  const indexPath = join(out, 'index.html');
-  writeFileSync(indexPath, readFileSync(indexPath, 'utf8').split(DEFAULT_SITE).join(site));
-}
+// Point the preview tags at wherever this copy is being published. Done every
+// time rather than only when the address differs from the default: the literal
+// in index.html is then just a placeholder for local work, and the published
+// copy is correct by construction rather than by remembering to update it.
+const indexPath = join(out, 'index.html');
+const PLACEHOLDER = 'https://SITE_URL/';
+writeFileSync(indexPath, readFileSync(indexPath, 'utf8').split(PLACEHOLDER).join(site));
 
 // GitHub Pages serves anything under a directory beginning with an underscore
 // through Jekyll, which would strip files it does not recognise.
@@ -76,7 +81,7 @@ writeFileSync(join(out, '.nojekyll'), '');
 // The custom domain has to travel inside the artifact. This workflow publishes
 // dist/ rather than a branch, so a CNAME at the repository root would never be
 // served, and the domain would fall back to the user site's /familiar/ path.
-writeFileSync(join(out, 'CNAME'), 'familiar.bradymoon.com\n');
+writeFileSync(join(out, 'CNAME'), `${host}\n`);
 
 let files = 0;
 let bytes = 0;

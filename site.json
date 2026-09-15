@@ -1,0 +1,4 @@
+{
+  "url": "https://familiar.bradymoon.com/",
+  "_comment": "Where the hosted build is published. Read by tools/build-static.mjs for the CNAME and the link-preview tags, and by tools/make-og-image.py for the address printed on the card, so the address lives in one place instead of drifting between three."
+}

@@ -14,12 +14,19 @@ looks like the thing it links to without claiming to be a photograph of it.
 Writes frontend/og.png at 1200x630, the size every major platform crops to.
 """
 
+import json
 from pathlib import Path
+from urllib.parse import urlparse
 
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 TARGET = ROOT / "frontend" / "og.png"
+
+# The same address the build publishes to, so the card cannot advertise one
+# place while the tags point at another.
+SITE = json.loads((ROOT / "site.json").read_text())["url"]
+SITE_LABEL = urlparse(SITE).netloc + urlparse(SITE).path.rstrip("/")
 
 WIDTH, HEIGHT = 1200, 630
 
@@ -117,7 +124,7 @@ def main() -> None:
     draw.ellipse((left + 20, 447, left + 34, 461), fill=BLUE)
     draw.text((left + 46, 443), "Your roster never leaves your device", font=font(21, bold=True), fill=BLUE)
 
-    draw.text((left, 528), "bradymoon.com/familiar", font=font(22), fill=MUTED)
+    draw.text((left, 528), SITE_LABEL, font=font(22), fill=MUTED)
 
     # A roster fragment on the right, at a size that still reads in a preview.
     panel_left, panel_top, panel_right, panel_bottom = 760, 96, 1136, 534
