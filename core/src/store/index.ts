@@ -25,6 +25,7 @@ export function createStore(kind: StoreKind = 'http'): Store {
 export { HttpStore } from './http.js';
 export { IndexedDbStore } from './indexeddb.js';
 export { readZip, writeZip, crc32, type ZipEntry } from './zip.js';
+export { extractRoster, type ExtractedPerson, type ExtractionProgress, type ExtractionResult } from './roster-extract.js';
 export type {
   Card,
   CardProgressRow,

@@ -3,11 +3,18 @@
 # build in the image means `docker compose up --build` stays the only command a
 # local user needs.
 FROM node:22-slim AS core
+# tesseract-ocr-eng supplies the language data the browser extractor is vendored
+# with, so both extractors read using exactly the same training data rather than
+# two different releases of it.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tesseract-ocr-eng \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /core
 COPY core/package.json core/package-lock.json ./
 RUN npm ci
 COPY core/tsconfig.json ./
 COPY core/src ./src
+COPY core/scripts ./scripts
 RUN npm run build
 
 
@@ -24,7 +31,7 @@ COPY backend/requirements.txt /app/backend/requirements.txt
 RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 COPY backend /app/backend
 COPY frontend /app/frontend
-COPY --from=core /frontend/vendor/core /app/frontend/vendor/core
+COPY --from=core /frontend/vendor /app/frontend/vendor
 # Included so a Docker-only user can restore a backup without a host Python.
 COPY tools /app/tools
 
