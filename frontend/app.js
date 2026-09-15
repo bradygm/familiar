@@ -238,7 +238,7 @@ async function home() {
   setView(document.querySelector('#loading').innerHTML);
   const courses = await store.listCourses();
   setView(`
-    <section class="hero"><div class="eyebrow">For BYU instructors</div><h1>Know every student<br>before the first day.</h1><p>Import your BYU course roster, confirm the people it finds, and build familiarity in short, adaptive sessions built on retrieval practice.</p></section>
+    <section class="hero"><div class="eyebrow">For BYU instructors</div><h1>Know every student<br>before the first day.</h1><p>Import your BYU course roster and build familiarity in short, adaptive sessions built on retrieval practice.</p></section>
     ${courses.length ? '' : orientation()}
     ${evictionWarning(courses)}
     ${backupReminder(courses)}
