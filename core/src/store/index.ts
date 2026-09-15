@@ -8,6 +8,7 @@
  */
 
 import { HttpStore } from './http.js';
+import { IndexedDbStore } from './indexeddb.js';
 import type { Store } from './types.js';
 
 export type StoreKind = 'http' | 'indexeddb';
@@ -17,11 +18,13 @@ export function createStore(kind: StoreKind = 'http'): Store {
     case 'http':
       return new HttpStore();
     case 'indexeddb':
-      throw new Error('The browser store arrives with the static build; see docs/PUBLIC_RELEASE_PLAN.md.');
+      return new IndexedDbStore();
   }
 }
 
 export { HttpStore } from './http.js';
+export { IndexedDbStore } from './indexeddb.js';
+export { readZip, writeZip, crc32, type ZipEntry } from './zip.js';
 export type {
   Card,
   CardProgressRow,
@@ -29,6 +32,7 @@ export type {
   CourseStats,
   ImportOutcome,
   ReviewOutcome,
+  RestoreCounts,
   ReviewRecord,
   SessionSummary,
   Store,

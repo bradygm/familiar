@@ -13,6 +13,7 @@ import type {
   Course,
   CourseStats,
   ImportOutcome,
+  RestoreCounts,
   ReviewRecord,
   SessionSummary,
   Store,
@@ -126,8 +127,20 @@ export class HttpStore implements Store {
     return request(`/sessions/${sessionId}/complete`, { method: 'POST', body: JSON.stringify({ readiness }) });
   }
 
-  exportUrl(courseId?: string, options: { includeProgress?: boolean } = {}): string {
+  async downloadExport(courseId?: string, options: { includeProgress?: boolean } = {}): Promise<void> {
     const base = courseId ? `/api/courses/${encodeURIComponent(courseId)}/export` : '/api/export';
-    return options.includeProgress === false ? `${base}?include_progress=false` : base;
+    const url = options.includeProgress === false ? `${base}?include_progress=false` : base;
+    // The server already sets a filename in Content-Disposition, so following
+    // the link is enough; no need to fetch the archive into the page first.
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = '';
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+  }
+
+  async importBundle(file: File): Promise<RestoreCounts> {
+    return sendFile('/import/bundle', file);
   }
 }

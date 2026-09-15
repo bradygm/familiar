@@ -62,13 +62,17 @@ export {
 
 export {
   HttpStore,
+  IndexedDbStore,
   createStore,
+  readZip,
+  writeZip,
   type Card,
   type CardProgressRow,
   type Course,
   type CourseStats,
   type ImportOutcome,
   type ReviewOutcome,
+  type RestoreCounts,
   type ReviewRecord,
   type SessionSummary,
   type Store,

@@ -55,9 +55,11 @@ tools/      backup restore CLI
 ```
 
 The UI contains no transport code of its own: every read and write goes through the
-`Store` interface in `core/src/store/`, chosen at build time. Today that is `HttpStore`,
-talking to FastAPI; the hosted build will supply a browser-backed implementation of the
-same interface without the UI changing.
+`Store` interface in `core/src/store/`, chosen at build time. `HttpStore` talks to FastAPI
+and keeps your SQLite file; `IndexedDbStore` keeps everything in the browser for the hosted
+build. They are verified interchangeable — loading a backup of the real local database into
+the browser store and comparing the two side by side gives identical values for every
+person and every statistic, differing only in whether a portrait is a path or a blob URL.
 
 `core/` is shared by every build of Familiar. It is compiled to
 `frontend/vendor/core/`, which is generated rather than committed — `docker compose up

@@ -119,6 +119,18 @@ export interface Store {
   recordReview(sessionId: string, review: ReviewRecord): Promise<void>;
   completeSession(sessionId: string, readiness: number | null): Promise<SessionSummary>;
 
-  /** Where a backup of this course, or of everything, can be downloaded. */
-  exportUrl(courseId?: string, options?: { includeProgress?: boolean }): string;
+  // Backups. Exporting is an action rather than a URL because the hosted build
+  // has no URL to offer — it assembles the archive in the page and hands the
+  // learner a file. Importing is how a browser store gets its data at all,
+  // until the browser extractor arrives.
+  downloadExport(courseId?: string, options?: { includeProgress?: boolean }): Promise<void>;
+  importBundle(file: File): Promise<RestoreCounts>;
+}
+
+export interface RestoreCounts {
+  readonly courses: number;
+  readonly cards: number;
+  readonly sessions: number;
+  readonly reviews: number;
+  readonly assets: number;
 }

@@ -202,7 +202,7 @@ and a restore CLI, but nothing in the browser can read a bundle back — and tha
 `IndexedDbStore` gets populated before browser OCR exists in Phase 4, and how the local
 database migrates into it.
 
-### Phase 3 — The storage adapter seam
+### Phase 3 — The storage adapter seam — **done**
 Formalise `api()` into a `Store` interface with two implementations: the existing
 `HttpStore` (extracted as-is, keeps your SQLite) and a new `IndexedDbStore`
 (`courses`, `cards`, `progress`, `sessions`, `reviews`, `assets` as Blobs). Do the same
@@ -211,7 +211,7 @@ build time, so the public bundle contains no HTTP client and your build contains
 IndexedDB code. Validate the new adapter by loading your Phase 0 export into it; your
 own daily use never leaves SQLite.
 
-### Phase 4 — Import in the browser (public build only)
+### Phase 4 — Import in the browser (public build only) — **next**
 `pdf.js` replaces `pdftoppm`; `tesseract.js` replaces `pytesseract` — same engine, so the
 crop fractions and `--psm` modes in `importer.py` port directly. Run it in a Web Worker
 with a progress bar. `importer.py` stays exactly where it is for your build, using the

@@ -51,6 +51,12 @@ Restore rebuilds a **new** database. It never merges into an existing one, and i
 refuses outright if the target already contains the bundle's courses — a silent
 merge is how divergent histories quietly lose reviews.
 
+From the home page, **Restore a backup…** loads a bundle back in. It refuses rather than
+merges: restoring into a database that already holds those courses is an error, because
+silently reconciling two divergent histories is how review events get lost.
+
+To rebuild a database from scratch outside the app:
+
 ```bash
 .venv/bin/python tools/restore_bundle.py backup.zip --into app-data/restored.sqlite3
 ```
