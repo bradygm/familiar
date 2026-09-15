@@ -234,6 +234,12 @@ Done: the hosted bundle builds and runs serverless (verified importing a roster 
 subpath with zero API calls), the Pages workflow, the self-explaining landing section, the
 demo class, persistent-storage requests and the backup reminder.
 
+Accessibility and error-handling QA is done, and found three real defects rather than
+none: a search matching nobody claimed the class was empty and told the learner to import
+a roster, a view whose data failed sat on its loading spinner for ever, and a wedged server
+did the same even once failures were handled, because `fetch` has no timeout and a hang is
+not a rejection.
+
 Outstanding: the service worker is written but **unverified** — registration fails in the
 development browser with "an unknown error occurred when fetching the script", which
 appears to be an environment restriction rather than a defect, so it needs checking on the

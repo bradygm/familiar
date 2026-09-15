@@ -170,7 +170,7 @@ async function home() {
     <section class="hero"><div class="eyebrow">For instructors</div><h1>Know every student<br>before the first day.</h1><p>Import your course roster, confirm the people it finds, and build familiarity in short, adaptive sessions built on retrieval practice.</p></section>
     ${courses.length ? '' : orientation()}
     ${backupReminder(courses)}
-    <section class="section-head"><div><div class="eyebrow">Courses</div><h1>Your courses</h1></div><p>${courses.length ? `${courses.length} imported` : 'Nothing imported yet'}</p></section>
+    <section class="section-head"><div><div class="eyebrow">Courses</div><h2>Your courses</h2></div><p>${courses.length ? `${courses.length} imported` : 'Nothing imported yet'}</p></section>
     ${courses.length ? `<div class="course-grid">${courses.map(course => { const summary = summariseCourse(course.progress || [], Date.now()); return `<a class="course" href="${courseLink(course)}"><div class="course-top"><span class="course-kicker">Course roster</span><span class="course-state">${studiedLabel(course.last_studied_at)}</span></div><h2>${esc(course.title)}</h2><dl class="course-metrics"><div><dt>People</dt><dd>${course.card_count}</dd></div><div><dt>Familiar</dt><dd>${summary.familiarPercent}%</dd></div><div><dt>Sessions</dt><dd>${course.session_count}</dd></div></dl><p class="course-cta">${course.last_studied_at ? 'Continue studying' : 'Start learning'} <span aria-hidden="true">→</span></p></a>`; }).join('')}</div>` : `<div class="empty"><h2>Your first course starts with a PDF.</h2><p>Source files remain on this machine. Imported information is saved in the local app database.</p></div>`}
     <section class="importer" style="margin-top:28px"><div class="eyebrow">New class</div><h2>Start a class from a roster</h2><p class="fine">Choose a roster PDF exported from BYU Flashcards (3 students per page). The file is read on this machine and not kept — only the names and portraits are saved. You approve everyone it finds before they appear in study sessions.</p><div class="import-list"><label class="chip" for="new-class-file">Choose a roster PDF…<input id="new-class-file" type="file" accept="application/pdf,.pdf" hidden></label></div><div id="import-message"></div></section>
     <section class="importer" style="margin-top:28px"><div class="eyebrow">Local backup</div><h2>Download a portable backup</h2><p class="fine">A single zip holding every course, portrait, and review event. It is the restore path if this database is ever lost, and the only supported way to move your history somewhere else. <code>app-data/</code> is not covered by Git.</p><div class="import-list"><button class="chip" id="export-all">Export everything</button><button class="chip" id="export-rosters">Export rosters only (no progress)</button><label class="chip" for="restore-file">Restore a backup…<input id="restore-file" type="file" accept=".zip,application/zip" hidden></label></div><div id="restore-message"></div></section>`);
@@ -276,7 +276,13 @@ async function courseView(courseId) {
   };
   function renderRoster(items = visibleCards) {
     visibleCards = items;
-    roster.innerHTML = items.length ? `<div class="roster">${items.map(cardMarkup).join('')}</div>` : `<div class="empty"><h2>No approved cards yet.</h2><p>Review the imported candidates, or add cards after your first successful PDF import.</p></div>`;
+    // An empty roster and an empty search result are different situations, and
+    // telling somebody to import a roster when they have 69 people and a typo
+    // in the search box is worse than saying nothing.
+    const empty = cards.length
+      ? `<div class="empty"><h2>Nobody matches that search.</h2><p>${cards.length} ${cards.length === 1 ? 'person is' : 'people are'} in this class. Clear the search to see everyone.</p></div>`
+      : `<div class="empty"><h2>No approved people yet.</h2><p>Review the names the importer found, or add someone by hand.</p></div>`;
+    roster.innerHTML = items.length ? `<div class="roster">${items.map(cardMarkup).join('')}</div>` : empty;
     roster.querySelectorAll('[data-card-id]').forEach(element => {
       const toggle = async () => {
         const cardId = element.dataset.cardId;
@@ -703,18 +709,32 @@ document.addEventListener('keydown', event => {
   if (study.revealed && event.key.toLowerCase() === 'w') score('wrong');
   if (event.key === 'Escape') completeStudy();
 });
+/**
+ * Show a failure rather than leaving the loading state on screen.
+ *
+ * Every view begins by replacing the page with a spinner, so anything that
+ * throws on the way to rendering leaves that spinner up for good: the app looks
+ * like it is still working when it has already given up. This is the difference
+ * between a server that stopped answering and a hang, and the learner should be
+ * able to tell them apart and retry.
+ */
+function showFailure(error) {
+  setView(`<section class="empty"><h2>Something went wrong.</h2><p>${esc(error?.message || 'The app could not load your data.')}</p><div class="actions" style="justify-content:center"><button class="button" id="retry">Try again</button><a class="button secondary" href="#/">Back to courses</a></div></section>`);
+  document.querySelector('#retry')?.addEventListener('click', () => route());
+}
+
 window.addEventListener('hashchange', route);
 async function route() {
-  const match = location.hash.match(/^#\/course\/([^/]+)(?:\/(review|add))?$/);
-  if (!match) return home();
-  const [, courseId, child] = match;
-  if (!child) return courseView(courseId);
   try {
+    const match = location.hash.match(/^#\/course\/([^/]+)(?:\/(review|add))?$/);
+    if (!match) return await home();
+    const [, courseId, child] = match;
+    if (!child) return await courseView(courseId);
     const course = await store.getCourse(courseId);
     if (child === 'review') return candidateView(course, await store.listCandidates(courseId));
     return manualCardView(course);
   } catch (error) {
-    setView(`<section class="empty"><h2>That course is unavailable.</h2><p>${esc(error.message)}</p><a class="button" href="#/">Back to courses</a></section>`);
+    showFailure(error);
   }
 }
 route();

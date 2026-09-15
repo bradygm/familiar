@@ -21,11 +21,41 @@ import type {
   StudyMode,
 } from './types.js';
 
+/**
+ * How long to wait for the local server before giving up.
+ *
+ * `fetch` has no timeout of its own: a server that accepts the connection and
+ * then stops answering leaves the promise pending for ever, and because every
+ * view starts by showing a spinner, that is indistinguishable from a hang. A
+ * request that fails at least becomes an error the UI can report and offer to
+ * retry. Generous, because this is a local server and a slow answer is likelier
+ * than a wedged one.
+ */
+const TIMEOUT_MS = 30_000;
+
+function withTimeout(options: RequestInit): RequestInit {
+  if (options.signal || typeof AbortSignal?.timeout !== 'function') return options;
+  return { ...options, signal: AbortSignal.timeout(TIMEOUT_MS) };
+}
+
+function describe(error: unknown): Error {
+  const name = (error as { name?: string })?.name;
+  if (name === 'TimeoutError' || name === 'AbortError') {
+    return new Error('Familiar could not reach its local server. Is it still running?');
+  }
+  return error instanceof Error ? error : new Error(String(error));
+}
+
 async function request(path: string, options: RequestInit = {}): Promise<any> {
-  const response = await fetch(`/api${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`/api${path}`, {
+      headers: { 'Content-Type': 'application/json' },
+      ...withTimeout(options),
+    });
+  } catch (error) {
+    throw describe(error);
+  }
   if (!response.ok) {
     const detail = await response.json().catch(() => ({}));
     throw new Error(detail.detail || 'Something went wrong.');
@@ -41,7 +71,12 @@ async function sendFile(path: string, file: File, extra: Record<string, string |
   const body = new FormData();
   body.append('file', file);
   for (const [key, value] of Object.entries(extra)) if (value) body.append(key, value);
-  const response = await fetch(`/api${path}`, { method: 'POST', body });
+  let response: Response;
+  try {
+    response = await fetch(`/api${path}`, withTimeout({ method: 'POST', body }));
+  } catch (error) {
+    throw describe(error);
+  }
   if (!response.ok) {
     const detail = await response.json().catch(() => ({}));
     throw new Error(detail.detail || 'Something went wrong.');
@@ -130,7 +165,12 @@ export class HttpStore implements Store {
     body.append('pages', String(pages));
     if (title) body.append('title', title);
 
-    const response = await fetch(`/api${path}`, { method: 'POST', body });
+    let response: Response;
+    try {
+      response = await fetch(`/api${path}`, withTimeout({ method: 'POST', body }));
+    } catch (error) {
+      throw describe(error);
+    }
     if (!response.ok) {
       const detail = await response.json().catch(() => ({}));
       throw new Error(detail.detail || 'Something went wrong.');
